@@ -1,0 +1,36 @@
+{
+  "name": "serl",
+  "version": "pre-release",
+  "description": "Javascript/OTP",
+  "main": "serl.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "dependencies": {
+    "doxdox": "^3.0.0"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.6.3"
+  },
+  "scripts": {
+    "test": "none"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerng/serl.git"
+  },
+  "keywords": [
+    "javascript",
+    "erlang",
+    "otp",
+    "ecmascript"
+  ],
+  "author": "Jerng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jerng/serl/issues"
+  },
+  "homepage": "https://github.com/jerng/serl#readme"
+}
