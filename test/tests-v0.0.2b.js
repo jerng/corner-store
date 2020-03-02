@@ -98,8 +98,7 @@ new Exam.Exam ( {
         //console.log ( n1 )
 
         let graph = {
-            vertices : {},  // consider upgrade to WeakMap (TODO)
-            arrows : {}    
+            vertices : {}  // consider upgrade to WeakMap (TODO)
         }
 
     /////////////////////////////////////////////////////////////////
@@ -140,6 +139,7 @@ new Exam.Exam ( {
     //          and name the prop 'value'. We might alternatively call it 'real
     //          value', 'really', or 'actually'...
     //
+    //          graph.vertices.datum
 
         graph.vertices['a prop key'] = {}
 
@@ -161,6 +161,8 @@ new Exam.Exam ( {
     //          datum's history - if logging is enabled, this might eat up
     //          memory very quickly with frequently modified datum, such as UI
     //          data.
+    //
+    //          graph.vertices.datum.log
 
         Object.defineProperty ( graph.vertices['a prop key'], 'log', {
             configurable : false,    
@@ -178,8 +180,10 @@ new Exam.Exam ( {
     //          been described to hold computed values, the computation time of
     //          any datum should be 0, and so a cache would be pointles. First
     //          we should add computability of values.
+    //
+    //          graph.vertices.datum.algo
 
-        Object.defineProperty ( graph.vertices['a prop key'], 'computation', {
+        Object.defineProperty ( graph.vertices['a prop key'], 'algo', {
             configurable : false,    
             enumerable   : false,    
             writable     : true,     
@@ -189,6 +193,8 @@ new Exam.Exam ( {
     //          This suffices for computations which do not depend on other
     //          data. In order to point to other data in the graph, we need to
     //          start storing arrows between vertices.
+    //
+    //          graph.vertices.datum.arrows
 
         console.log ( graph.vertices['a prop key'] )
 
