@@ -12,7 +12,8 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-
+{   warning: `Eruda web console doesn't show inenumerable props. Fork and fit Eruda.`
+},
 {   test : `Build a reactive datastore, where each datum is represented by a Proc instance.`,
     code : function () {
 
