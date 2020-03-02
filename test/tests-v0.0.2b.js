@@ -145,7 +145,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'datum', {
             configurable: false,    // specification default : false    
-            enumerable  : false,    // specification default : false    
+            enumerable  : true,    // specification default : false    
             writable    : true,     // specification default : false     
             value       : 'a prop value',
                                     // specification default : undefined
@@ -164,7 +164,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'log', {
             configurable : false,    
-            enumerable   : false,    
+            enumerable   : true,    
             writable     : true,     
             value        : {
                 reads   : [],       // elements: new Date
@@ -181,7 +181,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'computation', {
             configurable : false,    
-            enumerable   : false,    
+            enumerable   : true,    
             writable     : true,     
             value        : () => 1 + 2   // some kind of function
         } )
@@ -189,9 +189,9 @@ new Exam.Exam ( {
     //          This suffices for computations which do not depend on other
     //          data. In order to point to other data in the graph, we need to
     //          start storing arrows between vertices.
-
+        
         console.log ( graph.vertices['a prop key'] )
-
+console.log('test')
 
         /*
         // example where Property Descriptor is a Data Descriptor
