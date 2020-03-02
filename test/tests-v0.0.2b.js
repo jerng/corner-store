@@ -12,7 +12,9 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-{   warning: `Eruda web console doesn't show inenumerable props. Fork and fit Eruda.`
+{   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
+},
+{   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
 },
 {   test : `Build a reactive datastore, where each datum is represented by a Proc instance.`,
     code : function () {
@@ -146,13 +148,13 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'datum', {
             configurable: false,    // specification default : false    
-            enumerable  : true,    // specification default : false    
+            enumerable  : true,     // specification default : false    
             writable    : true,     // specification default : false     
             value       : 'a prop value',
                                     // specification default : undefined
         } )
 
-    //          As this seems to be satisfactory so far, we proceed to add a
+    //      2.1.    As this seems to be satisfactory so far, we proceed to add a
     //          log to this vertice. Upon its creation, a vertice can log its
     //          first update. Upon deletion, a vertice can log a soft-delete
     //          date.
@@ -169,14 +171,14 @@ new Exam.Exam ( {
             configurable : false,    
             enumerable   : true,    
             writable     : true,     
-            value        : {
-                reads   : [],       // elements: new Date
-                updates : [],       // elements: [ new Date, datum ]
-                deletes : []        // elements: [ new Date, datum ]
+            value        : {            // Examples of data structure:
+                reads   : [ new Date ],       
+                updates : [ [ new Date, 'the relevant prop value'] ],       
+                deletes : [ [ new Date, 'the relevant prop value'] ]        
             },
         } )
 
-    //          Assuming that all is well with the first two props, we now
+    //      2.2.    Assuming that all is well with the first two props, we now
     //          can consider adding a cache. But since the 'datum's have not
     //          been described to hold computed values, the computation time of
     //          any datum should be 0, and so a cache would be pointles. First
@@ -191,34 +193,43 @@ new Exam.Exam ( {
             value        : () => 1 + 2   // some kind of function
         } )
 
-    //          This suffices for computations which do not depend on other
+    //      2.3.    This suffices for computations which do not depend on other
     //          data. In order to point to other data in the graph, we need to
-    //          start storing arrows between vertices.
-    //
-    //          graph.vertices.datum.arrows
-
+    //          start storing arrows between vertices. For starters, we'll only
+    //          store the 'in arrows' because we want to know what data are used
+    //          in the computation of this datum. But later we may want to
+    //          automatically 'push' updates to any data whose computations
+    //          depend on this datum, so we will have to store the 'out arrows'
+    //          also.
         
-        console.log ( graph.vertices['a prop key'] )
-
-        /*
-        // example where Property Descriptor is a Data Descriptor
-        key1 : Object.defineProperty ( {}, {
-            cache : {           // the prop's key/name
-                value : {       // the prop's value
-                    value : 'some arbitrary value',
-                    log : {
-                        updates : [],
-                        hits : [],
-                        misses : []
-                    }
-                },
-                configurable : false,
-                enumerable : false,
-                writable : false
-            },
-        // example where Property Descriptor is an Accessor Descriptor
+        Object.defineProperty ( graph.vertices['a prop key'], 'arrows', {
+            configurable : false,    
+            enumerable   : true,    
+            writable     : true,     
+            value        : {
+                ins  : [ 'another prop key' ],
+                outs : [ 'yet another prop key' ]
+            } 
         } )
-        */
+
+    //      2.4.    Now that we can traverse vertices via arrows, it is
+    //          reasonable to believe that some value computations will be
+    //          expensive, and so we may want to have a cache boolean, which 
+    //          allows stale values to be marked, without recomputing them
+    //          immediately.
+        
+        Object.defineProperty ( graph.vertices['a prop key'], 'cache', {
+            configurable : false,    
+            enumerable   : true,    
+            writable     : true,     
+            value        : {        // Examples of data structure:
+                stale   : false,
+                hits    : [ new Date ],
+                misses  : [ new Date ]
+            } 
+        } )
+
+        console.log ( JSON.stringify ( graph, SSON.replacer, 4 ) )
 
     }, // code
     want : 'legible'
