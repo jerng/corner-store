@@ -145,7 +145,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'datum', {
             configurable: false,    // specification default : false    
-            enumerable  : false,    // specification default : false    
+            enumerable  : true,    // specification default : false    
             writable    : true,     // specification default : false     
             value       : 'a prop value',
                                     // specification default : undefined
@@ -166,7 +166,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'log', {
             configurable : false,    
-            enumerable   : false,    
+            enumerable   : true,    
             writable     : true,     
             value        : {
                 reads   : [],       // elements: new Date
@@ -185,7 +185,7 @@ new Exam.Exam ( {
 
         Object.defineProperty ( graph.vertices['a prop key'], 'algo', {
             configurable : false,    
-            enumerable   : false,    
+            enumerable   : true,    
             writable     : true,     
             value        : () => 1 + 2   // some kind of function
         } )
@@ -196,8 +196,8 @@ new Exam.Exam ( {
     //
     //          graph.vertices.datum.arrows
 
+        
         console.log ( graph.vertices['a prop key'] )
-
 
         /*
         // example where Property Descriptor is a Data Descriptor
