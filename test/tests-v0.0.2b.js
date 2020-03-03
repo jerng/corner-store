@@ -95,11 +95,6 @@ new Exam.Exam ( {
  ******************************************************************************/
 
 
-        let n1 = new Serl.Node('Node 1')
-        //let p1 = n1.spawn()
-        //let p2 = n2.spawn()
-        //console.log ( n1 )
-
         let graph = {
             vertices : {}  // consider upgrade to WeakMap (TODO)
         }
@@ -172,9 +167,32 @@ new Exam.Exam ( {
             enumerable   : true,    
             writable     : true,     
             value        : {            // Examples of data structure:
-                reads   : [ new Date ],       
-                updates : [ [ new Date, 'the relevant prop value'] ],       
-                deletes : [ [ new Date, 'the relevant prop value'] ]        
+
+                reads   : [ 
+                    (   performance.timeOrigin
+                        ||  performance.timing.navigationStart 
+                    ) + performance.now()
+                ], 
+
+                updates : [ 
+                    [   
+                        (   performance.timeOrigin
+                            ||  performance.timing.navigationStart 
+                        ) + performance.now(), 
+                        
+                        'the relevant prop value'
+                    ] 
+                ],
+
+                deletes : [ 
+                    [   
+                        (   performance.timeOrigin
+                            ||  performance.timing.navigationStart 
+                        ) + performance.now(), 
+                        
+                        'the relevant prop value'
+                    ] 
+                ],
             },
         } )
 
@@ -207,8 +225,69 @@ new Exam.Exam ( {
             enumerable   : true,    
             writable     : true,     
             value        : {
-                ins  : [ 'another prop key' ],
-                outs : [ 'yet another prop key' ]
+
+                ins  : [
+
+                    {   ikey    : 'another prop key',
+                        reads   : [ 
+                            (   performance.timeOrigin
+                                ||  performance.timing.navigationStart 
+                            ) + performance.now()
+                        ], 
+
+                        updates : [ 
+                            [   
+                                (   performance.timeOrigin
+                                    ||  performance.timing.navigationStart 
+                                ) + performance.now(), 
+                                
+                                'the relevant prop value'
+                            ] 
+                        ],
+
+                        deletes : [ 
+                            [   
+                                (   performance.timeOrigin
+                                    ||  performance.timing.navigationStart 
+                                ) + performance.now(), 
+                                
+                                'the relevant prop value'
+                            ] 
+                        ],
+                    }
+
+                ],
+                outs : [ 
+
+                    {   okey    : 'another prop key',
+                        reads   : [ 
+                            (   performance.timeOrigin
+                                ||  performance.timing.navigationStart 
+                            ) + performance.now()
+                        ], 
+
+                        updates : [ 
+                            [   
+                                (   performance.timeOrigin
+                                    ||  performance.timing.navigationStart 
+                                ) + performance.now(), 
+                                
+                                'the relevant prop value'
+                            ] 
+                        ],
+
+                        deletes : [ 
+                            [   
+                                (   performance.timeOrigin
+                                    ||  performance.timing.navigationStart 
+                                ) + performance.now(), 
+                                
+                                'the relevant prop value'
+                            ] 
+                        ],
+                    }
+
+                ]
             } 
         } )
 
@@ -224,12 +303,97 @@ new Exam.Exam ( {
             writable     : true,     
             value        : {        // Examples of data structure:
                 stale   : false,
-                hits    : [ new Date ],
-                misses  : [ new Date ]
+                hits    : [ 
+                    (   performance.timeOrigin
+                        ||  performance.timing.navigationStart 
+                    ) + performance.now()
+                ],
+                misses  : [ 
+                    (   performance.timeOrigin
+                        ||  performance.timing.navigationStart 
+                    ) + performance.now()
+                ]
             } 
         } )
 
-        console.log ( JSON.stringify ( graph, SSON.replacer, 4 ) )
+    //      If we accept the data structure as it is so far, then we can proceed
+    //      to discuss design of the operating structure, i.e. chronological
+    //      processes, in this system.
+    //
+    //      3.1.    Creating a Vertice 
+    //      3.2.    Reading a Vertice 
+    //      3.3.    Updating a Vertice 
+    //      3.4.    Deleting a Vertice
+    //
+    //      4.1.    Creating an Arrow
+    //      4.2.    Reading an Arrow
+    //      4.3.    Updating an Arrow
+    //      4.4.    Deleting an Arrow
+
+/*
+        let newGraphServer = async function () {
+            
+            //  The server process should run recursively, listening for
+            //  messages. For now we should not bother with authentication or
+            //  authorisation.
+
+            
+
+            //  return: a Pid of the new server process
+
+        }
+
+        let n1 = new Serl.Node('Node 1')
+        //let p1 = n1.spawn()
+        //let p2 = n2.spawn()
+        //console.log ( n1 )
+*/
+
+
+class Datum {
+
+    /*  End-developer variables that are reactive (has dependencies; dependent
+     *  on other variables) or active (has dependents; determining on other
+     *  variables), should be instances of this class.
+     *
+     *  Each Datum must be associated with one, and only one instance of the
+     *  Graph class.
+     *
+     *  When a Datum is created, it must know its Graph, and its Graph must know
+     *  it.
+     *
+     *  When a Datum is set or gotten, its Graph must be consulted.
+     *  
+     *  When a Datum is deleted, its Graph must know it.
+     *  
+     *  If a Datum's value is algorithmic, its must traverse its Graph by
+     *  following its Arrows, to determine its value.
+     *  
+     *  Arrows are stored in each Datum.
+     *  
+     *  Graphs are abstract entities... and reified only by the ability of Datum
+     *  to follow their Arrows in tracking down other Datum.
+     *  
+     *  
+     *  
+     */
+
+    constructor () {
+    }
+}
+
+        let someVar = new Proxy ( {}, {
+
+            get : function ( targ, prop, rcvr ) {
+                console.log ('Proxy.get()')
+            },
+
+            set: function(targ, prop, val, rcvr ) {
+            }
+
+        })
+
+        return  JSON.stringify ( graph, SSON.replacer, 4 ) 
 
     }, // code
     want : 'legible'
@@ -254,7 +418,123 @@ new Exam.Exam ( {
 */
     ] } )
 
+///////////////////////////////////////////////////////////////////////////////
+/*  
 
+    Discussion on eDX / end-developer experience scenarios, and how we end up
+    using the Proxy class:
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (1.) If we were to state,
+
+            let someObject      = { someProp : {}, someOtherProp : 2 }
+            let someVar         = someObject.someProp
+            let someOtherVar    = someObject.someOtherProp
+
+    //  ... then we could change someObject's props behind the scenes, and
+    //  thereby
+    //
+    //  we could cause our variousVars to behave reactively. This would be
+    //  achieved simply by adjusting the getters and setters of someObject on a
+    //  per-prop basis. 
+    //  
+    //  The following expression, 
+
+        {
+            ( someObject.someProp.subPropOfSomeProp = 'a value' )
+            &&
+            Object.is (     someVar.subPropOfSomeProp, 
+                            someObject.someProp.subPropOfSomeProp
+                      )
+        }
+
+    //  ... would then be true. And furthermore, you could state,
+
+            someVar.anotherSubPropOfSomeProp = 3
+            console.log ( someObject.someProp.anotherSubPropOfSomeProp )
+
+    //  ... and get '3'.
+      
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (2.) If we were to state,
+
+            let someObject      = { someProp : {} }
+
+            Object.defineProperty ( someObject, 'someProp', { set :  
+                function ( value ) { this[ '_someProp' ] = value }
+            } )
+
+            Object.defineProperty ( someObject, 'someProp', { get :  
+                function () { return this[ '_someProp' ] }
+            } )
+
+    //  ... then the getter's return value of someObject.someProp is no longer
+    //  an object, and therefore stating,
+
+            someObject.someProp = 5
+            let someVar         = someObject.someProp
+            console.log ( someVar, someObject.someProp ) 
+
+    //  ... has passed to someVar (by value) only the output of the getter,
+
+            someObject.someProp = 7
+            console.log ( someVar, someObject.someProp ) 
+
+    //  ... and likewise, assignig a value to someVar will not trigger the
+    //  setter of someObject.someProp
+
+            someVar = 9
+            console.log ( someVar, someObject.someProp ) 
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (3.) If we were to state,
+
+            let someObject = { someProp : {  } } 
+
+            Object.defineProperties ( 
+                someObject.someProp, { 
+
+                    'subPropOfSomeProp' : { 
+
+                        'set' : function ( value ) { 
+                            console.log ('setter')
+                            this[ '_subPropOfSomeProp' ] = value 
+                        },
+                        'get' : function () { 
+                            return this[ '_subPropOfSomeProp' ]
+                        }
+                    } 
+                } 
+            )
+            
+            let someVar         = someObject.someProp
+
+    //  ... we would then be able to write getters and setters for
+    //  someVar.anotherSubPropOfSomeProp.
+    
+            someVar.subPropOfSomeProp = {}      // does triggers the setter
+            someVar.subPropOfSomeProp.new = 1   // does not! 
+
+    //  ... so as it turns out, we still can't intercept key creation, using
+    //  setters on the parent object. We might as well stick with (1.) above.
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (4.)We now turn to the Proxy class, which allows us to intercept key
+    //  creation on Proxied variables.
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+    
+
+            
+
+
+*/
 
 
 
