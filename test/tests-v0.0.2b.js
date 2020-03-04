@@ -5,10 +5,11 @@ import * as Exam from '../lib/classes/exam.js'
 new Exam.Exam ( { 
     config : {
         expand : {
-            initial_context : true,
+            initialContext : true,
             tests : {
                 legibility : true,
-            }
+            },
+            unexpectedCode : false
         }
     },
     concerns : [ 
@@ -320,36 +321,71 @@ new Exam.Exam ( {
     //      to discuss design of the operating structure, i.e. chronological
     //      processes, in this system.
     //
-    //      3.1.    Creating a Vertice 
-    //      3.2.    Reading a Vertice 
-    //      3.3.    Updating a Vertice 
-    //      3.4.    Deleting a Vertice
+    //      3.1.    Creating a Vertice  OK 
+    //      3.2.    Reading a Vertice   x
+    //      3.3.    Updating a Vertice  x
+    //      3.4.    Deleting a Vertice  x
     //
-    //      4.1.    Creating an Arrow
-    //      4.2.    Reading an Arrow
-    //      4.3.    Updating an Arrow
-    //      4.4.    Deleting an Arrow
+    //      4.1.    Creating an Arrow   x
+    //      4.2.    Reading an Arrow    x
+    //      4.3.    Updating an Arrow   x
+    //      4.4.    Deleting an Arrow   x
 
-/*
-        let newGraphServer = async function () {
-            
-            //  The server process should run recursively, listening for
-            //  messages. For now we should not bother with authentication or
-            //  authorisation.
+class Graph {
 
-            
+    // A graph server, actually.
 
-            //  return: a Pid of the new server process
 
+    createVertice ( ...args ) {
+        
+        switch ( args.length ) 
+        {
+            case 1:
+
+                if ( ! ( args[0] instanceof Array ) ) {
+                    
+                    // if it's not an array, call Datum on it
+                    let newDatum
+                    newDatum = new Datum ( args[0] )
+                    this.vertices [ newDatum.key ] = newDatum
+                    return new Proxy ( newDatum, {} )
+
+                } else {
+                
+                    // if it's an array, map it with Datum
+                    let newData = args[0].map( element => new Datum (element) )
+                    newData.forEach ( 
+                        datum => this.vertices [ datum.key ] = datum 
+                    )
+                    return newData.map ( datum => new Proxy ( datum, {} ) )
+                }
+
+            default:
+                throw Error (`Graph::create/n was called, where n's branch remained undefined `)
         }
 
-        let n1 = new Serl.Node('Node 1')
-        //let p1 = n1.spawn()
-        //let p2 = n2.spawn()
-        //console.log ( n1 )
-*/
+    }
+
+    constructor ( node ) {
+
+        // initialisers
+        this.vertices = {} 
+        
+        // aliases
+        this.c = this.createVertice 
+
+        if ( ! ( node instanceof Serl.Node ) ) {
+            
+            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
+            
+            node = new Serl.Node ( 'node created by Graph::constructor()' )
+        }
 
 
+        return { serlNode : node, graph : this }
+    }
+
+}
 class Datum {
 
     /*  End-developer variables that are reactive (has dependencies; dependent
@@ -378,9 +414,163 @@ class Datum {
      *  
      */
 
-    constructor () {
+    /** Example data:
+
+            "log": {
+                "reads": [
+                    1583344147570.897
+                ],
+                "updates": [
+                    [
+                        1583344147570.9019,
+                        "the relevant prop value"
+                    ]
+                ],
+                "deletes": [
+                    [
+                        1583344147570.9019,
+                        "the relevant prop value"
+                    ]
+                ]
+            },
+    */
+
+    /** Example data:
+
+            "algo": {
+                "_serlType": 5,
+                "v": "() => 1 + 2"
+            },
+    */
+
+    /** Example data:
+
+                "arrows": {
+                "ins": [
+                    {
+                        "ikey": "another prop key",
+                        "reads": [
+                            1583344147570.9219
+                        ],
+                        "updates": [
+                            [
+                                1583344147570.9219,
+                                "the relevant prop value"
+                            ]
+                        ],
+                        "deletes": [
+                            [
+                                1583344147570.9219,
+                                "the relevant prop value"
+                            ]
+                        ]
+                    }
+                ],
+                "outs": [
+                    {
+                        "okey": "another prop key",
+                        "reads": [
+                            1583344147570.9268
+                        ],
+                        "updates": [
+                            [
+                                1583344147570.932,
+                                "the relevant prop value"
+                            ]
+                        ],
+                        "deletes": [
+                            [
+                                1583344147570.9368,
+                                "the relevant prop value"
+                            ]
+                        ]
+                    }
+                ]
+            },
+    */
+
+    /** Example data:
+
+            "cache": {
+                "stale": false,
+                "hits": [
+                    1583344147570.9368
+                ],
+                "misses": [
+                    1583344147570.942
+                ]
+            }
+    */
+
+    constructor ( ...args ) {
+  
+        // initialisers
+        this.key
+        this.value
+        this.algo
+
+        this.arrows     = {
+            ins     : [],
+            outs    : []
+        }
+
+        this.log        = {
+            reads   : [],
+            updates : [],
+            deletes : []
+        }
+
+        this.cache      = {
+            stale   : false,
+            hits    : [],
+            misses  : []
+        }
+
+        switch ( args.length )
+        {
+            case 1 :
+                switch ( typeof args[0] ) 
+                {
+                    case 'string':
+                        this.key = args[0]
+                        return this
+
+                    case 'object':
+                        this.key = Object.keys( args[0] )[0]
+                        this.value = args[0][this.key]
+                        return this
+
+                    default:
+                        throw Error (`Datum::constructor/1 called on n, where
+                        (typeof n) is not 'string' or 'object';  branch undefined`)
+                }
+            default:
+                throw Error (`Datum::constructor/n called, branch for this arity is undefined.`)
+        }
     }
 }
+
+
+        let { serlNode : node, graph : graph2 } = new Graph 
+
+        let d1  = graph2.c ( [] )    
+
+        let d2  = graph2.c ( 'firstName' )              // key
+        let d3  = graph2.c ( { location : 'Malaysia' } )// key, value
+          
+        // list of keys, values
+        let [ d4, d5, d6 ]  =   graph2.c ( [             
+
+            { colour    : 'green' }, 
+            { spin      : undefined },
+            { flavours  : { flav1 : 'oj', flav2 : 'ok' } }
+
+        ] )
+  
+        // we shan't allow for now, graph.d ( object ) where object is a tree of
+        // data to be graphed because, it would be ambiguous which ways the
+        // arrows point, so, that will have to be implemented later, with
+        // qualifying parameters.
 
         let someVar = new Proxy ( {}, {
 
@@ -393,7 +583,21 @@ class Datum {
 
         })
 
-        return  JSON.stringify ( graph, SSON.replacer, 4 ) 
+        console.log (
+            //JSON.stringify ( graph, SSON.replacer, 4 ),
+            graph2.vertices,
+            {
+                d1:d1,
+                d2:d2,
+                d3:d3,
+                d4:d4,
+                d5:d5,
+                d6:d6
+            }
+        )
+        console.log ( d2 )
+
+        return  'placeholder'
 
     }, // code
     want : 'legible'
