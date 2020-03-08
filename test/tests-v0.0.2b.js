@@ -338,6 +338,20 @@ class Graph {
 
     createVertice ( ...args ) {
         
+        let datumProxyHandler = {
+
+            get: function( targ, prop, rcvr ) {
+
+                // Reflect.get ( targ, prop, rcvr )
+            },
+
+            set: function( targ, prop, val, rcvr) {
+
+                // Reflect.set ( targ, prop, val, rcvr )
+            }
+
+        }
+
         switch ( args.length ) 
         {
             case 1:
@@ -348,7 +362,7 @@ class Graph {
                     let newDatum
                     newDatum = new Datum ( args[0] )
                     this.vertices [ newDatum.key ] = newDatum
-                    return new Proxy ( newDatum, {} )
+                    return new Proxy ( newDatum, datumProxyHandler )
 
                 } else {
                 
@@ -357,7 +371,7 @@ class Graph {
                     newData.forEach ( 
                         datum => this.vertices [ datum.key ] = datum 
                     )
-                    return newData.map ( datum => new Proxy ( datum, {} ) )
+                    return newData.map ( datum => new Proxy ( datum, datumProxyHandler ) )
                 }
 
             default:
@@ -583,19 +597,45 @@ class Datum {
 
         })
 
+console.warn('3.1.    Creating a Vertice  OK ')
+/*      
         console.log (
-            //JSON.stringify ( graph, SSON.replacer, 4 ),
-            graph2.vertices,
-            {
+
+            JSON.stringify ( graph, SSON.replacer, 4 ),
+
+            graph2.vertices
+
+        )
+//*/
+
+console.warn('3.2.    Reading a Vertice   x')
+
+//*      
+        console.log ( {
                 d1:d1,
                 d2:d2,
                 d3:d3,
                 d4:d4,
                 d5:d5,
                 d6:d6
-            }
-        )
+        })
+
         console.log ( d2 )
+//*/
+
+console.warn('3.3.    Updating a Vertice  x')
+
+
+
+
+console.warn('3.4.    Deleting a Vertice  x')
+
+console.warn('4.1.    Creating an Arrow   x')
+console.warn('4.2.    Reading an Arrow    x')
+console.warn('4.3.    Updating an Arrow   x')
+console.warn('4.4.    Deleting an Arrow   x')
+
+
 
         return  'placeholder'
 
