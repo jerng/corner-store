@@ -331,62 +331,114 @@ new Exam.Exam ( {
     //      4.3.    Updating an Arrow   x
     //      4.4.    Deleting an Arrow   x
 
+// FIRST ATTEMPT:
+//  createVertice ( ...args ) {
+//      
+//      let datumProxyHandler = {
+
+//          get: function( targ, prop, rcvr ) {
+
+//              // reflect.get ( targ, prop, rcvr )
+//          },
+
+//          set: function( targ, prop, val, rcvr) {
+
+//              // reflect.set ( targ, prop, val, rcvr )
+//          }
+
+//      }
+
+//      switch ( args.length ) 
+//      {
+//          case 1:
+
+//              if ( ! ( args[0] instanceof Array ) ) {
+//                  
+//                  // if it's not an array, call Datum on it
+//                  let newDatum
+//                  newDatum = new Datum ( args[0] )
+
+//                  // Second attempt:
+//                  return this.vertices [ newDatum.key ] 
+//                          = new Proxy ( newDatum, datumProxyHandler )
+//                  
+//                  // First attempt:
+//                  // this.vertices [ newDatum.key ] = newDatum
+//                  // return new Proxy ( newDatum, datumProxyHandler )
+
+//              } else {
+//              
+//                  // if it's an array, map it with Datum
+//                  let newData = args[0].map( element => new Datum (element) )
+
+//                  // First attempt:
+//                  // newData.forEach ( 
+
+//                  //    datum => this.vertices [ datum.key ] = datum 
+//                  // )
+//                  // 
+//                  //return newData.map ( datum => new Proxy ( datum, datumProxyHandler ) )
+
+//                  // Second attempt:
+//                  return newData.map ( datum => { 
+//                      return this.vertices [ datum.key ] 
+//                              = new Proxy ( datum, datumProxyHandler ) 
+//                  } )
+//                  
+//              }
+
+//          default:
+//              throw Error (`Graph::create/n was called, where n's branch remained undefined `)
+//      }
+
+//  }
+
 class Graph {
 
     // A graph server, actually.
 
 
-    createVertice ( ...args ) {
-        
-        let datumProxyHandler = {
+    // SECOND ATTEMPT:
+    updateVertice ( ... args ) {
 
-            get: function( targ, prop, rcvr ) {
-
-                // Reflect.get ( targ, prop, rcvr )
-            },
-
-            set: function( targ, prop, val, rcvr) {
-
-                // Reflect.set ( targ, prop, val, rcvr )
-            }
-
-        }
+        let datum
 
         switch ( args.length ) 
         {
             case 1:
 
-                if ( ! ( args[0] instanceof Array ) ) {
-                    
-                    // if it's not an array, call Datum on it
-                    let newDatum
-                    newDatum = new Datum ( args[0] )
-                    this.vertices [ newDatum.key ] = newDatum
-                    return new Proxy ( newDatum, datumProxyHandler )
+                datum = new Datum ( args[0] )
+                this.vertices [ datum.key ] = datum 
 
-                } else {
-                
-                    // if it's an array, map it with Datum
-                    let newData = args[0].map( element => new Datum (element) )
-                    newData.forEach ( 
-                        datum => this.vertices [ datum.key ] = datum 
-                    )
-                    return newData.map ( datum => new Proxy ( datum, datumProxyHandler ) )
+                // redundant check?
+                if ( this.vertices [ datum.key ].value !== args[0] ) {
+                    throw Error (`Graph::updateVertice/1 called, update failed.`)
                 }
+                break
+
+            case 2:
+
+                datum = new Datum ( { [ args[0] ] : args[1] } )
+                this.vertices [ datum.key ] = datum 
+
+                // redundant check?
+                return  ( this.vertices [ datum.key ].value == args[1] ) 
+                        ? true
+                        : false
 
             default:
-                throw Error (`Graph::create/n was called, where n's branch remained undefined `)
+                throw Error (`Graph::updateVertice/n was called, where n's branch remained undefined `)
         }
-
     }
 
+    //  Graph()
     constructor ( node ) {
 
         // initialisers
         this.vertices = {} 
         
         // aliases
-        this.c = this.createVertice 
+        //this.c = this.createVertice 
 
         if ( ! ( node instanceof Serl.Node ) ) {
             
@@ -394,13 +446,40 @@ class Graph {
             
             node = new Serl.Node ( 'node created by Graph::constructor()' )
         }
+        
+        let graphServerHandler = {
 
+            apply : function( targ, thisArg, args) { 
+            
+                return targ() // the Graph instance
+            
+            },
 
-        return { serlNode : node, graph : this }
+            get : function( targ, prop, rcvr ) {
+                // reflect.get ( targ, prop, rcvr )
+
+                let g = targ()
+                return g [ prop ]
+            },
+
+            set : function( targ, prop, val, rcvr) {
+                // reflect.set ( targ, prop, val, rcvr )
+
+                //  Update Datum
+                //   L> Create Datum
+
+                let g = targ()
+                let temp = g.updateVertice ( prop, val )
+                console.log(temp)
+                return temp
+            }
+        }
+
+        return  {   serlNode    : node, 
+                    graphServer : new Proxy ( () => this, graphServerHandler ) }
     }
 
 }
-class Datum {
 
     /*  End-developer variables that are reactive (has dependencies; dependent
      *  on other variables) or active (has dependents; determining on other
@@ -516,6 +595,8 @@ class Datum {
             }
     */
 
+class Datum {
+
     constructor ( ...args ) {
   
         // initialisers
@@ -565,43 +646,47 @@ class Datum {
 }
 
 
-        let { serlNode : node, graph : graph2 } = new Graph 
+        let {   serlNode    : node, 
+                graphServer : gs     } = new Graph 
 
-        let d1  = graph2.c ( [] )    
+console.group ('3.0.    Creating a graph server')
+    console.log ( gs )
+    console.log ( gs() )
+    console.log ( gs().vertices )
+console.groupEnd ('3.0.    Creating a graph server')
 
-        let d2  = graph2.c ( 'firstName' )              // key
-        let d3  = graph2.c ( { location : 'Malaysia' } )// key, value
-          
-        // list of keys, values
-        let [ d4, d5, d6 ]  =   graph2.c ( [             
+console.group ('3.1.    Creating a Vertice  OK ')
+// Second attempt:
+    console.log ( gs.firstName )
+    console.log ( gs.location = 'Malaysia' )
+    console.log ( gs().vertices )
+console.groupEnd ('3.1.    Creating a Vertice  OK ')
 
-            { colour    : 'green' }, 
-            { spin      : undefined },
-            { flavours  : { flav1 : 'oj', flav2 : 'ok' } }
 
-        ] )
+// First attempt:
+//      let d1  = graph2.c ( [] )    
+
+//      let d2  = graph2.c ( 'firstName' )              // key
+//      let d3  = graph2.c ( { location : 'Malaysia' } )// key, value
+//        
+//      // list of keys, values
+//      let [ d4, d5, d6 ]  =   graph2.c ( [             
+
+//          { colour    : 'green' }, 
+//          { spin      : undefined },
+//          { flavours  : { flav1 : 'oj', flav2 : 'ok' } }
+
+//      ] )
   
         // we shan't allow for now, graph.d ( object ) where object is a tree of
         // data to be graphed because, it would be ambiguous which ways the
         // arrows point, so, that will have to be implemented later, with
         // qualifying parameters.
 
-        let someVar = new Proxy ( {}, {
-
-            get : function ( targ, prop, rcvr ) {
-                console.log ('Proxy.get()')
-            },
-
-            set: function(targ, prop, val, rcvr ) {
-            }
-
-        })
-
-console.warn('3.1.    Creating a Vertice  OK ')
 /*      
         console.log (
 
-            JSON.stringify ( graph, SSON.replacer, 4 ),
+//            JSON.stringify ( graph, SSON.replacer, 4 ),
 
             graph2.vertices
 
@@ -609,18 +694,17 @@ console.warn('3.1.    Creating a Vertice  OK ')
 //*/
 
 console.warn('3.2.    Reading a Vertice   x')
-
-//*      
+/*      
         console.log ( {
-                d1:d1,
-                d2:d2,
-                d3:d3,
-                d4:d4,
-                d5:d5,
-                d6:d6
+            d1:d1,
+            d2:d2,
+            d3:d3,
+            d4:d4,
+            d5:d5,
+            d6:d6
         })
 
-        console.log ( d2 )
+//        console.log ( d2 )
 //*/
 
 console.warn('3.3.    Updating a Vertice  x')
