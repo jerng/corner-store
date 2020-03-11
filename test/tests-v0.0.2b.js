@@ -458,8 +458,10 @@ class Graph {
             get : function( targ, prop, rcvr ) {
                 // reflect.get ( targ, prop, rcvr )
 
-                let g = targ()
-                return g [ prop ]
+                let graph = targ()
+                return  ( prop in graph.vertices )
+                        ?   graph.vertices[ prop ].value
+                        :   undefined
             },
 
             set : function( targ, prop, val, rcvr) {
@@ -468,14 +470,21 @@ class Graph {
                 //  Update Datum
                 //   L> Create Datum
 
-                let g = targ()
-                let temp = g.updateVertice ( prop, val )
-                console.log(temp)
-                return temp
+                // TODO: consider, enabling arrow creation via ['->'] or
+                // ['$pointsTo']
+
+                let graph = targ()
+
+                if ( graph[ prop ] === null ) {
+                }
+
+                let success = g.updateVertice ( prop, val )
+                return success // throws an error if falsy
             }
         }
 
         return  {   serlNode    : node, 
+                    graph       : this,
                     graphServer : new Proxy ( () => this, graphServerHandler ) }
     }
 
@@ -538,7 +547,7 @@ class Graph {
 
     /** Example data:
 
-                "arrows": {
+            "arrows": {
                 "ins": [
                     {
                         "ikey": "another prop key",
@@ -647,51 +656,52 @@ class Datum {
 
 
         let {   serlNode    : node, 
-                graphServer : gs     } = new Graph 
+                graph       : g,
+                graphServer : server } = new Graph 
 
 console.group ('3.0.    Creating a graph server')
-    console.log ( gs )
-    console.log ( gs() )
-    console.log ( gs().vertices )
+
+    console.log ( server )      //  a proxy around the Graph object
+    console.log ( server() )    //  the Graph object
+    console.log ( g )           //  the Graph object
+    console.log ( g.vertices )  //  empty object 
+
 console.groupEnd ('3.0.    Creating a graph server')
 
 console.group ('3.1.    Creating a Vertice  OK ')
-// Second attempt:
-    console.log ( gs.firstName )
-    console.log ( gs.location = 'Malaysia' )
-    console.log ( gs().vertices )
+
+    console.log ( server.location )
+        // undefined key
+
+    console.log ( ( server.location = 'Malaysia' ) )    
+        // '=' evaluates to the assigned value
+
+    console.log ( server.testundefined = undefined )     
+        //
+
+    console.log ( server.location )     
+        // 'Malaysia' 
+
+    console.log ( server.location.sublocation )
+        // assignment fails, evaluates to undefined 
+
+        // Values which are not objects, which will throw and error if you try
+        // to read their properties : null, undefined, 
+        
+    // console.log ( server.location.sublocation = 'Puchong' )
+
+    console.log ( server().vertices )   
+        // { key: Datum }
+
+    {
+        let a = { b : 'hi' }
+
+        a.b.c = 'bye'
+            // throws an error in strict mode; 
+            // fails silently in non-strict mode, while evaluating to 'bye'
+    }
+
 console.groupEnd ('3.1.    Creating a Vertice  OK ')
-
-
-// First attempt:
-//      let d1  = graph2.c ( [] )    
-
-//      let d2  = graph2.c ( 'firstName' )              // key
-//      let d3  = graph2.c ( { location : 'Malaysia' } )// key, value
-//        
-//      // list of keys, values
-//      let [ d4, d5, d6 ]  =   graph2.c ( [             
-
-//          { colour    : 'green' }, 
-//          { spin      : undefined },
-//          { flavours  : { flav1 : 'oj', flav2 : 'ok' } }
-
-//      ] )
-  
-        // we shan't allow for now, graph.d ( object ) where object is a tree of
-        // data to be graphed because, it would be ambiguous which ways the
-        // arrows point, so, that will have to be implemented later, with
-        // qualifying parameters.
-
-/*      
-        console.log (
-
-//            JSON.stringify ( graph, SSON.replacer, 4 ),
-
-            graph2.vertices
-
-        )
-//*/
 
 console.warn('3.2.    Reading a Vertice   x')
 /*      
@@ -709,12 +719,11 @@ console.warn('3.2.    Reading a Vertice   x')
 
 console.warn('3.3.    Updating a Vertice  x')
 
-
-
-
 console.warn('3.4.    Deleting a Vertice  x')
 
-console.warn('4.1.    Creating an Arrow   x')
+console.group('4.1.    Creating an Arrow   x')
+console.groupEnd('4.1.    Creating an Arrow   x')
+
 console.warn('4.2.    Reading an Arrow    x')
 console.warn('4.3.    Updating an Arrow   x')
 console.warn('4.4.    Deleting an Arrow   x')
