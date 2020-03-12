@@ -435,7 +435,8 @@ class Graph {
     constructor ( node ) {
 
         // initialisers
-        this.vertices = {} 
+        this.vertices   = {} 
+        this.parentKey  = Symbol()
         
         // aliases
         //this.c = this.createVertice 
@@ -455,15 +456,44 @@ class Graph {
             
             },
 
+
+
+            // graphServerHandler
             get : function( targ, prop, rcvr ) {
                 // reflect.get ( targ, prop, rcvr )
 
+// Values which are not objects, which will throw an error if you try
+// to read their properties : null, undefined, 
+        
                 let graph = targ()
-                return  ( prop in graph.vertices )
-                        ?   graph.vertices[ prop ].value
-                        :   undefined
+                
+console.log (`graphServerHandler.get : Try to get (${prop}).`)
+
+                if ( ! ( prop in graph.vertices ) )
+                { return undefined } 
+
+                // Wherein. if we find that the user has previously set an
+                // object as the value, we try to intercept the call to that
+                // object's properties...
+                else 
+                if  (   ( typeof graph.vertices[ prop ].value !== 'object' )
+                        || 
+                        ( !( graph.parentKey in graph.vertices[ prop ].value ) )
+                    ) 
+                { return graph.vertices[ prop ].value } 
+
+                else {
+console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
+
+                    return graph.vertices[ prop ].value
+                }
+
+
             },
 
+
+
+            // graphServerHandler
             set : function( targ, prop, val, rcvr) {
                 // reflect.set ( targ, prop, val, rcvr )
 
@@ -474,14 +504,91 @@ class Graph {
                 // ['$pointsTo']
 
                 let graph = targ()
+                let success
 
-                if ( graph[ prop ] === null ) {
-                }
+console.log ( `graphServerHandler.set : Try to set (${prop}) to (${val}).` ) 
 
-                let success = g.updateVertice ( prop, val )
+
+                // Wherein, if we find the user trying to set an object as the
+                // value, we want to intercept future calls to that object's
+                // properties...
+                if ( typeof val == 'object' ) {
+
+                    // IMPORTANT - subObject mark created
+                    val[ graph.parentKey ] = prop
+
+console.log ( `graphServerHandler.set : set a parentKey in (${prop})` ) 
+
+                    let subObjectHandler = {
+
+                        get : function( targ, prop, rcvr ) {
+
+console.log ( `subObjectHandler.set's receiver :`)
+console.log ( rcvr )
+console.log ( `subObjectHandler.get:  ${prop}` )
+
+                            // IMPORTANT - subObject mark read
+                            if ( graph.parentKey in targ ) {
+console.log ( `subObjectHandler.get found a parentKey in the (targ) argument` )
+                                
+                                let compoundKey =
+                                        targ[ graph.parentKey ]
+                                        + '.'
+                                        + prop
+
+                                return graph.vertices[ compoundKey ].value
+                            }
+
+                            return targ[ prop ]
+                        },
+
+                        set : function( targ, prop, val, rcvr) {
+console.log (`subObjectHandler.set:  ${prop}`)
+
+                            // IMPORTANT - subObject mark read
+                            if ( graph.parentKey in targ ) {
+                                
+console.log (`subObjectHandler.set:  found a parentKey in (${targ})`)
+                                let compoundKey = 
+                                        targ[ graph.parentKey ]
+                                        + '.'
+                                        + prop
+                                
+                                let success =   g.updateVertice ( 
+                                                    compoundKey, 
+                                                    val
+                                                )
+                               
+                                return success
+
+                            } 
+                            
+                            else {
+                            
+                                targ[ prop ] = val
+
+                                // redundant check?
+                                return  targ[ prop ] == val
+                            }
+                        
+                        } // subObjectHandler.set
+
+                    } // subObjectHandler
+
+                    success =   g.updateVertice (   
+                                    prop,
+                                    new Proxy ( val, subObjectHandler )
+                                )
+                } 
+                
+                
+                else { success = g.updateVertice ( prop, val ) }
+
                 return success // throws an error if falsy
-            }
-        }
+            
+            } // graphServerHandler.set
+        
+        } // graphServerHandler
 
         return  {   serlNode    : node, 
                     graph       : this,
@@ -670,36 +777,91 @@ console.groupEnd ('3.0.    Creating a graph server')
 
 console.group ('3.1.    Creating a Vertice  OK ')
 
+
     console.log ( server.location )
         // undefined key
 
     console.log ( ( server.location = 'Malaysia' ) )    
         // '=' evaluates to the assigned value
 
-    console.log ( server.testundefined = undefined )     
-        //
-
     console.log ( server.location )     
         // 'Malaysia' 
 
-    console.log ( server.location.sublocation )
-        // assignment fails, evaluates to undefined 
+console.group ('3.1.1.    Creating a name-spaced Vertice  X ')
+    console.log ( server.testundefined = undefined )     
+        // '=' evaluates to the assigned value
 
-        // Values which are not objects, which will throw and error if you try
-        // to read their properties : null, undefined, 
-        
-    // console.log ( server.location.sublocation = 'Puchong' )
-
-    console.log ( server().vertices )   
-        // { key: Datum }
+    console.log ( server.testundefined )     
+        // undefined
 
     {
+        /* Expect error:
+
+        console.log ( server.location.sublocation = 'Puchong' )
         let a = { b : 'hi' }
 
         a.b.c = 'bye'
             // throws an error in strict mode; 
             // fails silently in non-strict mode, while evaluating to 'bye'
+        //*/
     }
+
+    console.log ( server.address = {} )
+        // evaluates to the assigned value 
+
+        //  DEV:
+        //      When the subObject {} is set, it is also given a symbol key,
+        //          
+        //          [graph.parentKey] = 'address'
+
+
+
+
+
+
+
+
+
+
+
+
+
+console.group (`trying to set the value of a subObject`)
+
+    console.log ( `server.address.street = 'Jalan 1' : ${server.address.street = 'Jalan 1'}` )
+        // evaluates to the assigned value 
+        //
+        // Questionable behaviour.
+
+
+console.groupEnd (`trying to set the value of a subObject`)
+
+console.group (`trying to get the value of a subObject`)
+
+    console.log ( `server.address.street : ${server.address.street}` )
+
+console.groupEnd (`trying to get the value of a subObject`)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    console.log ( server().vertices )   
+        // { key: Datum }
+
+console.groupEnd ('3.1.1.    Creating a name-spaced Vertice  X ')
+
 
 console.groupEnd ('3.1.    Creating a Vertice  OK ')
 
