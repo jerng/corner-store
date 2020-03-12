@@ -450,6 +450,7 @@ class Graph {
         
         let graphServerHandler = {
 
+            // graphServerHandler
             apply : function( targ, thisArg, args) { 
             
                 return targ() // the Graph instance
@@ -483,6 +484,9 @@ console.log (`graphServerHandler.get : Try to get (${prop}).`)
                 { return graph.vertices[ prop ].value } 
 
                 else {
+                    //  Implicitly, 
+                    //      graph.vertices[ prop ].value[ graph.parentKey ]
+                    //  ... is set.
 console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
 
                     return graph.vertices[ prop ].value
@@ -521,9 +525,14 @@ console.log ( `graphServerHandler.set : set a parentKey in (${prop})` )
 
                     let subObjectHandler = {
 
+
+
+                        // subObjectHandler
                         get : function( targ, prop, rcvr ) {
 
-console.log ( `subObjectHandler.set's receiver :`)
+console.log ( `subObjectHandler.get's target :`)
+console.log ( targ )
+console.log ( `subObjectHandler.get's receiver :`)
 console.log ( rcvr )
 console.log ( `subObjectHandler.get:  ${prop}` )
 
@@ -536,12 +545,19 @@ console.log ( `subObjectHandler.get found a parentKey in the (targ) argument` )
                                         + '.'
                                         + prop
 
+console.log (`subObjectHandler.get: will get a compoundKey (${compoundKey})`)
+
+console.log ( graph.vertices[ compoundKey ] )
+
                                 return graph.vertices[ compoundKey ].value
                             }
 
                             return targ[ prop ]
                         },
 
+
+
+                        // subObjectHandler
                         set : function( targ, prop, val, rcvr) {
 console.log (`subObjectHandler.set:  ${prop}`)
 
@@ -554,10 +570,28 @@ console.log (`subObjectHandler.set:  found a parentKey in (${targ})`)
                                         + '.'
                                         + prop
                                 
-                                let success =   g.updateVertice ( 
-                                                    compoundKey, 
-                                                    val
-                                                )
+                                let success
+
+                                // this code seems redundant, with
+                                // graphServerHandler's code, but we'll just
+                                // roll with it for now...
+                                if ( typeof val == 'object' ) {
+                                    
+                                    // IMPORTANT - subObject mark created
+                                    val[ graph.parentKey ] = compoundKey 
+
+                                    success = g.updateVertice ( 
+                                        compoundKey, 
+                                        new Proxy ( val, subObjectHandler )
+                                    )
+console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a proxied value`)
+                                }
+                                else { 
+                                    success 
+                                        = g.updateVertice ( compoundKey, val )
+
+console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
+                                } 
                                
                                 return success
 
@@ -766,7 +800,7 @@ class Datum {
                 graph       : g,
                 graphServer : server } = new Graph 
 
-console.group ('3.0.    Creating a graph server')
+console.groupCollapsed ('3.0.    Creating a graph server')
 
     console.log ( server )      //  a proxy around the Graph object
     console.log ( server() )    //  the Graph object
@@ -787,7 +821,7 @@ console.group ('3.1.    Creating a Vertice  OK ')
     console.log ( server.location )     
         // 'Malaysia' 
 
-console.group ('3.1.1.    Creating a name-spaced Vertice  X ')
+console.groupCollapsed ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
     console.log ( server.testundefined = undefined )     
         // '=' evaluates to the assigned value
 
@@ -814,24 +848,10 @@ console.group ('3.1.1.    Creating a name-spaced Vertice  X ')
         //          
         //          [graph.parentKey] = 'address'
 
-
-
-
-
-
-
-
-
-
-
-
-
 console.group (`trying to set the value of a subObject`)
 
     console.log ( `server.address.street = 'Jalan 1' : ${server.address.street = 'Jalan 1'}` )
         // evaluates to the assigned value 
-        //
-        // Questionable behaviour.
 
 
 console.groupEnd (`trying to set the value of a subObject`)
@@ -842,28 +862,49 @@ console.group (`trying to get the value of a subObject`)
 
 console.groupEnd (`trying to get the value of a subObject`)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     console.log ( server().vertices )   
         // { key: Datum }
 
-console.groupEnd ('3.1.1.    Creating a name-spaced Vertice  X ')
+console.groupEnd ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
 
+console.groupCollapsed ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
+
+    console.groupCollapsed (`trying to set the value of a subSubObject`)
+
+        console.warn ( `server.address.unit = {} : ${server.address.unit = {}}` )
+            // evaluates to the assigned value 
+            //
+            // Questionable behaviour.
+
+        console.warn ( `server.address.unit.part1 = 'The' : ${
+            server.address.unit.part1 = 'The'
+        }` )
+
+    console.groupEnd (`trying to set the value of a subSubObject`)
+
+    console.group (`trying to get the value of a subSubObject`)
+        console.log ( `server.address.unit.part1 : ${server.address.unit.part1}` )
+    console.groupEnd (`trying to get the value of a subSubObject`)
+
+    {
+        server.address.unit.part2 = {}
+        server.address.unit.part2.somethingElse = 'Home'
+        console.log ( server.address.unit.part2.somethingElse )
+    }
+
+console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
+
+console.group ('3.1.3.    Creating a tree of name-spaced Vertice (depth>1) X')
+
+
+console.groupEnd ('3.1.3.    Creating a tree of name-spaced Vertice (depth>1) X')
+
+console.error ( `WIP HERE` ) 
+    console.log ( server().vertices )   
 
 console.groupEnd ('3.1.    Creating a Vertice  OK ')
+
+console.warn (`3.1. What about when you set a deep object, and try to get its deep fields later?`)
 
 console.warn('3.2.    Reading a Vertice   x')
 /*      
