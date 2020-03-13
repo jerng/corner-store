@@ -243,7 +243,7 @@ window.Graph = class Graph {
         
                 let graph = targGraphReturner()
                 
-console.log (`graphServerHandler.get : Try to get the vertice (${prop}).`)
+console.log (`graphServerHandler.get : Try to get the vertex (${prop}).`)
 
                 if ( ! ( prop in graph.vertices ) )
                 { return undefined } 
@@ -285,7 +285,7 @@ console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
                 let graph = targGraphReturner()
                 let success
 
-console.log ( `graphServerHandler.set : Try to set the vertice (${prop}) to (${val}).` ) 
+console.log ( `graphServerHandler.set : Try to set the vertex (${prop}) to (${val}).` ) 
 
 
                 // Wherein, if we find the user trying to set an object as the
@@ -301,7 +301,7 @@ console.log ( `graphServerHandler.set : Try to set the vertice (${prop}) to (${v
                     valReturner[ graph.parentKey ] = prop
 
 console.log ( `graphServerHandler.set : set a Symbol Key (value = parentKey) in the value of the
-vertice (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
+vertex (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
 
                     let verticeValueHandler = {
 
@@ -432,9 +432,9 @@ console.log ( `verticeValueHandler.get the prop:  ${prop}` )
                                         + '.'
                                         + prop
 
-console.group (`verticeValueHandler.get: will get a compoundKeyed vertice (${compoundKey}) :`)
+console.group (`verticeValueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
 console.log ( graph.vertices[ compoundKey ] )
-console.groupEnd (`verticeValueHandler.get: will get a compoundKeyed vertice (${compoundKey}) :`)
+console.groupEnd (`verticeValueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
 
                                 return ( compoundKey in graph.vertices )
                                     ? graph.vertices[ compoundKey ].value
@@ -675,8 +675,8 @@ new Exam.Exam ( {
         } )
 
     //      2.1.    As this seems to be satisfactory so far, we proceed to add a
-    //          log to this vertice. Upon its creation, a vertice can log its
-    //          first update. Upon deletion, a vertice can log a soft-delete
+    //          log to this vertice. Upon its creation, a vertex can log its
+    //          first update. Upon deletion, a vertex can log a soft-delete
     //          date.
     //              
     //          As this seems to be satisfactory so far, we proceed to a cache
