@@ -331,68 +331,6 @@ new Exam.Exam ( {
     //      4.3.    Updating an Arrow   x
     //      4.4.    Deleting an Arrow   x
 
-// FIRST ATTEMPT:
-//  createVertice ( ...args ) {
-//      
-//      let datumProxyHandler = {
-
-//          get: function( targ, prop, rcvr ) {
-
-//              // reflect.get ( targ, prop, rcvr )
-//          },
-
-//          set: function( targ, prop, val, rcvr) {
-
-//              // reflect.set ( targ, prop, val, rcvr )
-//          }
-
-//      }
-
-//      switch ( args.length ) 
-//      {
-//          case 1:
-
-//              if ( ! ( args[0] instanceof Array ) ) {
-//                  
-//                  // if it's not an array, call Datum on it
-//                  let newDatum
-//                  newDatum = new Datum ( args[0] )
-
-//                  // Second attempt:
-//                  return this.vertices [ newDatum.key ] 
-//                          = new Proxy ( newDatum, datumProxyHandler )
-//                  
-//                  // First attempt:
-//                  // this.vertices [ newDatum.key ] = newDatum
-//                  // return new Proxy ( newDatum, datumProxyHandler )
-
-//              } else {
-//              
-//                  // if it's an array, map it with Datum
-//                  let newData = args[0].map( element => new Datum (element) )
-
-//                  // First attempt:
-//                  // newData.forEach ( 
-
-//                  //    datum => this.vertices [ datum.key ] = datum 
-//                  // )
-//                  // 
-//                  //return newData.map ( datum => new Proxy ( datum, datumProxyHandler ) )
-
-//                  // Second attempt:
-//                  return newData.map ( datum => { 
-//                      return this.vertices [ datum.key ] 
-//                              = new Proxy ( datum, datumProxyHandler ) 
-//                  } )
-//                  
-//              }
-
-//          default:
-//              throw Error (`Graph::create/n was called, where n's branch remained undefined `)
-//      }
-
-//  }
-
 class Graph {
 
     // A graph server, actually.
@@ -448,27 +386,29 @@ class Graph {
             node = new Serl.Node ( 'node created by Graph::constructor()' )
         }
         
+        let graphReturner = () => this
+
         let graphServerHandler = {
 
             // graphServerHandler
-            apply : function( targ, thisArg, args) { 
+            apply : function( targGraphReturner, thisArg, args) { 
             
-                return targ() // the Graph instance
+                return targGraphReturner() // the Graph instance
             
             },
 
 
 
             // graphServerHandler
-            get : function( targ, prop, rcvr ) {
+            get : function( targGraphReturner, prop, rcvr ) {
                 // reflect.get ( targ, prop, rcvr )
 
 // Values which are not objects, which will throw an error if you try
 // to read their properties : null, undefined, 
         
-                let graph = targ()
+                let graph = targGraphReturner()
                 
-console.log (`graphServerHandler.get : Try to get (${prop}).`)
+console.log (`graphServerHandler.get : Try to get the vertice (${prop}).`)
 
                 if ( ! ( prop in graph.vertices ) )
                 { return undefined } 
@@ -498,7 +438,7 @@ console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
 
 
             // graphServerHandler
-            set : function( targ, prop, val, rcvr) {
+            set : function( targGraphReturner, prop, val, rcvr) {
                 // reflect.set ( targ, prop, val, rcvr )
 
                 //  Update Datum
@@ -507,10 +447,10 @@ console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
                 // TODO: consider, enabling arrow creation via ['->'] or
                 // ['$pointsTo']
 
-                let graph = targ()
+                let graph = targGraphReturner()
                 let success
 
-console.log ( `graphServerHandler.set : Try to set (${prop}) to (${val}).` ) 
+console.log ( `graphServerHandler.set : Try to set the vertice (${prop}) to (${val}).` ) 
 
 
                 // Wherein, if we find the user trying to set an object as the
@@ -518,55 +458,169 @@ console.log ( `graphServerHandler.set : Try to set (${prop}) to (${val}).` )
                 // properties...
                 if ( typeof val == 'object' ) {
 
+                    let valReturner = () => val
+                        // Because we want to Proxy this, and have an (apply)
+                        // handler: the proxied value must be a function.
+
                     // IMPORTANT - subObject mark created
-                    val[ graph.parentKey ] = prop
+                    valReturner[ graph.parentKey ] = prop
 
-console.log ( `graphServerHandler.set : set a parentKey in (${prop})` ) 
+console.log ( `graphServerHandler.set : set a Symbol Key (value = parentKey) in the value of the
+vertice (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
 
-                    let subObjectHandler = {
+                    let verticeValueHandler = {
 
 
+                            //  When, a SERVER.key() is called...
+                            //  ... it refers to the underlying Graph object,
+                            //  and looks at... 
+                            //
+                            //      graph.vertices['key'] => a Datum    
+                            //      
+                            //  ... where...
+                            //
+                            //      datum.value
+                            //
+                            //  ... may be  (1.) a non-object, or
+                            //              (2.) a Proxy
+                            //
+                            //  ... where the proxy's target is a valReturner of
+                            //  the form...
+                            //
+                            //      () => val
+                            //
+                            //  ... where...
+                            //
+                            //      valReturner[graph.parentKey] => 'key'
+                            //
+                            //  ... a Symbol key may or may not be set which,
+                            //  WHEN SET, marks the val as an object which has
+                            //  properties tracked in the graph via compound
+                            //  keys of the form...
+                            //
+                            //      graph.vertices[ 'key' + '.' + subKey ]
+                            //
+                            //////////////////////////////////////////////////
 
-                        // subObjectHandler
-                        get : function( targ, prop, rcvr ) {
+                        // verticeValueHandler
+                        apply : function( targVerticeValReturner, thisArg, args) { 
 
-console.log ( `subObjectHandler.get's target :`)
-console.log ( targ )
-console.log ( `subObjectHandler.get's receiver :`)
+                            //////////////////////////////////////////////////
+                            //
+                            //  ** BASED ON THE CONTEXT GIVEN ABOVE **
+                            //
+                            //  This code runs upon calls of the form:
+                            //
+                            //      SERVER.key.subKey.subSubKey()
+                            //
+                            //  ... where ...
+                            //
+                            //  thisArg is the proxied parent valReturner, where...
+                            //
+                            //              valReturner[graph.parentKey] => 
+                            //                  'key.subKey'
+                            //  ;
+                            //  targ    is the child valReturner, where ...
+                            //
+                            //              valReturner[graph.parentKey] =>
+                            //                  'key.subKey.subSubKey'
+                            //  ;
+                            //
+                            //  targ()  will return the value of the "original
+                            //          object" set at...
+                            //
+                            //              graph.vertices['key.subKey']
+                            //  ;
+                            //
+                            //  ... and here what we want the code to do, is
+                            //  to take the "original object", update it based
+                            //  on those of its properties were tracked by the
+                            //  graph, and then to return the updated object to
+                            //  the user.
+                            
+console.log ( `verticeValueHandler.apply : ` )                          
+console.log ( targVerticeValReturner[graph.parentKey] )
+
+                            let initial         =   targVerticeValReturner()                         
+                            let tempGraphServer =   new Proxy ( 
+                                                            graphReturner, 
+                                                            graphServerHandler 
+                                                        )
+                            let subKeys         =   
+                                Object
+                                    .keys ( graph.vertices )
+                                    .reduce (
+
+    (acc, cur, ind, arr) => 
+    {
+        if (cur.startsWith ( targVerticeValReturner[ graph.parentKey ] + '.') ) 
+        {   
+            let key = cur.slice (
+                targVerticeValReturner[graph.parentKey].length + 1
+            )
+            if ( ! key.includes ( '.') )
+            {
+                acc[key] =  (   ( typeof tempGraphServer[cur] == 'function' )
+                                &&
+                                ( graph.parentKey in tempGraphServer[cur] )
+                            )   
+                            ? tempGraphServer[cur]() 
+                            : tempGraphServer[cur]
+            }
+        }
+        return acc
+        
+    }
+    
+                            , initial ) // reduce()
+
+                            return initial
+                        },
+
+                        // verticeValueHandler
+                        get : function( targVerticeValReturner, prop, rcvr ) {
+
+//console.log ( `verticeValueHandler.get's target :`)
+//console.log ( targ )
+console.group ( `verticeValueHandler.get's receiver :`)
 console.log ( rcvr )
-console.log ( `subObjectHandler.get:  ${prop}` )
+console.groupEnd ( `verticeValueHandler.get's receiver :`)
+
+console.log ( `verticeValueHandler.get the prop:  ${prop}` )
 
                             // IMPORTANT - subObject mark read
-                            if ( graph.parentKey in targ ) {
-console.log ( `subObjectHandler.get found a parentKey in the (targ) argument` )
+                            if ( graph.parentKey in targVerticeValReturner ) {
+//console.log ( `verticeValueHandler.get found a parentKey in the (targ) argument` )
                                 
                                 let compoundKey =
-                                        targ[ graph.parentKey ]
+                                        targVerticeValReturner[ graph.parentKey ]
                                         + '.'
                                         + prop
 
-console.log (`subObjectHandler.get: will get a compoundKey (${compoundKey})`)
-
+console.group (`verticeValueHandler.get: will get a compoundKeyed vertice (${compoundKey}) :`)
 console.log ( graph.vertices[ compoundKey ] )
+console.groupEnd (`verticeValueHandler.get: will get a compoundKeyed vertice (${compoundKey}) :`)
 
-                                return graph.vertices[ compoundKey ].value
+                                return ( compoundKey in graph.vertices )
+                                    ? graph.vertices[ compoundKey ].value
+                                    : undefined
                             }
 
-                            return targ[ prop ]
+                            else { return targVerticeValReturner[ prop ] }
                         },
 
 
 
-                        // subObjectHandler
-                        set : function( targ, prop, val, rcvr) {
-console.log (`subObjectHandler.set:  ${prop}`)
+                        // verticeValueHandler
+                        set : function( targVerticeValReturner, prop, val, rcvr) {
+console.log (`verticeValueHandler.set the prop : (${prop})`)
 
                             // IMPORTANT - subObject mark read
-                            if ( graph.parentKey in targ ) {
+                            if ( graph.parentKey in targVerticeValReturner ) {
                                 
-console.log (`subObjectHandler.set:  found a parentKey in (${targ})`)
+console.log (`verticeValueHandler.set:  found a parentKey in (${targVerticeValReturner})`)
                                 let compoundKey = 
-                                        targ[ graph.parentKey ]
+                                        targVerticeValReturner[ graph.parentKey ]
                                         + '.'
                                         + prop
                                 
@@ -577,20 +631,24 @@ console.log (`subObjectHandler.set:  found a parentKey in (${targ})`)
                                 // roll with it for now...
                                 if ( typeof val == 'object' ) {
                                     
-                                    // IMPORTANT - subObject mark created
-                                    val[ graph.parentKey ] = compoundKey 
+                                    let valReturner = () => val
+                                // Because we want to Proxy this, and have an (apply)
+                                // handler: the proxied value must be a function.
+                                // IMPORTANT - subObject mark created
+
+                                    valReturner[ graph.parentKey ] = compoundKey 
 
                                     success = g.updateVertice ( 
                                         compoundKey, 
-                                        new Proxy ( val, subObjectHandler )
+                                        new Proxy ( valReturner, verticeValueHandler )
                                     )
-console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a proxied value`)
+console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a proxied value`)
                                 }
                                 else { 
                                     success 
                                         = g.updateVertice ( compoundKey, val )
 
-console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
+console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
                                 } 
                                
                                 return success
@@ -599,21 +657,22 @@ console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a no
                             
                             else {
                             
-                                targ[ prop ] = val
+                                targVerticeValReturner[ prop ] = val
 
                                 // redundant check?
-                                return  targ[ prop ] == val
+                                return  targVerticeValReturner[ prop ] == val
                             }
                         
-                        } // subObjectHandler.set
+                        } // verticeValueHandler.set
 
-                    } // subObjectHandler
+                    } // verticeValueHandler
 
                     success =   g.updateVertice (   
                                     prop,
-                                    new Proxy ( val, subObjectHandler )
-                                )
-                } 
+                                    new Proxy ( valReturner, verticeValueHandler )
+                                ) // FIXME UNCERTAIN CHANGES 
+                
+                } // graphServerHandler.set, if ( typeof val == 'object' )
                 
                 
                 else { success = g.updateVertice ( prop, val ) }
@@ -624,9 +683,10 @@ console.log (`subObjectHandler.set: set a compoundKey (${compoundKey}) with a no
         
         } // graphServerHandler
 
+
         return  {   serlNode    : node, 
                     graph       : this,
-                    graphServer : new Proxy ( () => this, graphServerHandler ) }
+                    graphServer : new Proxy ( graphReturner, graphServerHandler ) }
     }
 
 }
@@ -798,113 +858,181 @@ class Datum {
 
         let {   serlNode    : node, 
                 graph       : g,
-                graphServer : server } = new Graph 
+                graphServer : SERVER } = new Graph 
 
-console.groupCollapsed ('3.0.    Creating a graph server')
+console.group ('3.0.    Creating a graph server')
 
-    console.log ( server )      //  a proxy around the Graph object
-    console.log ( server() )    //  the Graph object
+    console.log ( SERVER )      //  a proxy around the Graph object
+    console.log ( SERVER() )    //  the Graph object
     console.log ( g )           //  the Graph object
     console.log ( g.vertices )  //  empty object 
 
 console.groupEnd ('3.0.    Creating a graph server')
 
-console.group ('3.1.    Creating a Vertice  OK ')
+{   console.group ('3.1.    Creating a Vertice  OK ')
 
+    {   console.groupCollapsed ( `3.1.0. no namespaces` )
+        console.log ( SERVER.location )
+            // undefined key
 
-    console.log ( server.location )
-        // undefined key
+        console.log ( ( SERVER.location = 'Malaysia' ) )    
+            // '=' evaluates to the assigned value
 
-    console.log ( ( server.location = 'Malaysia' ) )    
-        // '=' evaluates to the assigned value
+        console.log ( SERVER.location )     
+            // 'Malaysia' 
 
-    console.log ( server.location )     
-        // 'Malaysia' 
+        console.log ( SERVER.testundefined = undefined )     
+            // '=' evaluates to the assigned value
 
-console.groupCollapsed ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
-    console.log ( server.testundefined = undefined )     
-        // '=' evaluates to the assigned value
+        console.log ( SERVER.testundefined )     
+            // undefined
 
-    console.log ( server.testundefined )     
-        // undefined
+        console.log ( SERVER.address = {} )
+            // evaluates to the final, proxy-handled, assigned value 
 
-    {
-        /* Expect error:
+            //  DEV:
+            //      When the subObject {} is set, it is also given a symbol key,
+            //          
+            //          [graph.parentKey] = 'address'
 
-        console.log ( server.location.sublocation = 'Puchong' )
-        let a = { b : 'hi' }
-
-        a.b.c = 'bye'
-            // throws an error in strict mode; 
-            // fails silently in non-strict mode, while evaluating to 'bye'
-        //*/
+        console.groupEnd ( `3.1.0. no namespaces` )
     }
+       
+    {   console.groupCollapsed ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
 
-    console.log ( server.address = {} )
-        // evaluates to the assigned value 
+        {   //  Expect error:
 
-        //  DEV:
-        //      When the subObject {} is set, it is also given a symbol key,
-        //          
-        //          [graph.parentKey] = 'address'
+        //  console.log ( SERVER.location.sublocation = 'Puchong' )
+        //  let a = { b : 'hi' }
 
-console.group (`trying to set the value of a subObject`)
+        //  a.b.c = 'bye'
+                // throws an error in strict mode; 
+                // fails silently in non-strict mode, while evaluating to 'bye'
+        }
 
-    console.log ( `server.address.street = 'Jalan 1' : ${server.address.street = 'Jalan 1'}` )
-        // evaluates to the assigned value 
+        {   console.group (`trying to set the value of a subObject`)
+            console.warn ( `SERVER.address.street = 'Jalan 1' : ${SERVER.address.street = 'Jalan 1'}` )
+                // evaluates to the assigned value 
+            console.groupEnd (`trying to set the value of a subObject`)
+        }
 
+        {   console.group (`trying to get the value of a subObject`)
+            console.warn ( `SERVER.address.street : ${SERVER.address.street}` )
+            console.groupEnd (`trying to get the value of a subObject`)
+        }
+        console.groupEnd ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
+    }
+        
+    {   console.group ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
 
-console.groupEnd (`trying to set the value of a subObject`)
+        {   console.groupCollapsed (`trying to set the value of a subSubObject`)
 
-console.group (`trying to get the value of a subObject`)
+            console.warn ( `SERVER.address.unit = {} : ${SERVER.address.unit = {}}` )
+                // evaluates to the assigned value 
+                //
+                // Questionable behaviour.
 
-    console.log ( `server.address.street : ${server.address.street}` )
+            console.warn ( `SERVER.address.unit.part1 = 'The' : ${
+                SERVER.address.unit.part1 = 'The'
+            }` )
 
-console.groupEnd (`trying to get the value of a subObject`)
+            console.groupEnd (`trying to set the value of a subSubObject`)
+        }
 
-    console.log ( server().vertices )   
-        // { key: Datum }
+        {   console.groupCollapsed (`trying to get the value of a subSubObject`)
+            console.log ( `SERVER.address.unit.part1 : ${SERVER.address.unit.part1}` )
+            console.groupEnd (`trying to get the value of a subSubObject`)
+        }
 
-console.groupEnd ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
-
-console.groupCollapsed ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
-
-    console.groupCollapsed (`trying to set the value of a subSubObject`)
-
-        console.warn ( `server.address.unit = {} : ${server.address.unit = {}}` )
-            // evaluates to the assigned value 
+        {   console.groupCollapsed (`deeper still?`) 
+        
+            // each of these below is a discrete test
+            
             //
-            // Questionable behaviour.
+            console.warn ( 
+                SERVER.function0 = () => 'function0 has returned'
+            )
+            console.warn ( SERVER.function0() )
 
-        console.warn ( `server.address.unit.part1 = 'The' : ${
-            server.address.unit.part1 = 'The'
-        }` )
+            //
+            console.warn ( 
+                SERVER.address.function1 = () => 'function1 has returned'
+            )
+            console.warn ( SERVER.address.function1() )
 
-    console.groupEnd (`trying to set the value of a subSubObject`)
+            //
+            console.warn ( 
+                SERVER.address.unit.function2 = () => 'function2 has returned'
+            )
+            console.warn ( SERVER.address.unit.function2() )
 
-    console.group (`trying to get the value of a subSubObject`)
-        console.log ( `server.address.unit.part1 : ${server.address.unit.part1}` )
-    console.groupEnd (`trying to get the value of a subSubObject`)
+            //
+            SERVER.address.unit.part2 = {}
+            SERVER.address.unit.part2.somethingElse = 'Home'
+            SERVER.address.unit.part2.part2a = {}
+            SERVER.address.unit.part2.part2a.deeperKey = '1,2,3 here is a deeper key'
+            
+            //
+            console.warn ( SERVER.address.unit.part2.somethingElse )
+            
+            //
+            console.warn ( SERVER.address.unit.part2.undefinedKey )
+            
+            console.groupEnd (`deeper still?`)
+        }
 
-    {
-        server.address.unit.part2 = {}
-        server.address.unit.part2.somethingElse = 'Home'
-        console.log ( server.address.unit.part2.somethingElse )
+        {   console.groupCollapsed (`Tree-extraction from the graph server`) 
+            
+            //
+            console.warn ( SERVER.address.unit.part2 )
+            
+            //
+            console.warn ( SERVER.address.unit.part2() )
+
+            console.groupEnd (`Tree-extraction from the graph server`) 
+        }
+
+        {   console.groupCollapsed (`Assigning from the graph server?`) 
+
+            //
+            let someVar = SERVER.address.unit.part2
+            
+            //
+            console.warn ( 
+                `These expressions return the proxied values`,
+                someVar, 
+                someVar.part2a 
+            )
+
+            //
+            console.warn ( 
+                `These expressions return the extracted trees`, 
+                someVar(),
+                someVar.part2a()
+            )
+            
+            //
+            console.warn ( 
+                `This expression returns a simple value`,
+                someVar.part2a.deeperKey 
+            )  
+
+            console.groupEnd (`Assigning from the graph server?`) 
+        }
+        console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
     }
 
-console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
+    console.group ('3.1.3.    Tree-insertion into the graph server')
+    console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
 
-console.group ('3.1.3.    Creating a tree of name-spaced Vertice (depth>1) X')
-
-
-console.groupEnd ('3.1.3.    Creating a tree of name-spaced Vertice (depth>1) X')
-
-console.error ( `WIP HERE` ) 
-    console.log ( server().vertices )   
-
-console.groupEnd ('3.1.    Creating a Vertice  OK ')
+    {   console.error ( `WIP HERE` ) 
+        console.log ( SERVER().vertices )  
+    }
+    console.groupEnd ('3.1.    Creating a Vertice  OK ')
+}
 
 console.warn (`3.1. What about when you set a deep object, and try to get its deep fields later?`)
+console.warn (`3.1. What about when you set another variable, to refer to a gs or a gs vertice?`)
 
 console.warn('3.2.    Reading a Vertice   x')
 /*      
