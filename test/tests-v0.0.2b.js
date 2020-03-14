@@ -2,6 +2,125 @@ import * as Serl from   '../lib/serl.js'
 import * as SSON from   '../lib/sson/sson.js'
 import * as Exam from '../lib/classes/exam.js'
 
+///////////////////////////////////////////////////////////////////////////////
+/*  
+
+    Discussion on eDX / end-developer experience scenarios, and how we end up
+    using the Proxy class:
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (1.) If we were to state,
+
+            let someObject      = { someProp : {}, someOtherProp : 2 }
+            let someVar         = someObject.someProp
+            let someOtherVar    = someObject.someOtherProp
+
+    //  ... then we could change someObject's props behind the scenes, and
+    //  thereby
+    //
+    //  we could cause our variousVars to behave reactively. This would be
+    //  achieved simply by adjusting the getters and setters of someObject on a
+    //  per-prop basis. 
+    //  
+    //  The following expression, 
+
+        {
+            ( someObject.someProp.subPropOfSomeProp = 'a value' )
+            &&
+            Object.is (     someVar.subPropOfSomeProp, 
+                            someObject.someProp.subPropOfSomeProp
+                      )
+        }
+
+    //  ... would then be true. And furthermore, you could state,
+
+            someVar.anotherSubPropOfSomeProp = 3
+            console.log ( someObject.someProp.anotherSubPropOfSomeProp )
+
+    //  ... and get '3'.
+      
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (2.) If we were to state,
+
+            let someObject      = { someProp : {} }
+
+            Object.defineProperty ( someObject, 'someProp', { set :  
+                function ( value ) { this[ '_someProp' ] = value }
+            } )
+
+            Object.defineProperty ( someObject, 'someProp', { get :  
+                function () { return this[ '_someProp' ] }
+            } )
+
+    //  ... then the getter's return value of someObject.someProp is no longer
+    //  an object, and therefore stating,
+
+            someObject.someProp = 5
+            let someVar         = someObject.someProp
+            console.log ( someVar, someObject.someProp ) 
+
+    //  ... has passed to someVar (by value) only the output of the getter,
+
+            someObject.someProp = 7
+            console.log ( someVar, someObject.someProp ) 
+
+    //  ... and likewise, assignig a value to someVar will not trigger the
+    //  setter of someObject.someProp
+
+            someVar = 9
+            console.log ( someVar, someObject.someProp ) 
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (3.) If we were to state,
+
+            let someObject = { someProp : {  } } 
+
+            Object.defineProperties ( 
+                someObject.someProp, { 
+
+                    'subPropOfSomeProp' : { 
+
+                        'set' : function ( value ) { 
+                            console.log ('setter')
+                            this[ '_subPropOfSomeProp' ] = value 
+                        },
+                        'get' : function () { 
+                            return this[ '_subPropOfSomeProp' ]
+                        }
+                    } 
+                } 
+            )
+            
+            let someVar         = someObject.someProp
+
+    //  ... we would then be able to write getters and setters for
+    //  someVar.anotherSubPropOfSomeProp.
+    
+            someVar.subPropOfSomeProp = {}      // does triggers the setter
+            someVar.subPropOfSomeProp.new = 1   // does not! 
+
+    //  ... so as it turns out, we still can't intercept key creation, using
+    //  setters on the parent object. We might as well stick with (1.) above.
+
+///////////////////////////////////////////////////////////////////////////////
+
+    //  (4.)We now turn to the Proxy class, which allows us to intercept key
+    //  creation on Proxied variables.
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+    
+
+            
+
+
+*/
+
+
     /*  End-developer variables that are reactive (has dependencies; dependent
      *  on other variables) or active (has dependents; determining on other
      *  variables), should be instances of this class.
@@ -117,6 +236,7 @@ import * as Exam from '../lib/classes/exam.js'
     */
 
 window.Datum = class Datum {
+    // Do not declare fields here! (non-standard feature)
 
     constructor ( ...args ) {
   
@@ -167,12 +287,13 @@ window.Datum = class Datum {
 }
 
 window.Graph = class Graph {
+    // Do not declare fields here! (non-standard feature)
 
     // A graph server, actually.
 
-
-    // SECOND ATTEMPT:
     updateVertice ( ... args ) {
+        //  TODO? : aliases
+        //  this.c = this.createVertice 
 
         let datum
 
@@ -208,20 +329,9 @@ window.Graph = class Graph {
     constructor ( node ) {
 
         // initialisers
-        this.vertices   = {} 
-        this.parentKey  = Symbol()
-        
-        // aliases
-        //this.c = this.createVertice 
-
-        if ( ! ( node instanceof Serl.Node ) ) {
-            
-            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
-            
-            node = new Serl.Node ( 'node created by Graph::constructor()' )
-        }
-        
-        let graphReturner = () => this
+        this.vertices       = {} 
+        this.graphReturner  = () => this
+        this.parentKey      = Symbol()
 
         let graphServerHandler = {
 
@@ -282,8 +392,12 @@ console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
                 // TODO: consider, enabling arrow creation via ['->'] or
                 // ['$pointsTo']
 
-                let graph = targGraphReturner()
-                let success
+                let graph           =   targGraphReturner()
+                let tempGraphServer =   new Proxy ( 
+                                                targGraphReturner, 
+                                                graphServerHandler 
+                                            )
+                let success         =   false
 
 console.log ( `graphServerHandler.set : Try to set the vertex (${prop}) to (${val}).` ) 
 
@@ -377,10 +491,6 @@ console.log ( `verticeValueHandler.apply : ` )
 console.log ( targVerticeValReturner[graph.parentKey] )
 
                             let initial         =   targVerticeValReturner()                         
-                            let tempGraphServer =   new Proxy ( 
-                                                            graphReturner, 
-                                                            graphServerHandler 
-                                                        )
                             let subKeys         =   
                                 Object
                                     .keys ( graph.vertices )
@@ -505,8 +615,11 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
                     success =   graph.updateVertice (   
                                     prop,
                                     new Proxy ( valReturner, verticeValueHandler )
-                                ) // FIXME UNCERTAIN CHANGES 
-                
+                                ) 
+
+                    for ( const loopProp in val ) {
+                    }
+
                 } // graphServerHandler.set, if ( typeof val == 'object' )
                 
                 
@@ -518,11 +631,21 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
         
         } // graphServerHandler
 
+        this.graphServer    = new Proxy     (   this.graphReturner, 
+                                                graphServerHandler  ) 
+
+        if ( ! ( node instanceof Serl.Node ) ) {
+            
+            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
+            
+            node = new Serl.Node ( 'node created by Graph::constructor()' )
+        }
 
         return  {   serlNode    : node, 
                     graph       : this,
-                    graphServer : new Proxy ( graphReturner, graphServerHandler ) }
-    }
+                    graphServer : this.graphServer  }
+
+    } // Graph.constructor
 
 }
 
@@ -1025,16 +1148,27 @@ console.groupEnd ('3.0.    Creating a graph server')
     }
 
     console.group ('3.1.3.    Tree-insertion into the graph server')
+
+    console.warn ( SERVER.tree = {
+        a : 1,
+        b : {
+            c : 2,
+            d : { e : 3 } 
+        } 
+    } )
+
+    console.warn ( SERVER.tree() ) 
+
     console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
 
     {   console.error ( `WIP HERE` ) 
+        console.error ( `continue: Graph.constructor let graphServerHandler vs
+        this.graphServerHandler` ) 
         console.log ( SERVER().vertices )  
     }
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-console.warn (`3.1. What about when you set a deep object, and try to get its deep fields later?`)
-console.warn (`3.1. What about when you set another variable, to refer to a gs or a gs vertice?`)
 
 console.warn('3.2.    Reading a Vertice   x')
 /*      
@@ -1087,125 +1221,6 @@ console.warn('4.4.    Deleting an Arrow   x')
 },
 */
     ] } )
-
-///////////////////////////////////////////////////////////////////////////////
-/*  
-
-    Discussion on eDX / end-developer experience scenarios, and how we end up
-    using the Proxy class:
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (1.) If we were to state,
-
-            let someObject      = { someProp : {}, someOtherProp : 2 }
-            let someVar         = someObject.someProp
-            let someOtherVar    = someObject.someOtherProp
-
-    //  ... then we could change someObject's props behind the scenes, and
-    //  thereby
-    //
-    //  we could cause our variousVars to behave reactively. This would be
-    //  achieved simply by adjusting the getters and setters of someObject on a
-    //  per-prop basis. 
-    //  
-    //  The following expression, 
-
-        {
-            ( someObject.someProp.subPropOfSomeProp = 'a value' )
-            &&
-            Object.is (     someVar.subPropOfSomeProp, 
-                            someObject.someProp.subPropOfSomeProp
-                      )
-        }
-
-    //  ... would then be true. And furthermore, you could state,
-
-            someVar.anotherSubPropOfSomeProp = 3
-            console.log ( someObject.someProp.anotherSubPropOfSomeProp )
-
-    //  ... and get '3'.
-      
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (2.) If we were to state,
-
-            let someObject      = { someProp : {} }
-
-            Object.defineProperty ( someObject, 'someProp', { set :  
-                function ( value ) { this[ '_someProp' ] = value }
-            } )
-
-            Object.defineProperty ( someObject, 'someProp', { get :  
-                function () { return this[ '_someProp' ] }
-            } )
-
-    //  ... then the getter's return value of someObject.someProp is no longer
-    //  an object, and therefore stating,
-
-            someObject.someProp = 5
-            let someVar         = someObject.someProp
-            console.log ( someVar, someObject.someProp ) 
-
-    //  ... has passed to someVar (by value) only the output of the getter,
-
-            someObject.someProp = 7
-            console.log ( someVar, someObject.someProp ) 
-
-    //  ... and likewise, assignig a value to someVar will not trigger the
-    //  setter of someObject.someProp
-
-            someVar = 9
-            console.log ( someVar, someObject.someProp ) 
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (3.) If we were to state,
-
-            let someObject = { someProp : {  } } 
-
-            Object.defineProperties ( 
-                someObject.someProp, { 
-
-                    'subPropOfSomeProp' : { 
-
-                        'set' : function ( value ) { 
-                            console.log ('setter')
-                            this[ '_subPropOfSomeProp' ] = value 
-                        },
-                        'get' : function () { 
-                            return this[ '_subPropOfSomeProp' ]
-                        }
-                    } 
-                } 
-            )
-            
-            let someVar         = someObject.someProp
-
-    //  ... we would then be able to write getters and setters for
-    //  someVar.anotherSubPropOfSomeProp.
-    
-            someVar.subPropOfSomeProp = {}      // does triggers the setter
-            someVar.subPropOfSomeProp.new = 1   // does not! 
-
-    //  ... so as it turns out, we still can't intercept key creation, using
-    //  setters on the parent object. We might as well stick with (1.) above.
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (4.)We now turn to the Proxy class, which allows us to intercept key
-    //  creation on Proxied variables.
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-    
-
-            
-
-
-*/
-
 
 
 
