@@ -114,126 +114,121 @@ import * as Exam from '../lib/classes/exam.js'
 
 ///////////////////////////////////////////////////////////////////////////////
     
-
-            
-
-
 */
 
+/*  End-developer variables that are reactive (has dependencies; dependent
+ *  on other variables) or active (has dependents; determining on other
+ *  variables), should be instances of this class.
+ *
+ *  Each Datum must be associated with one, and only one instance of the
+ *  Graph class.
+ *
+ *  When a Datum is created, it must know its Graph, and its Graph must know
+ *  it.
+ *
+ *  When a Datum is set or gotten, its Graph must be consulted.
+ *  
+ *  When a Datum is deleted, its Graph must know it.
+ *  
+ *  If a Datum's value is algorithmic, its must traverse its Graph by
+ *  following its Arrows, to determine its value.
+ *  
+ *  Arrows are stored in each Datum.
+ *  
+ *  Graphs are abstract entities... and reified only by the ability of Datum
+ *  to follow their Arrows in tracking down other Datum.
+ *  
+ *  
+ *  
+ */
 
-    /*  End-developer variables that are reactive (has dependencies; dependent
-     *  on other variables) or active (has dependents; determining on other
-     *  variables), should be instances of this class.
-     *
-     *  Each Datum must be associated with one, and only one instance of the
-     *  Graph class.
-     *
-     *  When a Datum is created, it must know its Graph, and its Graph must know
-     *  it.
-     *
-     *  When a Datum is set or gotten, its Graph must be consulted.
-     *  
-     *  When a Datum is deleted, its Graph must know it.
-     *  
-     *  If a Datum's value is algorithmic, its must traverse its Graph by
-     *  following its Arrows, to determine its value.
-     *  
-     *  Arrows are stored in each Datum.
-     *  
-     *  Graphs are abstract entities... and reified only by the ability of Datum
-     *  to follow their Arrows in tracking down other Datum.
-     *  
-     *  
-     *  
-     */
+/** Example data:
 
-    /** Example data:
-
-            "log": {
-                "reads": [
-                    1583344147570.897
-                ],
-                "updates": [
-                    [
-                        1583344147570.9019,
-                        "the relevant prop value"
-                    ]
-                ],
-                "deletes": [
-                    [
-                        1583344147570.9019,
-                        "the relevant prop value"
-                    ]
+        "log": {
+            "reads": [
+                1583344147570.897
+            ],
+            "updates": [
+                [
+                    1583344147570.9019,
+                    "the relevant prop value"
                 ]
-            },
-    */
+            ],
+            "deletes": [
+                [
+                    1583344147570.9019,
+                    "the relevant prop value"
+                ]
+            ]
+        },
+*/
 
-    /** Example data:
+/** Example data:
 
-            "algo": {
-                "_serlType": 5,
-                "v": "() => 1 + 2"
-            },
-    */
+        "algo": {
+            "_serlType": 5,
+            "v": "() => 1 + 2"
+        },
+*/
 
-    /** Example data:
+/** Example data:
 
-            "arrows": {
-                "ins": [
-                    {
-                        "ikey": "another prop key",
-                        "reads": [
-                            1583344147570.9219
-                        ],
-                        "updates": [
-                            [
-                                1583344147570.9219,
-                                "the relevant prop value"
-                            ]
-                        ],
-                        "deletes": [
-                            [
-                                1583344147570.9219,
-                                "the relevant prop value"
-                            ]
+        "arrows": {
+            "ins": [
+                {
+                    "ikey": "another prop key",
+                    "reads": [
+                        1583344147570.9219
+                    ],
+                    "updates": [
+                        [
+                            1583344147570.9219,
+                            "the relevant prop value"
                         ]
-                    }
-                ],
-                "outs": [
-                    {
-                        "okey": "another prop key",
-                        "reads": [
-                            1583344147570.9268
-                        ],
-                        "updates": [
-                            [
-                                1583344147570.932,
-                                "the relevant prop value"
-                            ]
-                        ],
-                        "deletes": [
-                            [
-                                1583344147570.9368,
-                                "the relevant prop value"
-                            ]
+                    ],
+                    "deletes": [
+                        [
+                            1583344147570.9219,
+                            "the relevant prop value"
                         ]
-                    }
-                ]
-            },
-    */
+                    ]
+                }
+            ],
+            "outs": [
+                {
+                    "okey": "another prop key",
+                    "reads": [
+                        1583344147570.9268
+                    ],
+                    "updates": [
+                        [
+                            1583344147570.932,
+                            "the relevant prop value"
+                        ]
+                    ],
+                    "deletes": [
+                        [
+                            1583344147570.9368,
+                            "the relevant prop value"
+                        ]
+                    ]
+                }
+            ]
+        },
+*/
 
-    /** Example data:
+/** Example data:
 
-            "cache": {
-                "stale": false,
-                "hits": [
-                    1583344147570.9368
-                ],
-                "misses": [
-                    1583344147570.942
-                ]
-            }
-    */
+        "cache": {
+            "stale": false,
+            "hits": [
+                1583344147570.9368
+            ],
+            "misses": [
+                1583344147570.942
+            ]
+        }
+*/
 
 window.Datum = class Datum {
     // Do not declare fields here! (non-standard feature)
@@ -325,24 +320,37 @@ window.Graph = class Graph {
         }
     }
 
+    getGraphServerHandler () {
+        
+    }
+
     //  Graph()
     constructor ( node ) {
 
         // initialisers
         this.vertices       = {} 
-        this.graphReturner  = () => this
         this.parentKey      = Symbol()
 
-        let graphServerHandler = {
+            // 'graphReturner' and 'graphServer' could be renamed more
+            // succinctly to 'returner' and 'server' respectively. However the
+            // decision to name them longer is to aid in the reading of code,
+            // and to help the reader learn the semantics of this framework.
+            // Perhaps in the future, the shorter names could be used. For now,
+            // aliases will be introduced.
+
+        this.graphReturner  = () => this
+
+        // ALIASED
+        this.returner       = this.graphReturner
+
+        this.graphServerHandler = {
 
             // graphServerHandler
             apply : function( targGraphReturner, thisArg, args) { 
-            
+           
                 return targGraphReturner() // the Graph instance
             
             },
-
-
 
             // graphServerHandler
             get : function( targGraphReturner, prop, rcvr ) {
@@ -351,36 +359,34 @@ window.Graph = class Graph {
 // Values which are not objects, which will throw an error if you try
 // to read their properties : null, undefined, 
         
-                let graph = targGraphReturner()
+                let targGraph = targGraphReturner()
                 
 console.log (`graphServerHandler.get : Try to get the vertex (${prop}).`)
 
-                if ( ! ( prop in graph.vertices ) )
+                if ( ! ( prop in targGraph.vertices ) )
                 { return undefined } 
 
                 // Wherein. if we find that the user has previously set an
                 // object as the value, we try to intercept the call to that
                 // object's properties...
                 else 
-                if  (   ( typeof graph.vertices[ prop ].value !== 'object' )
+                if  (   ( typeof targGraph.vertices[ prop ].value !== 'object' )
                         || 
-                        ( !( graph.parentKey in graph.vertices[ prop ].value ) )
+                        ( !( targGraph.parentKey in targGraph.vertices[ prop ].value ) )
                     ) 
-                { return graph.vertices[ prop ].value } 
+                { return targGraph.vertices[ prop ].value } 
 
                 else {
                     //  Implicitly, 
-                    //      graph.vertices[ prop ].value[ graph.parentKey ]
+                    //      targGraph.vertices[ prop ].value[ targGraph.parentKey ]
                     //  ... is set.
 console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
 
-                    return graph.vertices[ prop ].value
+                    return targGraph.vertices[ prop ].value
                 }
 
 
             },
-
-
 
             // graphServerHandler
             set : function( targGraphReturner, prop, val, rcvr) {
@@ -392,12 +398,12 @@ console.log ( `graphServerHandler.get found a parentkey in (${prop})`)
                 // TODO: consider, enabling arrow creation via ['->'] or
                 // ['$pointsTo']
 
-                let graph           =   targGraphReturner()
-                let tempGraphServer =   new Proxy ( 
-                                                targGraphReturner, 
-                                                graphServerHandler 
-                                            )
-                let success         =   false
+                let targGraph           =   targGraphReturner()
+                targGraph.graphServer   =   targGraph.graphServer
+                        ? targGraph.graphServer
+                        :   new Proxy ( targGraphReturner, targGraph.graphServerHandler )
+
+                let success             =   false
 
 console.log ( `graphServerHandler.set : Try to set the vertex (${prop}) to (${val}).` ) 
 
@@ -412,47 +418,46 @@ console.log ( `graphServerHandler.set : Try to set the vertex (${prop}) to (${va
                         // handler: the proxied value must be a function.
 
                     // IMPORTANT - subObject mark created
-                    valReturner[ graph.parentKey ] = prop
+                    valReturner[ targGraph.parentKey ] = prop
 
 console.log ( `graphServerHandler.set : set a Symbol Key (value = parentKey) in the value of the
 vertex (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
 
                     let verticeValueHandler = {
 
-
-                            //  When, a SERVER.key() is called...
-                            //  ... it refers to the underlying Graph object,
-                            //  and looks at... 
-                            //
-                            //      graph.vertices['key'] => a Datum    
-                            //      
-                            //  ... where...
-                            //
-                            //      datum.value
-                            //
-                            //  ... may be  (1.) a non-object, or
-                            //              (2.) a Proxy
-                            //
-                            //  ... where the proxy's target is a valReturner of
-                            //  the form...
-                            //
-                            //      () => val
-                            //
-                            //  ... where...
-                            //
-                            //      valReturner[graph.parentKey] => 'key'
-                            //
-                            //  ... a Symbol key may or may not be set which,
-                            //  WHEN SET, marks the val as an object which has
-                            //  properties tracked in the graph via compound
-                            //  keys of the form...
-                            //
-                            //      graph.vertices[ 'key' + '.' + subKey ]
-                            //
-                            //////////////////////////////////////////////////
-
                         // verticeValueHandler
                         apply : function( targVerticeValReturner, thisArg, args) { 
+
+    //  When, a SERVER.key() is called...
+    //  ... it refers to the underlying Graph object,
+    //  and looks at... 
+    //
+    //      targGraph.vertices['key'] => a Datum    
+    //      
+    //  ... where...
+    //
+    //      datum.value
+    //
+    //  ... may be  (1.) a non-object, or
+    //              (2.) a Proxy
+    //
+    //  ... where the proxy's target is a valReturner of
+    //  the form...
+    //
+    //      () => val
+    //
+    //  ... where...
+    //
+    //      valReturner[targGraph.parentKey] => 'key'
+    //
+    //  ... a Symbol key may or may not be set which,
+    //  WHEN SET, marks the val as an object which has
+    //  properties tracked in the targGraph via compound
+    //  keys of the form...
+    //
+    //      targGraph.vertices[ 'key' + '.' + subKey ]
+    //
+    //////////////////////////////////////////////////
 
                             //////////////////////////////////////////////////
                             //
@@ -466,19 +471,19 @@ vertex (${prop}); note that this value is stored in the (address.value) as (Prox
                             //
                             //  thisArg is the proxied parent valReturner, where...
                             //
-                            //              valReturner[graph.parentKey] => 
+                            //              valReturner[targGraph.parentKey] => 
                             //                  'key.subKey'
                             //  ;
                             //  targ    is the child valReturner, where ...
                             //
-                            //              valReturner[graph.parentKey] =>
+                            //              valReturner[targGraph.parentKey] =>
                             //                  'key.subKey.subSubKey'
                             //  ;
                             //
                             //  targ()  will return the value of the "original
                             //          object" set at...
                             //
-                            //              graph.vertices['key.subKey']
+                            //              targGraph.vertices['key.subKey']
                             //  ;
                             //
                             //  ... and here what we want the code to do, is
@@ -488,29 +493,29 @@ vertex (${prop}); note that this value is stored in the (address.value) as (Prox
                             //  the user.
                             
 console.log ( `verticeValueHandler.apply : ` )                          
-console.log ( targVerticeValReturner[graph.parentKey] )
+console.log ( targVerticeValReturner[targGraph.parentKey] )
 
                             let initial         =   targVerticeValReturner()                         
                             let subKeys         =   
                                 Object
-                                    .keys ( graph.vertices )
+                                    .keys ( targGraph.vertices )
                                     .reduce (
 
     (acc, cur, ind, arr) => 
     {
-        if (cur.startsWith ( targVerticeValReturner[ graph.parentKey ] + '.') ) 
+        if (cur.startsWith ( targVerticeValReturner[ targGraph.parentKey ] + '.') ) 
         {   
             let key = cur.slice (
-                targVerticeValReturner[graph.parentKey].length + 1
+                targVerticeValReturner[targGraph.parentKey].length + 1
             )
             if ( ! key.includes ( '.') )
             {
-                acc[key] =  (   ( typeof tempGraphServer[cur] == 'function' )
+                acc[key] =  (   ( typeof targGraph.graphServer[cur] == 'function' )
                                 &&
-                                ( graph.parentKey in tempGraphServer[cur] )
+                                ( targGraph.parentKey in targGraph.graphServer[cur] )
                             )   
-                            ? tempGraphServer[cur]() 
-                            : tempGraphServer[cur]
+                            ? targGraph.graphServer[cur]() 
+                            : targGraph.graphServer[cur]
             }
         }
         return acc
@@ -534,38 +539,36 @@ console.groupEnd ( `verticeValueHandler.get's receiver :`)
 console.log ( `verticeValueHandler.get the prop:  ${prop}` )
 
                             // IMPORTANT - subObject mark read
-                            if ( graph.parentKey in targVerticeValReturner ) {
+                            if ( targGraph.parentKey in targVerticeValReturner ) {
 //console.log ( `verticeValueHandler.get found a parentKey in the (targ) argument` )
                                 
                                 let compoundKey =
-                                        targVerticeValReturner[ graph.parentKey ]
+                                        targVerticeValReturner[ targGraph.parentKey ]
                                         + '.'
                                         + prop
 
 console.group (`verticeValueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
-console.log ( graph.vertices[ compoundKey ] )
+console.log ( targGraph.vertices[ compoundKey ] )
 console.groupEnd (`verticeValueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
 
-                                return ( compoundKey in graph.vertices )
-                                    ? graph.vertices[ compoundKey ].value
+                                return ( compoundKey in targGraph.vertices )
+                                    ? targGraph.vertices[ compoundKey ].value
                                     : undefined
                             }
 
                             else { return targVerticeValReturner[ prop ] }
                         },
 
-
-
                         // verticeValueHandler
                         set : function( targVerticeValReturner, prop, val, rcvr) {
 console.log (`verticeValueHandler.set the prop : (${prop})`)
 
                             // IMPORTANT - subObject mark read
-                            if ( graph.parentKey in targVerticeValReturner ) {
+                            if ( targGraph.parentKey in targVerticeValReturner ) {
                                 
 console.log (`verticeValueHandler.set:  found a parentKey in (${targVerticeValReturner})`)
                                 let compoundKey = 
-                                        targVerticeValReturner[ graph.parentKey ]
+                                        targVerticeValReturner[ targGraph.parentKey ]
                                         + '.'
                                         + prop
                                 
@@ -581,9 +584,9 @@ console.log (`verticeValueHandler.set:  found a parentKey in (${targVerticeValRe
                                 // handler: the proxied value must be a function.
                                 // IMPORTANT - subObject mark created
 
-                                    valReturner[ graph.parentKey ] = compoundKey 
+                                    valReturner[ targGraph.parentKey ] = compoundKey 
 
-                                    success = graph.updateVertice ( 
+                                    success = targGraph.updateVertice ( 
                                         compoundKey, 
                                         new Proxy ( valReturner, verticeValueHandler )
                                     )
@@ -591,7 +594,7 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
                                 }
                                 else { 
                                     success 
-                                        = graph.updateVertice ( compoundKey, val )
+                                        = targGraph.updateVertice ( compoundKey, val )
 
 console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
                                 } 
@@ -612,7 +615,7 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
 
                     } // verticeValueHandler
 
-                    success =   graph.updateVertice (   
+                    success =   targGraph.updateVertice (   
                                     prop,
                                     new Proxy ( valReturner, verticeValueHandler )
                                 ) 
@@ -623,7 +626,7 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
                 } // graphServerHandler.set, if ( typeof val == 'object' )
                 
                 
-                else { success = graph.updateVertice ( prop, val ) }
+                else { success = targGraph.updateVertice ( prop, val ) }
 
                 return success // throws an error if falsy
             
@@ -631,8 +634,15 @@ console.log (`verticeValueHandler.set: set a compoundKey (${compoundKey}) with a
         
         } // graphServerHandler
 
-        this.graphServer    = new Proxy     (   this.graphReturner, 
-                                                graphServerHandler  ) 
+        // ALIASED
+        this.serverHandler  = this.graphServerHandler
+
+        this.graphServer    =   this.graphServer
+            ?   this.graphServer
+            :   new Proxy ( this.graphReturner, this.graphServerHandler )
+
+        // ALIAS
+        this.server         = this.graphServer
 
         if ( ! ( node instanceof Serl.Node ) ) {
             
@@ -1222,16 +1232,3 @@ console.warn('4.4.    Deleting an Arrow   x')
 */
     ] } )
 
-
-
-
-
-
-
-
-
-
-
-
-
-    console.groupEnd ('3.1.3.    Creating a tree of name-spaced Vertice (depth>1) X')
