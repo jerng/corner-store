@@ -286,7 +286,7 @@ window.Graph = class Graph {
 
     // A graph server, actually.
 
-    updateVertice ( ... args ) {
+    updateVertex ( ... args ) {
         //  TODO? : aliases
         //  this.c = this.createVertice 
 
@@ -301,7 +301,7 @@ window.Graph = class Graph {
 
                 // redundant check?
                 if ( this.vertices [ datum.key ].value !== args[0] ) {
-                    throw Error (`Graph::updateVertice/1 called, update failed.`)
+                    throw Error (`Graph::updateVertex/1 called, update failed.`)
                 }
                 break
 
@@ -316,7 +316,7 @@ window.Graph = class Graph {
                         : false
 
             default:
-                throw Error (`Graph::updateVertice/n was called, where n's branch remained undefined `)
+                throw Error (`Graph::updateVertex/n was called, where n's branch remained undefined `)
         }
     }
 
@@ -368,15 +368,14 @@ console.log ( `serverHandler.get found a parentkey in (${prop})`)
 
             // serverHandler
             set : function( targGraphReturner, prop, val, rcvr ) {
-                // reflect.set ( targ, prop, val, rcvr )
+
+                // ProxyHandler.set: if this function returns a falsy value, an error is thrown
 
                 //  Update Datum
                 //   L> Create Datum
 
                 // TODO: consider, enabling arrow creation via ['->'] or
                 // ['$pointsTo']
-
-                let success             =   false
 
 console.log ( `serverHandler.set : Try to set the vertex (${prop}) to (${val}).` ) 
 
@@ -395,20 +394,27 @@ console.log ( `serverHandler.set : Try to set the vertex (${prop}) to (${val}).`
 console.log ( `serverHandler.set : set a Symbol Key (value = parentKey) in the value of the
 vertex (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
 
-                    success =   graph.updateVertice (   
-                                    prop,
-                                    new Proxy ( valReturner, graph.valueHandler )
-                                ) 
-
                     for ( const loopProp in val ) {
+
+                        if ( !  this.set  ( targGraphReturner, 
+                                            prop + '.' + loopProp,
+                                            val[loopProp],
+                                            rcvr                    )
+                                // target and receiver could be left 'null'?
+                        ) { return false }
                     }
+
+                    return graph.updateVertex   (   prop, 
+                                                    new Proxy ( 
+                                                        valReturner, 
+                                                        graph.valueHandler ) 
+                                                )
 
                 } // serverHandler.set, if ( typeof val == 'object' )
                 
                 
-                else { success = graph.updateVertice ( prop, val ) }
+                else { return graph.updateVertex ( prop, val ) }
 
-                return success // throws an error if falsy
             
             } // serverHandler.set
         
@@ -583,7 +589,7 @@ console.log (`valueHandler.set:  found a parentKey in (${targValueReturner})`)
 console.log ( `valueHandler.set: the handler : ` )
 console.log ( graph.valueHandler )
 
-                        success = graph.updateVertice ( 
+                        success = graph.updateVertex ( 
                             compoundKey, 
                             new Proxy ( valReturner, graph.valueHandler )
                         )
@@ -591,7 +597,7 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a proxie
                     }
                     else { 
                         success 
-                            = graph.updateVertice ( compoundKey, val )
+                            = graph.updateVertex ( compoundKey, val )
 
 console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
                     } 
@@ -1153,7 +1159,7 @@ console.groupEnd ('3.0.    Creating a graph server')
         console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
     }
 
-    console.group ('3.1.3.    Tree-insertion into the graph server')
+    console.groupCollapsed ('3.1.3.    Tree-insertion into the graph server')
 
     console.warn ( SERVER.tree = {
         a : 1,
@@ -1168,8 +1174,7 @@ console.groupEnd ('3.0.    Creating a graph server')
     console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
 
     {   console.error ( `WIP HERE` ) 
-        console.error ( `continue: Graph.constructor let serverHandler vs
-        this.serverHandler` ) 
+        console.error ( `continue: we need ARROWS` ) 
         console.log ( SERVER().vertices )  
     }
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
