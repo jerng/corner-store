@@ -174,46 +174,48 @@ import * as Exam from '../lib/classes/exam.js'
 /** Example data:
 
         "arrows": {
-            "ins": [
-                {
-                    "ikey": "another prop key",
-                    "reads": [
-                        1583344147570.9219
-                    ],
-                    "updates": [
-                        [
-                            1583344147570.9219,
-                            "the relevant prop value"
+            "TYPE" : {      // e.g. "causal"
+                "ins": [
+                    {
+                        "ikey": "another prop key",
+                        "reads": [
+                            1583344147570.9219
+                        ],
+                        "updates": [
+                            [
+                                1583344147570.9219,
+                                "the relevant prop value"
+                            ]
+                        ],
+                        "deletes": [
+                            [
+                                1583344147570.9219,
+                                "the relevant prop value"
+                            ]
                         ]
-                    ],
-                    "deletes": [
-                        [
-                            1583344147570.9219,
-                            "the relevant prop value"
+                    }
+                ],
+                "outs": [
+                    {
+                        "okey": "another prop key",
+                        "reads": [
+                            1583344147570.9268
+                        ],
+                        "updates": [
+                            [
+                                1583344147570.932,
+                                "the relevant prop value"
+                            ]
+                        ],
+                        "deletes": [
+                            [
+                                1583344147570.9368,
+                                "the relevant prop value"
+                            ]
                         ]
-                    ]
-                }
-            ],
-            "outs": [
-                {
-                    "okey": "another prop key",
-                    "reads": [
-                        1583344147570.9268
-                    ],
-                    "updates": [
-                        [
-                            1583344147570.932,
-                            "the relevant prop value"
-                        ]
-                    ],
-                    "deletes": [
-                        [
-                            1583344147570.9368,
-                            "the relevant prop value"
-                        ]
-                    ]
-                }
-            ]
+                    }
+                ]
+            }
         },
 */
 
@@ -1175,6 +1177,7 @@ console.groupEnd ('3.0.    Creating a graph server')
 
     {   console.error ( `WIP HERE` ) 
         console.error ( `continue: we need ARROWS` ) 
+        console.error ( `continue: we need ALGOS` ) 
         console.log ( SERVER().vertices )  
     }
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
@@ -1182,21 +1185,7 @@ console.groupEnd ('3.0.    Creating a graph server')
 
 
 console.warn('3.2.    Reading a Vertice   x')
-/*      
-        console.log ( {
-            d1:d1,
-            d2:d2,
-            d3:d3,
-            d4:d4,
-            d5:d5,
-            d6:d6
-        })
-
-//        console.log ( d2 )
-//*/
-
 console.warn('3.3.    Updating a Vertice  x')
-
 console.warn('3.4.    Deleting a Vertice  x')
 
 console.group('4.1.    Creating an Arrow   x')
