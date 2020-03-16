@@ -322,6 +322,7 @@ window.Graph = class Graph {
         }
     }
 
+    // TODO consider, should this be a static method? Performance? Safety?
     getServerHandler () {
         
         let graph = this
@@ -423,6 +424,7 @@ vertex (${prop}); note that this value is stored in the (address.value) as (Prox
         } // serverHandler
     }
 
+    // TODO consider, should this be a static method? Performance? Safety?
     getValueHandler () {
 
         let graph = this
@@ -1006,9 +1008,9 @@ console.group ('3.0.    Creating a graph server')
     console.log ( g )           //  the Graph object
     console.log ( g.vertices )  //  empty object 
 
-console.groupEnd ('3.0.    Creating a graph server')
+console.groupEnd (`3.0.    Creating a graph server`)
 
-{   console.group ('3.1.    Creating a Vertice  OK ')
+{   console.groupCollapsed (`3.1.    Creating a Vertice  OK `)
 
     {   console.groupCollapsed ( `3.1.0. no namespaces` )
         console.log ( SERVER.location )
@@ -1050,7 +1052,7 @@ console.groupEnd ('3.0.    Creating a graph server')
         }
 
         {   console.group (`trying to set the value of a subObject`)
-            console.warn ( `SERVER.address.street = 'Jalan 1' : ${SERVER.address.street = 'Jalan 1'}` )
+            console.warn ( `SERVER.address.street = 'Jalan 1' : ${SERVER.address.street = 'Jalan 1'}` ) // ` <- shim: syntax highlighting
                 // evaluates to the assigned value 
             console.groupEnd (`trying to set the value of a subObject`)
         }
@@ -1066,10 +1068,8 @@ console.groupEnd ('3.0.    Creating a graph server')
 
         {   console.groupCollapsed (`trying to set the value of a subSubObject`)
 
-            console.warn ( `SERVER.address.unit = {} : ${SERVER.address.unit = {}}` )
+            console.warn ( `SERVER.address.unit = {} : ${SERVER.address.unit = {}}` ) // ` <- syntax highlighting shim
                 // evaluates to the assigned value 
-                //
-                // Questionable behaviour.
 
             console.warn ( `SERVER.address.unit.part1 = 'The' : ${
                 SERVER.address.unit.part1 = 'The'
@@ -1161,31 +1161,125 @@ console.groupEnd ('3.0.    Creating a graph server')
         console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
     }
 
-    console.groupCollapsed ('3.1.3.    Tree-insertion into the graph server')
+    {   console.groupCollapsed ('3.1.3.    Tree-insertion into the graph server')
 
-    console.warn ( SERVER.tree = {
-        a : 1,
-        b : {
-            c : 2,
-            d : { e : 3 } 
-        } 
-    } )
+        console.warn ( SERVER.tree = {
+            a : 1,
+            b : {
+                c : 2,
+                d : { e : 3 } 
+            } 
+        } )
 
-    console.warn ( SERVER.tree() ) 
-
-    console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
-
-    {   console.error ( `WIP HERE` ) 
-        console.error ( `continue: we need ARROWS` ) 
-        console.error ( `continue: we need ALGOS` ) 
-        console.log ( SERVER().vertices )  
+        console.warn ( SERVER.tree() ) 
+        
+        console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
     }
+
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
+{   console.group ('4.1.    Dependency Injection')
+        
+    console.log ( SERVER.source1 = 'theFIRSTpart;' )
+    console.log ( SERVER.source2 = 'theSECONDpart;' )
+
+    
+    // pattern 1a
+    console.log ( SERVER.computed1a ( 
+        ( x = 'source1', y = 'source2' ) => x + y,
+        [ 'source1', 'source2' ]
+    ) )
+    // pattern 1b
+    console.log ( SERVER.computed1b ( 
+        ( [ x, y ] = [ 'source1', 'source2' ] ) => x + y,
+        [ 'source1', 'source2' ]
+    ) )
+    // pattern 1c
+    console.log ( SERVER.computed1c ( 
+        ( ...args ) => args[0] + args[1],
+        [ 'source1', 'source2' ]
+    ) )
+    // pattern 1d
+    console.log ( SERVER.computed1d ( 
+        ( x, y ) => x + y,
+        [ 'source1', 'source2' ]
+    ) )
+    // Discussion: 
+    //
+    // The rough approach here is, serverHandler would use the array argument to
+    // plant arrows in the dependency vertices (convenience), then plant arrows in the
+    // dependent vertex, and set the dependent vertex's valueHandler to grab the
+    // dependency values to compute the dependent whenever needed.
+    //
+    // In terms of DX, it would be ideal to have the FIRST parameter only, however,
+    // the serverHandler would not be able to reach into the lambda and read the
+    // default values of parameters, which the serverHandler needs to be able to
+    // traverse the graph to obtain values to insert as arguments respective to
+    // each parameter. THEREFORE, the SECOND parameter emerges simply to tell
+    // the serverHandler where to find the values, and so it because redundant
+    // to state the default parameters, and the default parameters then turn
+    // into mere reading aids for the xdev.
+    //
+    // 1b is more verbose than 1a.
+    //
+    // 1c is least verbose, but less readable (less literal, more demanding on
+    // memory).
+    //
+    // 1d is very nice, but the xdev would have to remember a lot of mappings
+    // between sources(1-10 for example) and variable names (a-j for example).
+    //
+    // These all share the same fundamental problem.
+
+
+    // pattern 2a
+    console.log ( SERVER.computed2a ( 
+        () => this.source1 + this.source2
+    ) )
+    // pattern 2b
+    console.log ( SERVER.computed2b ( 
+        () => SERVER.source1 + SERVER.source2 
+    ) )
+    // Discussion:
+    //
+    // The rough approach here is, serverHandler would,
+    //
+    // 1.       use 
+    // Reflect.apply ( target, thisArgument, argumentsList ) on the lambda,
+    // setting thisArgument to be a Proxy whose handler.get would be able to
+    // obtain string keys (e.g. 'source1', 'source2') via the 'prop' argument;
+    // the handler.get would then traverse the graph, plant arrows in the
+    // dependency vertices (convenience), then plant arrows in the dependent
+    // vertex, and 
+    //
+    // 2.       use 
+    // Reflect.apply ( target, thisArgument, argumentsList ) on the lambda,
+    // setting thisArgument to be the graphServer (whose serverHandler already
+    // handles syntax of the form SERVER.source1, SERVER.source2, for example),
+    // 
+    // 3.
+    // finally, wrapping (2.) with any other administrative code, then setting
+    // it as the dependent vertex's valueHandler.get
+    //
+    console.warn ( `Pattern 2 needs to be tested with compound keys.` )
+
+    // ALL PATTERNS 1 & 2 :
+    // the lambda could be stored simply in the valueHandler.get, or more
+    // explictly but less succinctly in a .algo property.
+    // TODO: test the ergonomics of both
+
+    console.groupEnd ('4.1.    Dependency Injection')
+}
+
+{   console.error ( `WIP HERE` ) 
+    console.error ( `continue: we need ARROWS` ) 
+    console.error ( `continue: we need ALGOS` ) 
+    console.log ( SERVER().vertices )  
+}
 
 console.warn('3.2.    Reading a Vertice   x')
 console.warn('3.3.    Updating a Vertice  x')
+console.warn(`3.3.    (Does not check for 'configurable' or 'writable' - will only complain when you try to extract the tree with SERVER.key() )`)
 console.warn('3.4.    Deleting a Vertice  x')
 
 console.group('4.1.    Creating an Arrow   x')
