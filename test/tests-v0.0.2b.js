@@ -174,8 +174,8 @@ import * as Exam from '../lib/classes/exam.js'
 /** Example data:
 
         "arrows": {
-            "TYPE" : {      // e.g. "causal"
-                "in": [
+            "in": {     
+                "TYPE": [       // e.g. "causal"
                     {
                         "ikey": "another prop key",
                         "reads": [
@@ -194,8 +194,10 @@ import * as Exam from '../lib/classes/exam.js'
                             ]
                         ]
                     }
-                ],
-                "out": [
+                ]
+            },
+            "out": {
+                "TYPE": [       // e.g. "causal"
                     {
                         "okey": "another prop key",
                         "reads": [
@@ -215,8 +217,7 @@ import * as Exam from '../lib/classes/exam.js'
                         ]
                     }
                 ]
-            }
-        },
+            },
 */
 
 /** Example data:
@@ -232,7 +233,58 @@ import * as Exam from '../lib/classes/exam.js'
         }
 */
 
-window.Algo = class Algo {
+// data type for use in Datum
+class ArrowOut {
+
+    constructor ( _okey ) {
+        
+        this.okey       = _okey
+        this.reads      = [    
+            // e.g. 1583344147570.9219
+        ]
+        this.updates    = [
+            // e.g. [   1583344147570.932,
+            //          "the relevant okey value"
+            //      ]
+        ]
+        this.deletes    = [
+            // e.g. [   1583344147570.932,
+            //          "the relevant okey value"
+            //      ]
+        ]
+
+        return this
+    }
+
+}
+
+// data type for use in Datum
+class ArrowIn {
+
+    constructor ( _ikey ) {
+        
+        this.ikey       = _ikey
+        this.reads      = [    
+            // e.g. 1583344147570.9219
+        ]
+        this.updates    = [
+            // e.g. [   1583344147570.932,
+            //          "the relevant ikey value"
+            //      ]
+        ]
+        this.deletes    = [
+            // e.g. [   1583344147570.932,
+            //          "the relevant ikey value"
+            //      ]
+        ]
+
+        return this
+    }
+
+}
+
+// data type for use in Datum
+class Algo {
 
     constructor ( ... args ) {
         
@@ -274,8 +326,12 @@ class Datum {
         this.algo
 
         this.arrows     = {
-            in      : [],
-            out     : []
+            in      : { 
+                // type: [ ArrowIn ]
+            },
+            out     : {
+                // type: [ ArrowOut ]
+            }
         }
 
         this.log        = {
@@ -389,13 +445,10 @@ console.log (`serverHandler.get could not find the key (${prop}) in graph.vertic
                 
 console.log ( graph.vertices [ prop ].value )
 
-                if (    ( typeof graph.vertices [ prop ].value == 'function' )
-                        &&
-                        ( graph.algoFlag in graph.vertices [ prop ].value ) )
+                if ( graph.vertices[ prop ].algo )
                 {
-                    return  graph
-                            .vertices[ `${prop}.lambda` ]
-                            .value ( graph.server )
+                  return graph.vertices[ prop ].algo ( graph.server )
+
                 } else
 
                 {   return graph.vertices[ prop ].value }
@@ -483,7 +536,8 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
         val.lambda ( keySniffer )
 
         // tag for serverHandler.get performance
-        valReturner[ graph.algoFlag ] = true
+        
+        graph.vertices[ prop ].algo = val.lambda
 
     }
 }
@@ -665,14 +719,13 @@ console.log (`valueHandler.set:  found a parentKey in (${targValueReturner})`)
                     // serverHandler's code, but we'll just
                     // roll with it for now...
                     if ( typeof val == 'object' ) {
-                        
-                    // Because we want to Proxy this, and have an (apply)
-                    // handler: the proxied value must be a function.
+
+                    let valReturner = () => val
+                        // Because we want to Proxy this, and have an (apply)
+                        // handler: the proxied value must be a function.
+
                     // IMPORTANT - subObject mark created
-
-                        let valReturner = () => val
-
-                        valReturner[ graph.parentKey ] = compoundKey 
+                    valReturner[ graph.parentKey ] = compoundKey 
 
                         
 
@@ -727,8 +780,6 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-ob
         this.vertices       = {} 
 
         this.parentKey      = Symbol()
-
-        this.algoFlag        = Symbol()
 
         this.returner       = () => this
 
