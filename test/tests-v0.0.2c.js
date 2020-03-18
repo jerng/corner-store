@@ -2,236 +2,6 @@ import * as Serl from   '../lib/serl.js'
 import * as SSON from   '../lib/sson/sson.js'
 import * as Exam from '../lib/classes/exam.js'
 
-///////////////////////////////////////////////////////////////////////////////
-/*  
-
-    Discussion on eDX / end-developer experience scenarios, and how we end up
-    using the Proxy class:
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (1.) If we were to state,
-
-            let someObject      = { someProp : {}, someOtherProp : 2 }
-            let someVar         = someObject.someProp
-            let someOtherVar    = someObject.someOtherProp
-
-    //  ... then we could change someObject's props behind the scenes, and
-    //  thereby
-    //
-    //  we could cause our variousVars to behave reactively. This would be
-    //  achieved simply by adjusting the getters and setters of someObject on a
-    //  per-prop basis. 
-    //  
-    //  The following expression, 
-
-        {
-            ( someObject.someProp.subPropOfSomeProp = 'a value' )
-            &&
-            Object.is (     someVar.subPropOfSomeProp, 
-                            someObject.someProp.subPropOfSomeProp
-                      )
-        }
-
-    //  ... would then be true. And furthermore, you could state,
-
-            someVar.anotherSubPropOfSomeProp = 3
-            console.log ( someObject.someProp.anotherSubPropOfSomeProp )
-
-    //  ... and get '3'.
-      
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (2.) If we were to state,
-
-            let someObject      = { someProp : {} }
-
-            Object.defineProperty ( someObject, 'someProp', { set :  
-                function ( value ) { this[ '_someProp' ] = value }
-            } )
-
-            Object.defineProperty ( someObject, 'someProp', { get :  
-                function () { return this[ '_someProp' ] }
-            } )
-
-    //  ... then the getter's return value of someObject.someProp is no longer
-    //  an object, and therefore stating,
-
-            someObject.someProp = 5
-            let someVar         = someObject.someProp
-            console.log ( someVar, someObject.someProp ) 
-
-    //  ... has passed to someVar (by value) only the output of the getter,
-
-            someObject.someProp = 7
-            console.log ( someVar, someObject.someProp ) 
-
-    //  ... and likewise, assignig a value to someVar will not trigger the
-    //  setter of someObject.someProp
-
-            someVar = 9
-            console.log ( someVar, someObject.someProp ) 
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (3.) If we were to state,
-
-            let someObject = { someProp : {  } } 
-
-            Object.defineProperties ( 
-                someObject.someProp, { 
-
-                    'subPropOfSomeProp' : { 
-
-                        'set' : function ( value ) { 
-                            console.log ('setter')
-                            this[ '_subPropOfSomeProp' ] = value 
-                        },
-                        'get' : function () { 
-                            return this[ '_subPropOfSomeProp' ]
-                        }
-                    } 
-                } 
-            )
-            
-            let someVar         = someObject.someProp
-
-    //  ... we would then be able to write getters and setters for
-    //  someVar.anotherSubPropOfSomeProp.
-    
-            someVar.subPropOfSomeProp = {}      // does triggers the setter
-            someVar.subPropOfSomeProp.new = 1   // does not! 
-
-    //  ... so as it turns out, we still can't intercept key creation, using
-    //  setters on the parent object. We might as well stick with (1.) above.
-
-///////////////////////////////////////////////////////////////////////////////
-
-    //  (4.)We now turn to the Proxy class, which allows us to intercept key
-    //  creation on Proxied variables.
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-    
-*/
-
-/*  End-developer variables that are reactive (has dependencies; dependent
- *  on other variables) or active (has dependents; determining on other
- *  variables), should be instances of this class.
- *
- *  Each Datum must be associated with one, and only one instance of the
- *  Graph class.
- *
- *  When a Datum is created, it must know its Graph, and its Graph must know
- *  it.
- *
- *  When a Datum is set or gotten, its Graph must be consulted.
- *  
- *  When a Datum is deleted, its Graph must know it.
- *  
- *  If a Datum's value is algorithmic, its must traverse its Graph by
- *  following its Arrows, to determine its value.
- *  
- *  Arrows are stored in each Datum.
- *  
- *  Graphs are abstract entities... and reified only by the ability of Datum
- *  to follow their Arrows in tracking down other Datum.
- *  
- *  
- *  
- */
-
-/** Example data:
-
-        "log": {
-            "reads": [
-                1583344147570.897
-            ],
-            "updates": [
-                [
-                    1583344147570.9019,
-                    "the relevant prop value"
-                ]
-            ],
-            "deletes": [
-                [
-                    1583344147570.9019,
-                    "the relevant prop value"
-                ]
-            ]
-        },
-*/
-
-/** Example data:
-
-        "algo": {
-            "_serlType": 5,
-            "v": "() => 1 + 2"
-        },
-*/
-
-/** Example data:
-
-        "arrows": {
-            "in": {     
-                "TYPE": [       // e.g. "causal"
-                    {
-                        "ikey": "another prop key",
-                        "reads": [
-                            1583344147570.9219
-                        ],
-                        "updates": [
-                            [
-                                1583344147570.9219,
-                                "the relevant prop value"
-                            ]
-                        ],
-                        "deletes": [
-                            [
-                                1583344147570.9219,
-                                "the relevant prop value"
-                            ]
-                        ]
-                    }
-                ]
-            },
-            "out": {
-                "TYPE": [       // e.g. "causal"
-                    {
-                        "okey": "another prop key",
-                        "reads": [
-                            1583344147570.9268
-                        ],
-                        "updates": [
-                            [
-                                1583344147570.932,
-                                "the relevant prop value"
-                            ]
-                        ],
-                        "deletes": [
-                            [
-                                1583344147570.9368,
-                                "the relevant prop value"
-                            ]
-                        ]
-                    }
-                ]
-            },
-*/
-
-/** Example data:
-
-        "cache": {
-            "stale": false,
-            "hits": [
-                1583344147570.9368
-            ],
-            "misses": [
-                1583344147570.942
-            ]
-        }
-*/
 
 // data type for use in Datum
 class ArrowOut {
@@ -380,16 +150,18 @@ window.Graph = class Graph {
         //  this.c = this.createVertice 
 
         let datum
+        let datumReturner = () => datum
 
         switch ( args.length ) 
         {
             case 1:
 
                 datum = new Datum ( args[0] )
-                this.vertices [ datum.key ] = datum 
+                this.vertices [ datum.key ] 
+                    = new Proxy ( datumReturner, this.datumHandler )
 
                 // redundant check?
-                if ( this.vertices [ datum.key ].value !== args[0] ) {
+                if ( this.vertices [ datum.key ] !== args[0] ) {
                     throw Error (`Graph::updateVertex/1 called, update failed.`)
                 }
                 break
@@ -397,10 +169,14 @@ window.Graph = class Graph {
             case 2:
 
                 datum = new Datum ( { [ args[0] ] : args[1] } )
-                this.vertices [ datum.key ] = datum 
+
+                this.vertices [ datum.key ] 
+                    = new Proxy ( datumReturner, this.datumHandler )
+
+console.log( `graph.updateVertex :`, datumReturner, this.vertices [ datum.key ] )
 
                 // redundant check?
-                return  ( this.vertices [ datum.key ].value == args[1] ) 
+                return  ( this.vertices [ datum.key ]().value == args[1] ) 
                         ? true
                         : false
 
@@ -425,11 +201,7 @@ window.Graph = class Graph {
 
             // serverHandler
             get : function( targGraphReturner, prop, rcvr ) {
-                // reflect.get ( targ, prop, rcvr )
 
-// Values which are not objects, which will throw an error if you try
-// to read their properties : null, undefined, 
-        
 console.log (`serverHandler.get : graph.vertices['${prop}'].`)
 
                 if ( ! ( prop in graph.vertices ) )
@@ -443,7 +215,7 @@ console.log (`serverHandler.get could not find the key (${prop}) in graph.vertic
                 // object as the value, we try to intercept the call to that
                 // object's properties...
                 
-console.log ( graph.vertices [ prop ].value )
+console.log ( `serverHandler.get got graph.vertices[ '${prop}' ]() : `, graph.vertices [ prop ]() )
 
                 if ( graph.vertices[ prop ].algo )
                 {
@@ -457,14 +229,6 @@ console.log ( graph.vertices [ prop ].value )
             // serverHandler
             set : function( targGraphReturner, prop, val, rcvr ) {
 
-                // ProxyHandler.set: if this function returns a falsy value, an error is thrown
-
-                //  Update Datum
-                //   L> Create Datum
-
-                // TODO: consider, enabling arrow creation via ['->'] or
-                // ['$pointsTo']
-
 console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
 
                 // Wherein, if we find the user trying to set an object as the
@@ -474,38 +238,34 @@ console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${va
 
 console.warn (`Naive object check`)
 
-                    let valReturner = () => val
+                    //let valReturner = () => val
                         // Because we want to Proxy this, and have an (apply)
                         // handler: the proxied value must be a function.
-
-                    // IMPORTANT - subObject mark created
-                    valReturner[ graph.parentKey ] = prop
 
 console.log ( `serverHandler.set : set
 graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKey' which is a Symbol] = '${prop}'` ) 
 
                     // update sub-vertices
-                    for ( const loopProp in val ) {
+                  //for ( const loopProp in val ) {
 
-                        if ( !  this.set  ( targGraphReturner, 
-                                            prop + '.' + loopProp,
-                                            val[loopProp],
-                                            rcvr                    )    
-                        )       // target and receiver could be left 'null'?
-                        { return false }
-                    }
+                  //    if ( !  this.set  ( targGraphReturner, 
+                  //                        prop + '.' + loopProp,
+                  //                        val[loopProp],
+                  //                        rcvr                    )    
+                  //    )       // target and receiver could be left 'null'?
+                  //    { return false }
+                  //}
 
                     let success
 
                     // update vertex
-                    if ( ! (    success = 
-                                    graph.updateVertex   
-                                    (   prop, 
-                                        new Proxy   (   valReturner, 
-                                                        graph.valueHandler ) ) ) 
-                    )
+                    if ( ! (    success = graph.updateVertex   (   prop, val ) ) )
                     { return false }
 
+                    // IMPORTANT - subObject mark created
+                    //valReturner[ graph.parentKey ] = prop
+
+/*
 {
     // Detect dependencies and plant arrows.
     if ( val instanceof Algo ) {
@@ -541,7 +301,7 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
 
     }
 }
-                    return success
+*/                    return success
 
                 } // serverHandler.set, if ( typeof val == 'object' )
                 
@@ -552,6 +312,30 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
             } // serverHandler.set
         
         } // serverHandler
+    }
+
+    // TODO consider, should this be a static method? Performance? Safety?
+    getDatumHandler () {
+
+        let graph = this
+
+        return {
+            // datumHandler
+            apply : function( targDatumReturner, thisArg, args ) { 
+
+console.log (`graph.datumHandler.apply : `, targDatumReturner, thisArg, args )
+                return targDatumReturner()
+            },
+            get : function( targDatumReturner, prop, rcvr ) {
+
+console.log (`graph.datumHandler.get : `, prop, rcvr )
+            },
+            set : function( targDatumReturner, prop, val, rcvr) {
+
+console.log (`graph.datumHandler.set : `, prop, val, rcvr)
+            }
+
+        }
     }
 
     // TODO consider, should this be a static method? Performance? Safety?
@@ -787,7 +571,9 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-ob
 
         this.server         = new Proxy (   this.returner, this.serverHandler )
 
-        this.valueHandler   = this.getValueHandler()
+        //this.valueHandler   = this.getValueHandler()
+
+        this.datumHandler   = this.getDatumHandler()
 
         if ( ! ( node instanceof Serl.Node ) ) {
             
@@ -815,326 +601,14 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
+/*    
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 {   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
 },
+*/
 {   test : `Build a reactive datastore, where each datum is represented by a Proc instance.`,
     code : function () {
-
-/*******************************************************************************
- *
- *  Abstract Data [ Model @ Graph ]
- *
- *  -   [ Entities @ Addresses @ Predicates ] which are spatio-temporally Discrete
- *
- *      1.  [ Data @ Values ] as [ Nodes @ Vertices ]
- *
- *      2.  [ Dependencies @ Causalities ] 
- *              as [ Arrows @ Directed Edges] between Datum
- *
- *          -   The following expressions are (roughly) equivalent:
- *
- *              -   'Y depends on X' 
- *              -   'X determines Y' 
- *              -   'X supervenes on Y' 
- *              -   'there is an arrow from X to Y' 
- *              -   'changes in X, cause changes in Y' 
- *              -
- *              -   'there is a causal function, F, from X to Y'
- *                      (X is its domain, and Y its codomain)
- *
- *              -   'changes in X, imply changes in Y'
- *              -   'a change in X, necessitates an update of Y'
- *                      (this update may, or may not, 
- *                       result in the same value of Y)
- *
- *          -   The following expressions are (roughly) equivalent:
- *
- *              -   'A is equivalent to B' 
- *              -   'there is a two-way dependency, between A and B'
- *              -   'there are two opposing arrows, between A and B'
- *              -   'a change in A necessites an update of B, and, 
- *                      a change in B necessitates an update of A'
- *
- *  -   Existential Quantification of a Discrete Entity.
- *
- *      1.  [ Creation @ Existentialisation ]
- *
- *      2.  [ Deletion @ Uncreation @ Destruction]
- *
- *  -   [ Qualifying @ Copying ] Operations may be performed,
- *          only between two Entities which Exist
- *
- *      3a. [ Reading @ Evaluation @ Getting ] is a copying of values,
- *              from a remote Address (typically a Machine), 
- *              to a local Address (typically a User).
- *
- *      3b. [ Updating @ Writing @ Setting @ Modifying ] is a copying of values,
- *              from a local Address (typically a User),
- *              to a remote Address (typically a Machine).
- *
- *  -   The acronym, CRUD ( Create, Read, Update, Delete), is conventional.
- *  
- *  -   (Discuss) Reading and Updating are basically the same operation, but in
- *      different directions. The main difference is that because the flow
- *      teleology is User-centric (describes User intent), there arises an
- *      asymmetry between Reading and Updating, whereby 
- *
- *      -   Reading ASSUMES the staleness of the User's data, and therefore
- *          performs dependency check and reevaluation, of the remote data,
- *          whereas,
- *
- *      -   Updating ASSUMES the staleness of the remote data, and therefore
- *          performs no dependency check and reevaluation of the local data,
- *
- *  -   (Discuss) Creating may be viewed simply as the first Update event. 
- *
- *  -   (Sketch) Given two types of Entity, and three types of event, we should need
- *      six ( 6 = 2 * 3 ) blocks of code to implement this model.
- *      Additionally, we have to pipe the Qualifying Operation to two sets
- *      of syntax, respectively for 3a. and 3b.
- *
- ******************************************************************************/
-
-
-        let graph = {
-            vertices : {}  // consider upgrade to WeakMap (TODO)
-        }
-
-    /////////////////////////////////////////////////////////////////
-    //
-    //      1.  Approach using 'a prop key' as the datum key, then defining
-    //          properties on the value.
-    //    
-    //          This however, requires that we coerce all primitives 'string's,
-    //          'boolean's, and 'number's to objects.  This would result in
-    //          large performance losses under the hood, and users may not know
-    //          why their data operations are so non-performant.
-    //          
-    //          But it completely fails for 'undefined' and 'null'. So we cannot
-    //         
-    //  Object.defineProperty ( graph.vertices, 'a prop key', {
-    //      value       : new String ('a prop value'),
-    //                              // specification default : undefined
-    //      configurable: false,    // specification default : false    
-    //      enumerable  : false,    // specification default : false    
-    //      writable    : true      // specification default : false     
-    //  } )
-    //  Object.defineProperty ( graph.vertices['a prop key'], 'a meta prop key', {
-    //      value       : 'a meta prop value',
-    //      configurable: false,    
-    //      enumerable  : false,    
-    //      writable    : true      
-    //  } )
-    //
-    //  console.log ( graph.vertices['a prop key'] ) 
-    //
-    /////////////////////////////////////////////////////////////////
-
-    /////////////////////////////////////////////////////////////////
-    //
-    //      2.  Approach with an extra layer of indirection. 'a prop key' now
-    //          refers to an object. The value of 'a prop key' is stored in a
-    //          subprop called 'datum' because we don't want to be confusing
-    //          and name the prop 'value'. We might alternatively call it 'real
-    //          value', 'really', or 'actually'...
-    //
-    //          graph.vertices.datum
-
-        graph.vertices['a prop key'] = {}
-
-        Object.defineProperty ( graph.vertices['a prop key'], 'datum', {
-            configurable: false,    // specification default : false    
-            enumerable  : true,     // specification default : false    
-            writable    : true,     // specification default : false     
-            value       : 'a prop value',
-                                    // specification default : undefined
-        } )
-
-    //      2.1.    As this seems to be satisfactory so far, we proceed to add a
-    //          log to this vertice. Upon its creation, a vertex can log its
-    //          first update. Upon deletion, a vertex can log a soft-delete
-    //          date.
-    //              
-    //          As this seems to be satisfactory so far, we proceed to a cache
-    //          to this vertice. The cache has a log, enabling playback of a
-    //          datum's history - if logging is enabled, this might eat up
-    //          memory very quickly with frequently modified datum, such as UI
-    //          data.
-    //
-    //          graph.vertices.datum.log
-
-        Object.defineProperty ( graph.vertices['a prop key'], 'log', {
-            configurable : false,    
-            enumerable   : true,    
-            writable     : true,     
-            value        : {            // Examples of data structure:
-
-                reads   : [ 
-                    (   performance.timeOrigin
-                        ||  performance.timing.navigationStart 
-                    ) + performance.now()
-                ], 
-
-                updates : [ 
-                    [   
-                        (   performance.timeOrigin
-                            ||  performance.timing.navigationStart 
-                        ) + performance.now(), 
-                        
-                        'the relevant prop value'
-                    ] 
-                ],
-
-                deletes : [ 
-                    [   
-                        (   performance.timeOrigin
-                            ||  performance.timing.navigationStart 
-                        ) + performance.now(), 
-                        
-                        'the relevant prop value'
-                    ] 
-                ],
-            },
-        } )
-
-    //      2.2.    Assuming that all is well with the first two props, we now
-    //          can consider adding a cache. But since the 'datum's have not
-    //          been described to hold computed values, the computation time of
-    //          any datum should be 0, and so a cache would be pointles. First
-    //          we should add computability of values.
-    //
-    //          graph.vertices.datum.algo
-
-        Object.defineProperty ( graph.vertices['a prop key'], 'algo', {
-            configurable : false,    
-            enumerable   : true,    
-            writable     : true,     
-            value        : () => 1 + 2   // some kind of function
-        } )
-
-    //      2.3.    This suffices for computations which do not depend on other
-    //          data. In order to point to other data in the graph, we need to
-    //          start storing arrows between vertices. For starters, we'll only
-    //          store the 'in arrows' because we want to know what data are used
-    //          in the computation of this datum. But later we may want to
-    //          automatically 'push' updates to any data whose computations
-    //          depend on this datum, so we will have to store the 'out arrows'
-    //          also.
-        
-        Object.defineProperty ( graph.vertices['a prop key'], 'arrows', {
-            configurable : false,    
-            enumerable   : true,    
-            writable     : true,     
-            value        : {
-
-                ins  : [
-
-                    {   ikey    : 'another prop key',
-                        reads   : [ 
-                            (   performance.timeOrigin
-                                ||  performance.timing.navigationStart 
-                            ) + performance.now()
-                        ], 
-
-                        updates : [ 
-                            [   
-                                (   performance.timeOrigin
-                                    ||  performance.timing.navigationStart 
-                                ) + performance.now(), 
-                                
-                                'the relevant prop value'
-                            ] 
-                        ],
-
-                        deletes : [ 
-                            [   
-                                (   performance.timeOrigin
-                                    ||  performance.timing.navigationStart 
-                                ) + performance.now(), 
-                                
-                                'the relevant prop value'
-                            ] 
-                        ],
-                    }
-
-                ],
-                outs : [ 
-
-                    {   okey    : 'another prop key',
-                        reads   : [ 
-                            (   performance.timeOrigin
-                                ||  performance.timing.navigationStart 
-                            ) + performance.now()
-                        ], 
-
-                        updates : [ 
-                            [   
-                                (   performance.timeOrigin
-                                    ||  performance.timing.navigationStart 
-                                ) + performance.now(), 
-                                
-                                'the relevant prop value'
-                            ] 
-                        ],
-
-                        deletes : [ 
-                            [   
-                                (   performance.timeOrigin
-                                    ||  performance.timing.navigationStart 
-                                ) + performance.now(), 
-                                
-                                'the relevant prop value'
-                            ] 
-                        ],
-                    }
-
-                ]
-            } 
-        } )
-
-    //      2.4.    Now that we can traverse vertices via arrows, it is
-    //          reasonable to believe that some value computations will be
-    //          expensive, and so we may want to have a cache boolean, which 
-    //          allows stale values to be marked, without recomputing them
-    //          immediately.
-        
-        Object.defineProperty ( graph.vertices['a prop key'], 'cache', {
-            configurable : false,    
-            enumerable   : true,    
-            writable     : true,     
-            value        : {        // Examples of data structure:
-                stale   : false,
-                hits    : [ 
-                    (   performance.timeOrigin
-                        ||  performance.timing.navigationStart 
-                    ) + performance.now()
-                ],
-                misses  : [ 
-                    (   performance.timeOrigin
-                        ||  performance.timing.navigationStart 
-                    ) + performance.now()
-                ]
-            } 
-        } )
-
-    //      If we accept the data structure as it is so far, then we can proceed
-    //      to discuss design of the operating structure, i.e. chronological
-    //      processes, in this system.
-    //
-    //      3.1.    Creating a Vertice  OK 
-    //      3.2.    Reading a Vertice   x
-    //      3.3.    Updating a Vertice  x
-    //      3.4.    Deleting a Vertice  x
-    //
-    //      4.1.    Creating an Arrow   x
-    //      4.2.    Reading an Arrow    x
-    //      4.3.    Updating an Arrow   x
-    //      4.4.    Deleting an Arrow   x
-
-
-
 
         let {   serlNode    : node, 
                 graph       : g,
@@ -1149,27 +623,27 @@ console.groupCollapsed ('3.0.    Creating a graph server')
 
 console.groupEnd (`3.0.    Creating a graph server`)
 
-{   console.groupCollapsed (`3.1.    Creating a Vertice  OK `)
+{   console.group (`3.1.    Creating a Vertice  OK `)
 
     {   console.groupCollapsed ( `3.1.0. no namespaces` )
-        console.log ( SERVER.location )
+        console.warn ( SERVER.location )
             // undefined key
 
-        console.log ( ( SERVER.location = 'Malaysia' ) )    
+        console.warn ( ( SERVER.location = 'Malaysia' ) )    
             // '=' evaluates to the assigned value
 
-        console.log ( SERVER.location )     
+        console.warn ( SERVER.location )     
             // 'Malaysia' 
 
-        console.log ( SERVER.testundefined = undefined )     
+        console.warn ( SERVER.testundefined = undefined )     
             // '=' evaluates to the assigned value
 
-        console.log ( SERVER.testundefined )     
+        console.warn ( SERVER.testundefined )     
             // undefined
 
-        console.log ( SERVER.address = {} )
+        console.warn ( SERVER.address = {} )
             // evaluates to the final, proxy-handled, assigned value 
-
+console.error ( `WIP HERE` ) 
             //  DEV:
             //      When the subObject {} is set, it is also given a symbol key,
             //          
@@ -1177,7 +651,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
 
         console.groupEnd ( `3.1.0. no namespaces` )
     }
-       
+
     {   console.group ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
 
         {   //  Expect error:
@@ -1203,6 +677,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
         console.groupEnd ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
     }
         
+/*       
     {   console.group ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
 
         {   console.groupCollapsed (`trying to set the value of a subSubObject`)
@@ -1218,7 +693,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
         }
 
         {   console.groupCollapsed (`trying to get the value of a subSubObject`)
-            console.log ( `SERVER.address.unit.part1 : ${SERVER.address.unit.part1}` )
+            console.warn ( `SERVER.address.unit.part1 : ${SERVER.address.unit.part1}` )
             console.groupEnd (`trying to get the value of a subSubObject`)
         }
 
@@ -1314,109 +789,16 @@ console.groupEnd (`3.0.    Creating a graph server`)
         
         console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
     }
-
+*/
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
+/*
 {   console.group ('4.1.    Dependency Injection')
         
     console.log ( SERVER.source1 = 'theFIRSTpart;' )
     console.log ( SERVER.source2 = 'theSECONDpart;' )
 
-    /* 
-    // pattern 1a
-    console.log ( SERVER.computed1a ( 
-        ( x = 'source1', y = 'source2' ) => x + y,
-        [ 'source1', 'source2' ]
-    ) )
-    // pattern 1b
-    console.log ( SERVER.computed1b ( 
-        ( [ x, y ] = [ 'source1', 'source2' ] ) => x + y,
-        [ 'source1', 'source2' ]
-    ) )
-    // pattern 1c
-    console.log ( SERVER.computed1c ( 
-        ( ...args ) => args[0] + args[1],
-        [ 'source1', 'source2' ]
-    ) )
-    // pattern 1d
-    console.log ( SERVER.computed1d ( 
-        ( x, y ) => x + y,
-        [ 'source1', 'source2' ]
-    ) )
-    // Discussion: 
-    //
-    // The rough approach here is, serverHandler would use the array argument to
-    // plant arrows in the dependency vertices (convenience), then plant arrows in the
-    // dependent vertex, and set the dependent vertex's valueHandler to grab the
-    // dependency values to compute the dependent whenever needed.
-    //
-    // In terms of DX, it would be ideal to have the FIRST parameter only, however,
-    // the serverHandler would not be able to reach into the lambda and read the
-    // default values of parameters, which the serverHandler needs to be able to
-    // traverse the graph to obtain values to insert as arguments respective to
-    // each parameter. THEREFORE, the SECOND parameter emerges simply to tell
-    // the serverHandler where to find the values, and so it because redundant
-    // to state the default parameters, and the default parameters then turn
-    // into mere reading aids for the xdev.
-    //
-    // 1b is more verbose than 1a.
-    //
-    // 1c is least verbose, but less readable (less literal, more demanding on
-    // memory).
-    //
-    // 1d is very nice, but the xdev would have to remember a lot of mappings
-    // between sources(1-10 for example) and variable names (a-j for example).
-    //
-    // These all share the same fundamental problem.
-
-
-    // pattern 2a
-    console.log ( SERVER.computed2a ( 
-        () => this.source1 + this.source2
-    ) )
-    // pattern 2b
-    console.log ( SERVER.computed2b ( 
-        () => SERVER.source1 + SERVER.source2 
-    ) )
-    // Discussion:
-    //
-    // The rough approach here is, serverHandler would,
-    //
-    // 1.       use 
-    // Reflect.apply ( target, thisArgument, argumentsList ) on the lambda,
-    // setting thisArgument to be a Proxy whose handler.get would be able to
-    // obtain string keys (e.g. 'source1', 'source2') via the 'prop' argument;
-    // the handler.get would then traverse the graph, plant arrows in the
-    // dependency vertices (convenience), then plant arrows in the dependent
-    // vertex, and 
-    //
-    // 2.       use 
-    // Reflect.apply ( target, thisArgument, argumentsList ) on the lambda,
-    // setting thisArgument to be the graphServer (whose serverHandler already
-    // handles syntax of the form SERVER.source1, SERVER.source2, for example),
-    // 
-    // 3.
-    // finally, wrapping (2.) with any other administrative code, then setting
-    // it as the dependent vertex's valueHandler.get
-    //
-    // Points 1,2,3 refer mainly to pattern 2a. 2b is not quite sufficient to
-    // achieve 1,2,3.
-    //
-    console.warn ( `Pattern 2 needs to be tested with compound keys.` )
-
-    // ALL PATTERNS 1 & 2 :
-    // the lambda could be stored simply in the valueHandler.get, or more
-    // explictly but less succinctly in a .algo property.
-    //
-    // Both 1,2 fail because of the pattern SERVER.key ( do something ), as when
-    // assigning to a new key, this amounts to 'undefined()' which can't
-    // happen because undefined is not a function.
-    //
-    //
-    //
-    // TODO: test the ergonomics of both
-    */
 
     // pattern 3
     console.warn ( SERVER.plain = {} ) 
@@ -1430,11 +812,12 @@ console.groupEnd (`3.0.    Creating a graph server`)
 
     console.groupEnd ('4.1.    Dependency Injection')
 }
+*/
 
-{   console.error ( `WIP HERE` ) 
+{   
     console.log ( SERVER().vertices )  
 }
-
+/*
 console.groupCollapsed('3.2.    Reading a Vertice   OK')
 console.groupEnd('3.2.    Reading a Vertice   OK')
 
@@ -1442,14 +825,7 @@ console.warn('3.3.    Updating a Vertice  x')
 console.warn(`3.3.    (Does not check for 'configurable' or 'writable' - will only complain when you try to extract the tree with SERVER.key() )`)
 console.warn('3.4.    Deleting a Vertice  x')
 
-console.error(`4.1. the Graph class now manipulates Datum instances to its own
-ends; most of that code is in the graph.serverHandler; however, aside from the
-application-specific serverHandler, the Graph class lacks application agnostic
-code for CRUD; much of what serverHandler does is facilitate a UIX for the
-developer using the graph.server... to make namespacing of data easier via
-nested objects; however none of that is needed for graph data analysis and
-traversal in general... so how separate should these concerns be? Consider this
-next.`)
+console.error(`4.1. the Graph class now manipulates Datum instances to its own ends; most of that code is in the graph.serverHandler; however, aside from the application-specific serverHandler, the Graph class lacks application agnostic code for CRUD; much of what serverHandler does is facilitate a UIX for the developer using the graph.server... to make namespacing of data easier via nested objects; however none of that is needed for graph data analysis and traversal in general... so how separate should these concerns be? Consider this next.`)
 
 
 console.groupCollapsed('4.1.    Creating an Arrow   OK')
@@ -1458,7 +834,7 @@ console.groupEnd('4.1.    Creating an Arrow   OK')
 console.warn('4.2.    Reading an Arrow    x')
 console.warn('4.3.    Updating an Arrow   x')
 console.warn('4.4.    Deleting an Arrow   x')
-
+*/
 
 
         return  'placeholder'
