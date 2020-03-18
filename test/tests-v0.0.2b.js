@@ -232,7 +232,38 @@ import * as Exam from '../lib/classes/exam.js'
         }
 */
 
-window.Datum = class Datum {
+window.Algo = class Algo {
+
+    constructor ( ... args ) {
+        
+        if ( args.length !== 1 ) {
+            throw Error (`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`) 
+        }
+        if ( typeof args[0] !== 'function' ) {
+            throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
+        }
+        if ( ! ( 'prototype' in args[0] ) ) {
+            throw Error (`Algo.constructor : you appear to have passed in an
+            arrow function expression; AFE bodies do not have internal bindings
+            for the (this) keyword, instead inheriting (this) from their surrounding
+            scope. Therefore, Algo.constructor cannot use Reflect.apply ( AFE,
+            this = (new Proxy) ) to sniff the props called on (this) in the AFE's
+            function body. Please use a non-arrow function expression instead.`)
+        }
+
+        // this.verticeKeys = []
+        // It is possible to extract this data here, but currently it has been
+        // delegated to Graph.serverHandler.set
+
+        let _lambda = this.lambda = args[0]
+
+        return this
+
+    }
+
+}
+
+class Datum {
     // Do not declare fields here! (non-standard feature)
 
     constructor ( ...args ) {
@@ -322,7 +353,7 @@ window.Graph = class Graph {
         }
     }
 
-    // TODO consider, should this be a static method? Performance? Safety?
+    // TODO consider, should this be a static method? Performance? Safety? 
     getServerHandler () {
         
         let graph = this
@@ -343,30 +374,21 @@ window.Graph = class Graph {
 // Values which are not objects, which will throw an error if you try
 // to read their properties : null, undefined, 
         
-console.log (`serverHandler.get : Try to get the vertex (${prop}).`)
+console.log (`serverHandler.get : graph.vertices['${prop}'].`)
 
-                if ( ! ( prop in graph.vertices ) )
-                { return undefined } 
+                if ( ! ( prop in graph.vertices ) ) { 
+
+console.log (`serverHandler.get could not find the key (${prop}) in graph.vertices`)
+                    return undefined 
+                } 
 
                 // Wherein. if we find that the user has previously set an
                 // object as the value, we try to intercept the call to that
                 // object's properties...
-                else 
-                if  (   ( typeof graph.vertices[ prop ].value !== 'object' )
-                        || 
-                        ( !( graph.parentKey in graph.vertices[ prop ].value ) )
-                    ) 
-                { return graph.vertices[ prop ].value } 
+                
+console.log ( graph.vertices [ prop ].value )
 
-                else {
-                    //  Implicitly, 
-                    //      graph.vertices[ prop ].value[ graph.parentKey ]
-                    //  ... is set.
-console.log ( `serverHandler.get found a parentkey in (${prop})`)
-
-                    return graph.vertices[ prop ].value
-                }
-
+                    return graph.vertices[ prop ].value 
             },
 
             // serverHandler
@@ -380,7 +402,7 @@ console.log ( `serverHandler.get found a parentkey in (${prop})`)
                 // TODO: consider, enabling arrow creation via ['->'] or
                 // ['$pointsTo']
 
-console.log ( `serverHandler.set : Try to set the vertex (${prop}) to (${val}).` ) 
+console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
 
                 // Wherein, if we find the user trying to set an object as the
                 // value, we want to intercept future calls to that object's
@@ -394,8 +416,8 @@ console.log ( `serverHandler.set : Try to set the vertex (${prop}) to (${val}).`
                     // IMPORTANT - subObject mark created
                     valReturner[ graph.parentKey ] = prop
 
-console.log ( `serverHandler.set : set a Symbol Key (value = parentKey) in the value of the
-vertex (${prop}); note that this value is stored in the (address.value) as (Proxy ( ()=> value) )` ) 
+console.log ( `serverHandler.set : set
+graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKey' which is a Symbol] = '${prop}'` ) 
 
                     for ( const loopProp in val ) {
 
@@ -406,6 +428,28 @@ vertex (${prop}); note that this value is stored in the (address.value) as (Prox
                                 // target and receiver could be left 'null'?
                         ) { return false }
                     }
+
+{
+    // Detect dependencies and plant arrows.
+    if ( val instanceof Algo ) {
+        
+        let keySniffer = new Proxy ( {}, {
+            
+            get : ( ksTarg, ksProp, ksRcvr ) => {
+               
+                // WARNING: does not require dependency keys to be in the graph
+                // before dependents are set FIXME
+                //
+                if ( ! ( 'causal' in graph.vertices[ ksProp ].arrows ) ) {
+
+                    graph.vertices[ ksProp ].arrows.causal = { outs: [] }
+                }
+                graph.vertices[ ksProp ].arrows.causal.outs.push ( { okey: prop } )
+            }
+        } )
+        Reflect.apply ( val.lambda, keySniffer, [] )
+    }
+}
 
                     return graph.updateVertex   (   prop, 
                                                     new Proxy ( 
@@ -1001,7 +1045,7 @@ new Exam.Exam ( {
                 graph       : g,
                 server      : SERVER } = new Graph 
 
-console.group ('3.0.    Creating a graph server')
+console.groupCollapsed ('3.0.    Creating a graph server')
 
     console.log ( SERVER )      //  a proxy around the Graph object
     console.log ( SERVER() )    //  the Graph object
@@ -1010,7 +1054,7 @@ console.group ('3.0.    Creating a graph server')
 
 console.groupEnd (`3.0.    Creating a graph server`)
 
-{   console.groupCollapsed (`3.1.    Creating a Vertice  OK `)
+{   console.group (`3.1.    Creating a Vertice  OK `)
 
     {   console.groupCollapsed ( `3.1.0. no namespaces` )
         console.log ( SERVER.location )
@@ -1039,7 +1083,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
         console.groupEnd ( `3.1.0. no namespaces` )
     }
        
-    {   console.groupCollapsed ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
+    {   console.group ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
 
         {   //  Expect error:
 
@@ -1179,12 +1223,12 @@ console.groupEnd (`3.0.    Creating a graph server`)
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-{   console.group ('4.1.    Dependency Injection')
+{   console.groupCollapsed ('4.1.    Dependency Injection')
         
     console.log ( SERVER.source1 = 'theFIRSTpart;' )
     console.log ( SERVER.source2 = 'theSECONDpart;' )
 
-    
+    /* 
     // pattern 1a
     console.log ( SERVER.computed1a ( 
         ( x = 'source1', y = 'source2' ) => x + y,
@@ -1261,12 +1305,33 @@ console.groupEnd (`3.0.    Creating a graph server`)
     // finally, wrapping (2.) with any other administrative code, then setting
     // it as the dependent vertex's valueHandler.get
     //
+    // Points 1,2,3 refer mainly to pattern 2a. 2b is not quite sufficient to
+    // achieve 1,2,3.
+    //
     console.warn ( `Pattern 2 needs to be tested with compound keys.` )
 
     // ALL PATTERNS 1 & 2 :
     // the lambda could be stored simply in the valueHandler.get, or more
     // explictly but less succinctly in a .algo property.
+    //
+    // Both 1,2 fail because of the pattern SERVER.key ( do something ), as when
+    // assigning to a new key, this amounts to 'undefined()' which can't
+    // happen because undefined is not a function.
+    //
+    //
+    //
     // TODO: test the ergonomics of both
+    */
+
+    // pattern 3
+    console.warn ( SERVER.plain = {} ) 
+    console.warn ( SERVER.plain ) 
+
+    console.warn ( SERVER.computed2a =
+        new Algo ( function() { return this.source1 + this.source2 } )
+    )
+    
+    console.warn ( SERVER.computed2a ) 
 
     console.groupEnd ('4.1.    Dependency Injection')
 }
