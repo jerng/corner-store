@@ -175,7 +175,7 @@ import * as Exam from '../lib/classes/exam.js'
 
         "arrows": {
             "TYPE" : {      // e.g. "causal"
-                "ins": [
+                "in": [
                     {
                         "ikey": "another prop key",
                         "reads": [
@@ -195,7 +195,7 @@ import * as Exam from '../lib/classes/exam.js'
                         ]
                     }
                 ],
-                "outs": [
+                "out": [
                     {
                         "okey": "another prop key",
                         "reads": [
@@ -274,8 +274,8 @@ class Datum {
         this.algo
 
         this.arrows     = {
-            ins     : [],
-            outs    : []
+            in      : [],
+            out     : []
         }
 
         this.log        = {
@@ -388,7 +388,18 @@ console.log (`serverHandler.get could not find the key (${prop}) in graph.vertic
                 
 console.log ( graph.vertices [ prop ].value )
 
-                    return graph.vertices[ prop ].value 
+                if (    ( typeof graph.vertices [ prop ].value == 'function' )
+                        &&
+                        ( graph.algoFlag in graph.vertices [ prop ].value ) )
+                {
+                    return  Reflect.apply ( 
+                                graph.vertices[ prop ].value().lambda, 
+                                graph.server, 
+                                [] 
+                            )
+                }
+
+                return graph.vertices[ prop ].value 
             },
 
             // serverHandler
@@ -409,6 +420,8 @@ console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${va
                 // properties...
                 if ( typeof val == 'object' ) {
 
+console.warn (`Naive object check`)
+
                     let valReturner = () => val
                         // Because we want to Proxy this, and have an (apply)
                         // handler: the proxied value must be a function.
@@ -419,15 +432,27 @@ console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${va
 console.log ( `serverHandler.set : set
 graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKey' which is a Symbol] = '${prop}'` ) 
 
+                    // update sub-vertices
                     for ( const loopProp in val ) {
 
                         if ( !  this.set  ( targGraphReturner, 
                                             prop + '.' + loopProp,
                                             val[loopProp],
-                                            rcvr                    )
-                                // target and receiver could be left 'null'?
-                        ) { return false }
+                                            rcvr                    )    
+                        )       // target and receiver could be left 'null'?
+                        { return false }
                     }
+
+                    let success
+
+                    // update vertex
+                    if ( ! (    success = 
+                                    graph.updateVertex   
+                                    (   prop, 
+                                        new Proxy   (   valReturner, 
+                                                        graph.valueHandler ) ) ) 
+                    )
+                    { return false }
 
 {
     // Detect dependencies and plant arrows.
@@ -440,22 +465,29 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
                 // WARNING: does not require dependency keys to be in the graph
                 // before dependents are set FIXME
                 //
-                if ( ! ( 'causal' in graph.vertices[ ksProp ].arrows ) ) {
+                //  Configure dependencies to track dependent:
+                if ( ! ( 'causal' in graph.vertices[ ksProp ].arrows.out ) ) {
 
-                    graph.vertices[ ksProp ].arrows.causal = { outs: [] }
+                    graph.vertices[ ksProp ].arrows.out.causal = []
                 }
-                graph.vertices[ ksProp ].arrows.causal.outs.push ( { okey: prop } )
+                graph.vertices[ ksProp ].arrows.out.causal.push ( { okey: prop } )
+
+                //  Configure dependent to track dependencies:
+                if ( ! ( 'causal' in graph.vertices[ prop ].arrows.in ) ) {
+
+                    graph.vertices[ prop ].arrows.in.causal = []
+                }
+                graph.vertices[ prop ].arrows.in.causal.push ( { ikey: ksProp } )
             }
         } )
         Reflect.apply ( val.lambda, keySniffer, [] )
+
+        // tag for serverHandler.get performance
+        valReturner[ graph.algoFlag ] = true
+
     }
 }
-
-                    return graph.updateVertex   (   prop, 
-                                                    new Proxy ( 
-                                                        valReturner, 
-                                                        graph.valueHandler ) 
-                                                )
+                    return success
 
                 } // serverHandler.set, if ( typeof val == 'object' )
                 
@@ -600,9 +632,15 @@ console.group (`valueHandler.get: will get a compoundKeyed vertex (${compoundKey
 console.log ( graph.vertices[ compoundKey ] )
 console.groupEnd (`valueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
 
-                    return ( compoundKey in graph.vertices )
-                        ? graph.vertices[ compoundKey ].value
-                        : undefined
+                    if ( ! ( compoundKey in graph.vertices ) ) { 
+
+console.log (`valueHandler.get could not find the key (${compoundKey}) in graph.vertices`)
+                        return undefined 
+                    }
+
+console.warn ( graph.vertices[ compoundKey ].value )
+
+                    { return graph.vertices[ compoundKey ].value }
                 }
 
                 else { return targValueReturner[ prop ] }
@@ -628,12 +666,16 @@ console.log (`valueHandler.set:  found a parentKey in (${targValueReturner})`)
                     // roll with it for now...
                     if ( typeof val == 'object' ) {
                         
-                        let valReturner = () => val
                     // Because we want to Proxy this, and have an (apply)
                     // handler: the proxied value must be a function.
                     // IMPORTANT - subObject mark created
 
+                        let valReturner = () => val
+
                         valReturner[ graph.parentKey ] = compoundKey 
+
+                        
+
 console.log ( `valueHandler.set: the handler : ` )
 console.log ( graph.valueHandler )
 
@@ -685,6 +727,8 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-ob
         this.vertices       = {} 
 
         this.parentKey      = Symbol()
+
+        this.algoFlag        = Symbol()
 
         this.returner       = () => this
 
@@ -1054,7 +1098,7 @@ console.groupCollapsed ('3.0.    Creating a graph server')
 
 console.groupEnd (`3.0.    Creating a graph server`)
 
-{   console.group (`3.1.    Creating a Vertice  OK `)
+{   console.groupCollapsed (`3.1.    Creating a Vertice  OK `)
 
     {   console.groupCollapsed ( `3.1.0. no namespaces` )
         console.log ( SERVER.location )
@@ -1223,7 +1267,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-{   console.groupCollapsed ('4.1.    Dependency Injection')
+{   console.group ('4.1.    Dependency Injection')
         
     console.log ( SERVER.source1 = 'theFIRSTpart;' )
     console.log ( SERVER.source2 = 'theSECONDpart;' )
@@ -1337,18 +1381,28 @@ console.groupEnd (`3.0.    Creating a graph server`)
 }
 
 {   console.error ( `WIP HERE` ) 
-    console.error ( `continue: we need ARROWS` ) 
-    console.error ( `continue: we need ALGOS` ) 
     console.log ( SERVER().vertices )  
 }
 
-console.warn('3.2.    Reading a Vertice   x')
+console.groupCollapsed('3.2.    Reading a Vertice   OK')
+console.groupEnd('3.2.    Reading a Vertice   OK')
+
 console.warn('3.3.    Updating a Vertice  x')
 console.warn(`3.3.    (Does not check for 'configurable' or 'writable' - will only complain when you try to extract the tree with SERVER.key() )`)
 console.warn('3.4.    Deleting a Vertice  x')
 
-console.group('4.1.    Creating an Arrow   x')
-console.groupEnd('4.1.    Creating an Arrow   x')
+console.error(`4.1. the Graph class now manipulates Datum instances to its own
+ends; most of that code is in the graph.serverHandler; however, aside from the
+application-specific serverHandler, the Graph class lacks application agnostic
+code for CRUD; much of what serverHandler does is facilitate a UIX for the
+developer using the graph.server... to make namespacing of data easier via
+nested objects; however none of that is needed for graph data analysis and
+traversal in general... so how separate should these concerns be? Consider this
+next.`)
+
+
+console.groupCollapsed('4.1.    Creating an Arrow   OK')
+console.groupEnd('4.1.    Creating an Arrow   OK')
 
 console.warn('4.2.    Reading an Arrow    x')
 console.warn('4.3.    Updating an Arrow   x')
