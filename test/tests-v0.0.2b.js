@@ -242,14 +242,14 @@ window.Algo = class Algo {
         if ( typeof args[0] !== 'function' ) {
             throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
         }
-        if ( ! ( 'prototype' in args[0] ) ) {
+        /*if ( ! ( 'prototype' in args[0] ) ) {
             throw Error (`Algo.constructor : you appear to have passed in an
             arrow function expression; AFE bodies do not have internal bindings
             for the (this) keyword, instead inheriting (this) from their surrounding
             scope. Therefore, Algo.constructor cannot use Reflect.apply ( AFE,
             this = (new Proxy) ) to sniff the props called on (this) in the AFE's
             function body. Please use a non-arrow function expression instead.`)
-        }
+        }*/
 
         // this.verticeKeys = []
         // It is possible to extract this data here, but currently it has been
@@ -376,11 +376,12 @@ window.Graph = class Graph {
         
 console.log (`serverHandler.get : graph.vertices['${prop}'].`)
 
-                if ( ! ( prop in graph.vertices ) ) { 
-
+                if ( ! ( prop in graph.vertices ) )
+                { 
 console.log (`serverHandler.get could not find the key (${prop}) in graph.vertices`)
+
                     return undefined 
-                } 
+                } else 
 
                 // Wherein. if we find that the user has previously set an
                 // object as the value, we try to intercept the call to that
@@ -392,14 +393,12 @@ console.log ( graph.vertices [ prop ].value )
                         &&
                         ( graph.algoFlag in graph.vertices [ prop ].value ) )
                 {
-                    return  Reflect.apply ( 
-                                graph.vertices[ prop ].value().lambda, 
-                                graph.server, 
-                                [] 
-                            )
-                }
+                    return  graph
+                            .vertices[ `${prop}.lambda` ]
+                            .value ( graph.server )
+                } else
 
-                return graph.vertices[ prop ].value 
+                {   return graph.vertices[ prop ].value }
             },
 
             // serverHandler
@@ -480,7 +479,8 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
                 graph.vertices[ prop ].arrows.in.causal.push ( { ikey: ksProp } )
             }
         } )
-        Reflect.apply ( val.lambda, keySniffer, [] )
+        //Reflect.apply ( val.lambda, keySniffer, [] )
+        val.lambda ( keySniffer )
 
         // tag for serverHandler.get performance
         valReturner[ graph.algoFlag ] = true
@@ -1372,7 +1372,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
     console.warn ( SERVER.plain ) 
 
     console.warn ( SERVER.computed2a =
-        new Algo ( function() { return this.source1 + this.source2 } )
+        new Algo ( s => s.source1 + s.source2 )
     )
     
     console.warn ( SERVER.computed2a ) 
