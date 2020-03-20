@@ -199,6 +199,18 @@ globalThis.Graph = class Graph {
 
         datum = new Datum ( { [key] : value } )
 
+        if ( typeof value == 'object') {
+         
+            // update sub-vertices
+            for ( const loopKey in value ) {
+
+                if ( !  this.setVertex (    
+                            key + '.' + loopKey,
+                            value[ loopKey ]       )    )       
+                { return false }
+            }
+        }
+
         // Detect dependencies and plant arrows.
         if ( value instanceof Algo ) {
 
@@ -235,7 +247,7 @@ globalThis.Graph = class Graph {
 
             value.lambda ( keySniffer )
 
-        }
+        } // (value instanceof Algo)
 
         this.vertices [ datum.key ] 
             = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
