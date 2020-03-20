@@ -85,6 +85,20 @@ class Algo {
 
 }
 
+/**
+ *  Arities:
+ *
+ *  1   :   Argument is typechecked.
+ *      
+ *      String ?    datum.key <= argument,
+ *
+ *      Object ?    datum.key   <= object's first key,
+ *                  datum.value <= object's first value,
+ *      
+ *                  ... to be implement: object's other key/values as inputs... 
+ *      
+ *      Array ?     ... to be implemented as lists of the above...       
+ */
 class Datum {
     // Do not declare fields here! (non-standard feature)
 
@@ -93,7 +107,7 @@ class Datum {
         // initialisers
         this.key
         this.value
-        this.algo
+        //this.algo
 
         this.arrows     = {
             in      : { 
@@ -135,9 +149,15 @@ class Datum {
                         (typeof n) is not 'string' or 'object';  branch undefined`)
                 }
             default:
-                throw Error (`Datum::constructor/n called, branch for this arity is undefined.`)
+                throw Error (`datum.constructor/n called, branch for this arity is undefined.`)
         }
     }
+}
+
+class DatumReturner {
+    constructor ( datum ) {
+        return () => datum
+    } 
 }
 
 window.Graph = class Graph {
@@ -145,44 +165,123 @@ window.Graph = class Graph {
 
     // A graph server, actually.
 
-    updateVertex ( ... args ) {
+    setVertex ( ... args ) {
         //  TODO? : aliases
         //  this.c = this.createVertice 
 
         let datum
-        let datumReturner = () => datum
+            // Because we want to Proxy this, and have an (apply)
+            // handler: the proxied value must be a function, which will wrap
+            // around the datum with a DatumReturner.
 
         switch ( args.length ) 
         {
+            case 0:
+                throw Error (`graph.setVertex/0 called; unsupported arity.`)
+
             case 1:
 
-                datum = new Datum ( args[0] )
-                this.vertices [ datum.key ] 
-                    = new Proxy ( datumReturner, this.datumHandler )
+                console.warn (`graph.setVertex/1 : write a test for this branch`)
+                
+                let key = args[0]  
 
-                // redundant check?
-                if ( this.vertices [ datum.key ] !== args[0] ) {
-                    throw Error (`Graph::updateVertex/1 called, update failed.`)
-                }
+                datum   = new Datum ( key )
+
+                this.vertices [ datum.key ] 
+                    = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
+
                 break
-
-            case 2:
-
-                datum = new Datum ( { [ args[0] ] : args[1] } )
-
-                this.vertices [ datum.key ] 
-                    = new Proxy ( datumReturner, this.datumHandler )
-
-console.log( `graph.updateVertex :`, datumReturner, this.vertices [ datum.key ] )
-
-                // redundant check?
-                return  ( this.vertices [ datum.key ]().value == args[1] ) 
-                        ? true
-                        : false
-
-            default:
-                throw Error (`Graph::updateVertex/n was called, where n's branch remained undefined `)
         }
+        // HEREON: args.length > 1
+
+        let key     = args[0]
+        let value   = args[1]
+
+        datum = new Datum ( { [key] : value } )
+
+        // Detect dependencies and plant arrows.
+        if ( value instanceof Algo ) {
+
+            let keySniffer = new Proxy ( {}, {
+                
+                get : ( ksTarg, ksProp, ksRcvr ) => {
+                  
+                    console.log (`serverHandler.set, val is an Algo, :`,
+                    this.vertices[ ksProp ]('Datum') )
+
+                    //  Configure dependent to track dependencies:
+                    if ( ! ( 'causal' in datum.arrows.in ) ) {
+
+                        datum.arrows.in.causal = []
+                    }
+                    datum.arrows.in.causal.push ( { ikey: ksProp } )
+
+                    // WARNING: does not require dependency keys to be in the graph
+                    // before dependents are set FIXME
+                    //
+                    //  Configure dependencies to track dependent:
+
+                    let dependencyDatum = this.vertices[ ksProp ]('Datum')
+
+                        if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
+                            
+                            dependencyDatum.arrows.out.causal = []
+                        }
+                        dependencyDatum.arrows.out.causal.push ( { okey: key } )
+
+                }
+            } )
+
+            value.lambda ( keySniffer )
+
+        }
+
+        this.vertices [ datum.key ] 
+            = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
+
+        console.log( `graph.setVertex/[n>1] :`, datum.key, this.vertices [
+        datum.key ]() )
+
+        // redundant? check
+        return  ( this.vertices [ datum.key ]() == args[1] ) 
+                ? true
+                : false
+    }
+
+    getVertex ( key ) {
+        if ( ! ( key in this.vertices ) )
+        { 
+            console.log(this)
+            console.log (`graph.getVertex/1 could not find the key (${key}) in
+            graph.vertices`)
+
+            return undefined 
+        }
+
+        let value = this.vertices[ key ]()
+            console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
+            }' ]() : `, this.vertices [ key ]() )
+
+        if ( value instanceof Algo ) { 
+            console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
+            return value.lambda ( this.server ) 
+        } 
+
+        else
+
+        if ( typeof value == 'object' )
+        {
+            // Wherein. if we find that the user has previously set an
+            // object as the value, we try to intercept the call to that
+            // object's keyerties...
+            console.log (`graph.getVertex/1 : found that datum.value is
+            an object, so will return graph.vertices ['${key}'] `)
+
+            return this.vertices[ key ] 
+        } 
+
+        else
+        { return value } 
     }
 
     // TODO consider, should this be a static method? Performance? Safety? 
@@ -202,111 +301,41 @@ console.log( `graph.updateVertex :`, datumReturner, this.vertices [ datum.key ] 
             // serverHandler
             get : function( targGraphReturner, prop, rcvr ) {
 
-console.log (`serverHandler.get : graph.vertices['${prop}'].`)
+                console.log (`serverHandler.get : graph.vertices['${prop}'].`)
 
-                if ( ! ( prop in graph.vertices ) )
-                { 
-console.log (`serverHandler.get could not find the key (${prop}) in graph.vertices`)
-
-                    return undefined 
-                } else 
-
-                // Wherein. if we find that the user has previously set an
-                // object as the value, we try to intercept the call to that
-                // object's properties...
-                
-console.log ( `serverHandler.get got graph.vertices[ '${prop}' ]() : `, graph.vertices [ prop ]() )
-
-                if ( graph.vertices[ prop ].algo )
-                {
-                  return graph.vertices[ prop ].algo ( graph.server )
-
-                } else
-
-                {   return graph.vertices[ prop ].value }
+                return graph.getVertex ( prop )
             },
 
             // serverHandler
             set : function( targGraphReturner, prop, val, rcvr ) {
 
-console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
+                console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
 
                 // Wherein, if we find the user trying to set an object as the
                 // value, we want to intercept future calls to that object's
                 // properties...
-                if ( typeof val == 'object' ) {
+                if ( typeof val == 'object' )
+                {
 
-console.warn (`Naive object check`)
+                    console.warn (`Naive object check`)
 
-                    //let valReturner = () => val
-                        // Because we want to Proxy this, and have an (apply)
-                        // handler: the proxied value must be a function.
-
-console.log ( `serverHandler.set : set
-graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKey' which is a Symbol] = '${prop}'` ) 
-
-                    // update sub-vertices
-                  //for ( const loopProp in val ) {
-
-                  //    if ( !  this.set  ( targGraphReturner, 
-                  //                        prop + '.' + loopProp,
-                  //                        val[loopProp],
-                  //                        rcvr                    )    
-                  //    )       // target and receiver could be left 'null'?
-                  //    { return false }
-                  //}
+                    console.log ( `serverHandler.set : set
+                        graph.vertices ['${prop}'] = Proxy ( ()=>Datum) ], where
+                        datum.value = '${val}'` ) 
 
                     let success
 
-                    // update vertex
-                    if ( ! (    success = graph.updateVertex   (   prop, val ) ) )
+                    //      graph.setVertex/2 already does a redundant check that
+                    //      the graph.vertices['prop'] was set correctly
+                    if ( ! ( success = graph.setVertex ( prop, val ) ) )
                     { return false }
 
-                    // IMPORTANT - subObject mark created
-                    //valReturner[ graph.parentKey ] = prop
-
-/*
-{
-    // Detect dependencies and plant arrows.
-    if ( val instanceof Algo ) {
-        
-        let keySniffer = new Proxy ( {}, {
-            
-            get : ( ksTarg, ksProp, ksRcvr ) => {
-               
-                // WARNING: does not require dependency keys to be in the graph
-                // before dependents are set FIXME
-                //
-                //  Configure dependencies to track dependent:
-                if ( ! ( 'causal' in graph.vertices[ ksProp ].arrows.out ) ) {
-
-                    graph.vertices[ ksProp ].arrows.out.causal = []
-                }
-                graph.vertices[ ksProp ].arrows.out.causal.push ( { okey: prop } )
-
-                //  Configure dependent to track dependencies:
-                if ( ! ( 'causal' in graph.vertices[ prop ].arrows.in ) ) {
-
-                    graph.vertices[ prop ].arrows.in.causal = []
-                }
-                graph.vertices[ prop ].arrows.in.causal.push ( { ikey: ksProp } )
-            }
-        } )
-        //Reflect.apply ( val.lambda, keySniffer, [] )
-        val.lambda ( keySniffer )
-
-        // tag for serverHandler.get performance
-        
-        graph.vertices[ prop ].algo = val.lambda
-
-    }
-}
-*/                    return success
+                    return success
 
                 } // serverHandler.set, if ( typeof val == 'object' )
                 
                 
-                else { return graph.updateVertex ( prop, val ) }
+                else { return graph.setVertex ( prop, val ) }
 
             
             } // serverHandler.set
@@ -320,230 +349,85 @@ graph.vertices [${prop}] ['value' which is a Proxy(()=>value) ] ['graph.parentKe
         let graph = this
 
         return {
+
             // datumHandler
             apply : function( targDatumReturner, thisArg, args ) { 
 
-console.log (`graph.datumHandler.apply : `, targDatumReturner, thisArg, args )
+switch ( args.length ) 
+{
+    case 0:
+        console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
+            thisArg, args) `, targDatumReturner().key,
+            targDatumReturner().value, thisArg, args )
+        
+        let datum = targDatumReturner()
+
+        if ( typeof datum.value == 'object' ) 
+        {
+
+            console.log (`graph.datumHandler.apply : datum.value is an
+                object`)
+
+            let reducer = 
+                ( acc, cur, ind, arr ) => {
+                    if ( cur.startsWith ( datum.key + '.' ) ) {   
+                        let key = cur.slice ( datum.key.length + 1 )
+                        if ( ! key.includes ( '.' ) ) {
+                            acc[ key ] = graph.vertices[ cur ]()
+                        } 
+                    }
+                    return acc
+                }
+
+            Object.keys ( graph.vertices ).reduce ( reducer, datum.value )
+        }
+        return datum.value
+
+    case 1:
+        console.log (`graph.datumHandler.apply/1 : `)
+        switch (args[0])
+        {
+            case 'Datum':
                 return targDatumReturner()
+
+            default:
+                throw Error (`graph.datumHandler.apply/1 : the argument was
+                not understood`)
+        }
+
+    default:
+        throw Error (`graph.datumHandler.apply/n, where arity-n has no defined branch`)
+}
+
             },
+
+            // datumHandler
             get : function( targDatumReturner, prop, rcvr ) {
 
-console.log (`graph.datumHandler.get : `, prop, rcvr )
+                console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
+                    targDatumReturner().key, prop, rcvr, targDatumReturner(),
+                    graph.vertices[ targDatumReturner().key + '.' + prop ] )
+            
+                
+
+                return graph.getVertex ( targDatumReturner().key + '.' + prop )
             },
+
+            // datumHandler
             set : function( targDatumReturner, prop, val, rcvr) {
 
-console.log (`graph.datumHandler.set : `, prop, val, rcvr)
-            }
-
-        }
-    }
-
-    // TODO consider, should this be a static method? Performance? Safety?
-    getValueHandler () {
-
-        let graph = this
-
-        return {
-
-            // valueHandler
-            apply : function( targValueReturner, thisArg, args ) { 
-
-    //  When, a SERVER.key() is called...
-    //  ... it refers to the underlying Graph object,
-    //  and looks at... 
-    //
-    //      graph.vertices['key'] => a Datum    
-    //      
-    //  ... where...
-    //
-    //      datum.value
-    //
-    //  ... may be  (1.) a non-object, or
-    //              (2.) a Proxy
-    //
-    //  ... where the proxy's target is a valReturner of
-    //  the form...
-    //
-    //      () => val
-    //
-    //  ... where...
-    //
-    //      valReturner[graph.parentKey] => 'key'
-    //
-    //  ... a Symbol key may or may not be set which,
-    //  WHEN SET, marks the val as an object which has
-    //  properties tracked in the graph via compound
-    //  keys of the form...
-    //
-    //      graph.vertices[ 'key' + '.' + subKey ]
-    //
-    //////////////////////////////////////////////////
-
-                            //////////////////////////////////////////////////
-                            //
-                            //  ** BASED ON THE CONTEXT GIVEN ABOVE **
-                            //
-                            //  This code runs upon calls of the form:
-                            //
-                            //      SERVER.key.subKey.subSubKey()
-                            //
-                            //  ... where ...
-                            //
-                            //  thisArg is the proxied parent valReturner, where...
-                            //
-                            //              valReturner[graph.parentKey] => 
-                            //                  'key.subKey'
-                            //  ;
-                            //  targ    is the child valReturner, where ...
-                            //
-                            //              valReturner[graph.parentKey] =>
-                            //                  'key.subKey.subSubKey'
-                            //  ;
-                            //
-                            //  targ()  will return the value of the "original
-                            //          object" set at...
-                            //
-                            //              graph.vertices['key.subKey']
-                            //  ;
-                            //
-                            //  ... and here what we want the code to do, is
-                            //  to take the "original object", update it based
-                            //  on those of its properties were tracked by the
-                            //  graph, and then to return the updated object to
-                            //  the user.
-                            
-console.log ( `valueHandler.apply : ` )                          
-console.log ( targValueReturner[graph.parentKey] )
-
-                let initial         =   targValueReturner()                         
-                let subKeys         =   
-                    Object
-                        .keys ( graph.vertices )
-                        .reduce (
-    (acc, cur, ind, arr) => 
-    {
-        if (cur.startsWith ( targValueReturner[ graph.parentKey ] + '.') ) 
-        {   
-            let key = cur.slice (
-                targValueReturner[graph.parentKey].length + 1
-            )
-            if ( ! key.includes ( '.') )
-            {
-                acc[key] =  (   ( typeof graph.server[cur] == 'function' )
-                                &&
-                                ( graph.parentKey in graph.server[cur] )
-                            )   
-                            ? graph.server[cur]() 
-                            : graph.server[cur]
+                console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
+                    rcvr)`, targDatumReturner().key, prop, val, rcvr )
+                
+                //      This is upstream (via Proxy ( () => graph )'s set
+                //      handler ) graph.setVertex/2 already does a
+                //      redundant check that the graph.vertices['prop'] was
+                //      set correctly.
+                return  graph.setVertex ( 
+                            targDatumReturner().key + '.' + prop, 
+                            val                                     )
             }
         }
-        return acc
-        
-    }
-    
-                , initial ) // reduce()
-
-                return initial
-            },
-
-            // valueHandler
-            get : function( targValueReturner, prop, rcvr ) {
-
-//console.log ( `valueHandler.get's target :`)
-//console.log ( targ )
-console.group ( `valueHandler.get's receiver :`)
-console.log ( rcvr )
-console.groupEnd ( `valueHandler.get's receiver :`)
-
-console.log ( `valueHandler.get the prop:  ${prop}` )
-
-                // IMPORTANT - subObject mark read
-                if ( graph.parentKey in targValueReturner ) {
-//console.log ( `valueHandler.get found a parentKey in the (targ) argument` )
-                    
-                    let compoundKey =
-                            targValueReturner[ graph.parentKey ]
-                            + '.'
-                            + prop
-
-console.group (`valueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
-console.log ( graph.vertices[ compoundKey ] )
-console.groupEnd (`valueHandler.get: will get a compoundKeyed vertex (${compoundKey}) :`)
-
-                    if ( ! ( compoundKey in graph.vertices ) ) { 
-
-console.log (`valueHandler.get could not find the key (${compoundKey}) in graph.vertices`)
-                        return undefined 
-                    }
-
-console.warn ( graph.vertices[ compoundKey ].value )
-
-                    { return graph.vertices[ compoundKey ].value }
-                }
-
-                else { return targValueReturner[ prop ] }
-            },
-
-            // valueHandler
-            set : function( targValueReturner, prop, val, rcvr) {
-console.log (`valueHandler.set the prop : (${prop})`)
-
-                // IMPORTANT - subObject mark read
-                if ( graph.parentKey in targValueReturner ) {
-                    
-console.log (`valueHandler.set:  found a parentKey in (${targValueReturner})`)
-                    let compoundKey = 
-                            targValueReturner[ graph.parentKey ]
-                            + '.'
-                            + prop
-                    
-                    let success
-
-                    // this code seems redundant, with
-                    // serverHandler's code, but we'll just
-                    // roll with it for now...
-                    if ( typeof val == 'object' ) {
-
-                    let valReturner = () => val
-                        // Because we want to Proxy this, and have an (apply)
-                        // handler: the proxied value must be a function.
-
-                    // IMPORTANT - subObject mark created
-                    valReturner[ graph.parentKey ] = compoundKey 
-
-                        
-
-console.log ( `valueHandler.set: the handler : ` )
-console.log ( graph.valueHandler )
-
-                        success = graph.updateVertex ( 
-                            compoundKey, 
-                            new Proxy ( valReturner, graph.valueHandler )
-                        )
-console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a proxied value`)
-                    }
-                    else { 
-                        success 
-                            = graph.updateVertex ( compoundKey, val )
-
-console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-object`)
-                    } 
-                   
-                    return success
-
-                } 
-                
-                else {
-                
-                    targValueReturner[ prop ] = val
-
-                    // redundant check?
-                    return  targValueReturner[ prop ] == val
-                }
-            
-            } // valueHandler.set
-
-        } // valueHandler
     }
 
     //  Graph()
@@ -570,8 +454,6 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-ob
         this.serverHandler  = this.getServerHandler()
 
         this.server         = new Proxy (   this.returner, this.serverHandler )
-
-        //this.valueHandler   = this.getValueHandler()
 
         this.datumHandler   = this.getDatumHandler()
 
@@ -614,7 +496,7 @@ new Exam.Exam ( {
                 graph       : g,
                 server      : SERVER } = new Graph 
 
-console.groupCollapsed ('3.0.    Creating a graph server')
+console.group ('3.0.    Creating a graph server')
 
     console.log ( SERVER )      //  a proxy around the Graph object
     console.log ( SERVER() )    //  the Graph object
@@ -643,7 +525,6 @@ console.groupEnd (`3.0.    Creating a graph server`)
 
         console.warn ( SERVER.address = {} )
             // evaluates to the final, proxy-handled, assigned value 
-console.error ( `WIP HERE` ) 
             //  DEV:
             //      When the subObject {} is set, it is also given a symbol key,
             //          
@@ -652,7 +533,7 @@ console.error ( `WIP HERE` )
         console.groupEnd ( `3.1.0. no namespaces` )
     }
 
-    {   console.group ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
+    {   console.groupCollapsed ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
 
         {   //  Expect error:
 
@@ -665,7 +546,7 @@ console.error ( `WIP HERE` )
         }
 
         {   console.group (`trying to set the value of a subObject`)
-            console.warn ( `SERVER.address.street = 'Jalan 1' : ${SERVER.address.street = 'Jalan 1'}` ) // ` <- shim: syntax highlighting
+            console.warn ( `SERVER.address.street = 'Jalan 1' : ${SERVER.address.street = 'Jalan 1'}` ) // ` //<- shim: syntax highlighting
                 // evaluates to the assigned value 
             console.groupEnd (`trying to set the value of a subObject`)
         }
@@ -677,13 +558,13 @@ console.error ( `WIP HERE` )
         console.groupEnd ('3.1.1.    Creating a name-spaced Vertice (depth=1) OK ')
     }
         
-/*       
-    {   console.group ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
+    {   console.groupCollapsed ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
 
         {   console.groupCollapsed (`trying to set the value of a subSubObject`)
 
-            console.warn ( `SERVER.address.unit = {} : ${SERVER.address.unit = {}}` ) // ` <- syntax highlighting shim
-                // evaluates to the assigned value 
+            console.warn ( `SERVER.address.unit = {} : ${
+                SERVER.address.unit = {}}` ) // ` //<- syntax highlighting shim
+            // evaluates to the assigned value 
 
             console.warn ( `SERVER.address.unit.part1 = 'The' : ${
                 SERVER.address.unit.part1 = 'The'
@@ -737,33 +618,25 @@ console.error ( `WIP HERE` )
         {   console.groupCollapsed (`Tree-extraction from the graph server`) 
             
             //
-            console.warn ( SERVER.address.unit.part2 )
+            console.warn ( `A proxied datumReturner :`, SERVER.address.unit.part2 )
             
             //
-            console.warn ( SERVER.address.unit.part2() )
-
+            console.error ( `A tree :`, SERVER.address.unit.part2() )
+            
             console.groupEnd (`Tree-extraction from the graph server`) 
         }
 
         {   console.groupCollapsed (`Assigning from the graph server?`) 
 
-            //
             let someVar = SERVER.address.unit.part2
             
             //
             console.warn ( 
-                `These expressions return the proxied values`,
+                `These expressions return the proxied Datums`,
                 someVar, 
                 someVar.part2a 
             )
 
-            //
-            console.warn ( 
-                `These expressions return the extracted trees`, 
-                someVar(),
-                someVar.part2a()
-            )
-            
             //
             console.warn ( 
                 `This expression returns a simple value`,
@@ -772,7 +645,10 @@ console.error ( `WIP HERE` )
 
             console.groupEnd (`Assigning from the graph server?`) 
         }
+
+
         console.groupEnd ('3.1.2.    Creating a name-spaced Vertice (depth>1) OK')
+
     }
 
     {   console.groupCollapsed ('3.1.3.    Tree-insertion into the graph server')
@@ -789,21 +665,16 @@ console.error ( `WIP HERE` )
         
         console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
     }
-*/
+
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-/*
 {   console.group ('4.1.    Dependency Injection')
         
     console.log ( SERVER.source1 = 'theFIRSTpart;' )
     console.log ( SERVER.source2 = 'theSECONDpart;' )
 
-
     // pattern 3
-    console.warn ( SERVER.plain = {} ) 
-    console.warn ( SERVER.plain ) 
-
     console.warn ( SERVER.computed2a =
         new Algo ( s => s.source1 + s.source2 )
     )
@@ -812,6 +683,7 @@ console.error ( `WIP HERE` )
 
     console.groupEnd ('4.1.    Dependency Injection')
 }
+/*
 */
 
 {   
