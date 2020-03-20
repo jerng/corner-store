@@ -165,6 +165,27 @@ globalThis.Graph = class Graph {
 
     // A graph server, actually.
 
+    deleteVertex ( key ) {
+
+        if ( ! ( key in this.vertices ) ) { return true }
+
+        // delete subkeys
+        if ( ( typeof this.vertices[ key ]('datum').value == 'object' ) ) 
+        {
+            for ( const loopKey in this.vertices ) {
+
+                if ( loopKey.startsWith ( key + '.' ) ) {
+                    
+                    if ( ! this.deleteVertex ( loopKey ) ) { return false }
+                }
+            }
+        }
+        
+        delete this.vertices[ key ]
+
+        return ! ( key in this.vertices )
+    }
+
     setVertex ( ... args ) {
         //  TODO? : aliases
         //  this.c = this.createVertice 
@@ -181,7 +202,7 @@ globalThis.Graph = class Graph {
 
             case 1:
 
-                //console.warn (`graph.setVertex/1 : write a test for this branch`)
+                console.warn (`graph.setVertex/1 : rewrite & test for this branch`)
                 
                 let key = args[0]  
 
@@ -197,21 +218,22 @@ globalThis.Graph = class Graph {
         let key     = args[0]
         let value   = args[1]
 
+        // updates are destructive
+        if ( ! this.deleteVertex ( key ) ) { return false }
+
         datum = new Datum ( { [key] : value } )
 
-        if ( typeof value == 'object') {
+        // update sub-vertices
+        if ( typeof value == 'object' ) {
          
-            // update sub-vertices
-            for ( const loopKey in value ) {
+            for ( const subKey in value ) {
 
-                if ( !  this.setVertex (    
-                            key + '.' + loopKey,
-                            value[ loopKey ]       )    )       
+                let compoundKey = key + '.' + subKey
+                if ( !  this.setVertex ( compoundKey, value[ subKey ] ) )       
                 { return false }
             }
         }
 
-        // Detect dependencies and plant arrows.
         if ( value instanceof Algo ) {
 
             let keySniffer = new Proxy ( {}, {
@@ -233,7 +255,7 @@ globalThis.Graph = class Graph {
                     //
                     //  Configure dependencies to track dependent:
 
-                    let dependencyDatum = this.vertices[ ksProp ]('Datum')
+                    let dependencyDatum = this.vertices[ ksProp ]('datum')
 
                         if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
                             
@@ -241,10 +263,10 @@ globalThis.Graph = class Graph {
                         }
                         dependencyDatum
                             .arrows.out.causal.push ( new ArrowOut ( key) )
-
                 }
             } )
 
+            // Detect dependencies and plant arrows.
             value.lambda ( keySniffer )
 
         } // (value instanceof Algo)
@@ -340,6 +362,11 @@ globalThis.Graph = class Graph {
             },
 
             // serverHandler
+            deleteProperty : function ( targGraphReturner, prop ) {
+                return graph.deleteVertex ( prop )    
+            },
+
+            // serverHandler
             get : function( targGraphReturner, prop, rcvr ) {
 
                 //console.log (`serverHandler.get : graph.vertices['${prop}'].`)
@@ -352,32 +379,7 @@ globalThis.Graph = class Graph {
 
                 //console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
 
-                // Wherein, if we find the user trying to set an object as the
-                // value, we want to intercept future calls to that object's
-                // properties...
-                if ( typeof val == 'object' )
-                {
-
-                    //console.warn (`Naive object check`)
-
-                    //console.log ( `serverHandler.set : set
-                    //    graph.vertices ['${prop}'] = Proxy ( ()=>Datum) ], where
-                    //    datum.value = '${val}'` ) 
-
-                    let success
-
-                    //      graph.setVertex/2 already does a redundant check that
-                    //      the graph.vertices['prop'] was set correctly
-                    if ( ! ( success = graph.setVertex ( prop, val ) ) )
-                    { return false }
-
-                    return success
-
-                } // serverHandler.set, if ( typeof val == 'object' )
-                
-                
-                else { return graph.setVertex ( prop, val ) }
-
+                return graph.setVertex ( prop, val )
             
             } // serverHandler.set
         
@@ -428,7 +430,7 @@ switch ( args.length )
         //console.log (`graph.datumHandler.apply/1 : `)
         switch (args[0])
         {
-            case 'Datum':
+            case 'datum':
                 return targDatumReturner()
 
             default:
@@ -443,13 +445,16 @@ switch ( args.length )
             },
 
             // datumHandler
+            deleteProperty : function ( targDatumReturner, prop ) {
+                return graph.deleteVertex ( prop )    
+            },
+
+            // datumHandler
             get : function( targDatumReturner, prop, rcvr ) {
 
                 //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
                 //    targDatumReturner().key, prop, rcvr, targDatumReturner(),
                 //    graph.vertices[ targDatumReturner().key + '.' + prop ] )
-            
-                
 
                 return graph.getVertex ( targDatumReturner().key + '.' + prop )
             },
@@ -722,7 +727,30 @@ console.groupEnd (`3.0.    Creating a graph server`)
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-{   console.group ('4.1.    Dependency Injection')
+{   console.group ('3.4.    Vertex deletion')
+
+    {   SERVER.deletable = 'hi'
+        console.warn ( SERVER.deletable )
+        console.warn ( delete SERVER.deletable )
+        console.warn ( SERVER.deletable )
+    }
+
+    {   console.warn ( JSON.stringify ( SERVER.tree(), null, 2 ) )
+
+        SERVER.tree.b.d = 1
+        console.warn ( JSON.stringify ( SERVER.tree(), null, 2 ) )
+
+        SERVER.tree.b.d = [11,22,,44,,,77]
+        console.warn ( JSON.stringify ( SERVER.tree(), null, 2 ) )
+
+        SERVER.tree.b.d = {z:1, y:2, x: {m:1, n:2} } 
+        console.warn ( JSON.stringify ( SERVER.tree(), null, 2 ) )
+    } 
+
+    console.groupEnd ('3.4.    Vertex deletion')
+}
+
+{   console.groupCollapsed ('4.1.    Dependency Injection')
         
     console.log ( SERVER.source1 = 'theFIRSTpart;' )
     console.log ( SERVER.source2 = 'theSECONDpart;' )
