@@ -54,7 +54,7 @@ class ArrowIn {
 }
 
 // data type for use in Datum
-class Algo {
+globalThis.Algo = class Algo {
 
     constructor ( ... args ) {
         
@@ -160,7 +160,7 @@ class DatumReturner {
     } 
 }
 
-window.Graph = class Graph {
+globalThis.Graph = class Graph {
     // Do not declare fields here! (non-standard feature)
 
     // A graph server, actually.
@@ -181,7 +181,7 @@ window.Graph = class Graph {
 
             case 1:
 
-                console.warn (`graph.setVertex/1 : write a test for this branch`)
+                //console.warn (`graph.setVertex/1 : write a test for this branch`)
                 
                 let key = args[0]  
 
@@ -206,15 +206,15 @@ window.Graph = class Graph {
                 
                 get : ( ksTarg, ksProp, ksRcvr ) => {
                   
-                    console.log (`serverHandler.set, val is an Algo, :`,
-                    this.vertices[ ksProp ]('Datum') )
+                    //console.log (`serverHandler.set, val is an Algo, :`,
+                    //this.vertices[ ksProp ]('Datum') )
 
                     //  Configure dependent to track dependencies:
                     if ( ! ( 'causal' in datum.arrows.in ) ) {
 
                         datum.arrows.in.causal = []
                     }
-                    datum.arrows.in.causal.push ( { ikey: ksProp } )
+                    datum.arrows.in.causal.push ( new ArrowIn ( ksProp) )
 
                     // WARNING: does not require dependency keys to be in the graph
                     // before dependents are set FIXME
@@ -227,7 +227,8 @@ window.Graph = class Graph {
                             
                             dependencyDatum.arrows.out.causal = []
                         }
-                        dependencyDatum.arrows.out.causal.push ( { okey: key } )
+                        dependencyDatum
+                            .arrows.out.causal.push ( new ArrowOut ( key) )
 
                 }
             } )
@@ -239,8 +240,8 @@ window.Graph = class Graph {
         this.vertices [ datum.key ] 
             = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
 
-        console.log( `graph.setVertex/[n>1] :`, datum.key, this.vertices [
-        datum.key ]() )
+        //console.log( `graph.setVertex/[n>1] :`, datum.key, this.vertices [
+        //datum.key ]() )
 
         // redundant? check
         return  ( this.vertices [ datum.key ]() == args[1] ) 
@@ -251,19 +252,19 @@ window.Graph = class Graph {
     getVertex ( key ) {
         if ( ! ( key in this.vertices ) )
         { 
-            console.log(this)
-            console.log (`graph.getVertex/1 could not find the key (${key}) in
-            graph.vertices`)
+            //console.log(this)
+            //console.log (`graph.getVertex/1 could not find the key (${key}) in
+            //graph.vertices`)
 
             return undefined 
         }
 
         let value = this.vertices[ key ]()
-            console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
-            }' ]() : `, this.vertices [ key ]() )
+            //console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
+            //}' ]() : `, this.vertices [ key ]() )
 
         if ( value instanceof Algo ) { 
-            console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
+            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
             return value.lambda ( this.server ) 
         } 
 
@@ -274,8 +275,8 @@ window.Graph = class Graph {
             // Wherein. if we find that the user has previously set an
             // object as the value, we try to intercept the call to that
             // object's keyerties...
-            console.log (`graph.getVertex/1 : found that datum.value is
-            an object, so will return graph.vertices ['${key}'] `)
+            //console.log (`graph.getVertex/1 : found that datum.value is
+            //an object, so will return graph.vertices ['${key}'] `)
 
             return this.vertices[ key ] 
         } 
@@ -294,14 +295,42 @@ window.Graph = class Graph {
             // serverHandler
             apply : function( targGraphReturner, thisArg, args ) { 
            
-                return targGraphReturner() // the Graph instance
+                switch ( args.length ) {
+                    case 0:
+                        throw Error (`graph.serverHandler/0 called, where no
+                        branch is defined for arity-n`)
+                    
+                    case 1:
+                        switch ( args[0] ) {
+
+                            /*
+                            case 'node' :
+                                // Serl Node, TODO
+                                break
+                            */
+
+                            case 'graph' :
+                                return graph // same as targGraphReturner()
+                            
+                            case 'server' :
+                                return graph.server 
+                            
+                            default:
+                                throw Error (`graph.serverHandler/1 called;
+                                the argument was not understood`)
+                        }    
+                    
+                    default:
+                        throw Error (`graph.serverHandler/n called, where no
+                        branch is defined for arity-n`)
+                }
             
             },
 
             // serverHandler
             get : function( targGraphReturner, prop, rcvr ) {
 
-                console.log (`serverHandler.get : graph.vertices['${prop}'].`)
+                //console.log (`serverHandler.get : graph.vertices['${prop}'].`)
 
                 return graph.getVertex ( prop )
             },
@@ -309,7 +338,7 @@ window.Graph = class Graph {
             // serverHandler
             set : function( targGraphReturner, prop, val, rcvr ) {
 
-                console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
+                //console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
 
                 // Wherein, if we find the user trying to set an object as the
                 // value, we want to intercept future calls to that object's
@@ -317,11 +346,11 @@ window.Graph = class Graph {
                 if ( typeof val == 'object' )
                 {
 
-                    console.warn (`Naive object check`)
+                    //console.warn (`Naive object check`)
 
-                    console.log ( `serverHandler.set : set
-                        graph.vertices ['${prop}'] = Proxy ( ()=>Datum) ], where
-                        datum.value = '${val}'` ) 
+                    //console.log ( `serverHandler.set : set
+                    //    graph.vertices ['${prop}'] = Proxy ( ()=>Datum) ], where
+                    //    datum.value = '${val}'` ) 
 
                     let success
 
@@ -356,17 +385,17 @@ window.Graph = class Graph {
 switch ( args.length ) 
 {
     case 0:
-        console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
-            thisArg, args) `, targDatumReturner().key,
-            targDatumReturner().value, thisArg, args )
+        //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
+        //    thisArg, args) `, targDatumReturner().key,
+        //    targDatumReturner().value, thisArg, args )
         
         let datum = targDatumReturner()
 
         if ( typeof datum.value == 'object' ) 
         {
 
-            console.log (`graph.datumHandler.apply : datum.value is an
-                object`)
+            //console.log (`graph.datumHandler.apply : datum.value is an
+            //    object`)
 
             let reducer = 
                 ( acc, cur, ind, arr ) => {
@@ -384,7 +413,7 @@ switch ( args.length )
         return datum.value
 
     case 1:
-        console.log (`graph.datumHandler.apply/1 : `)
+        //console.log (`graph.datumHandler.apply/1 : `)
         switch (args[0])
         {
             case 'Datum':
@@ -404,9 +433,9 @@ switch ( args.length )
             // datumHandler
             get : function( targDatumReturner, prop, rcvr ) {
 
-                console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
-                    targDatumReturner().key, prop, rcvr, targDatumReturner(),
-                    graph.vertices[ targDatumReturner().key + '.' + prop ] )
+                //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
+                //    targDatumReturner().key, prop, rcvr, targDatumReturner(),
+                //    graph.vertices[ targDatumReturner().key + '.' + prop ] )
             
                 
 
@@ -416,8 +445,8 @@ switch ( args.length )
             // datumHandler
             set : function( targDatumReturner, prop, val, rcvr) {
 
-                console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
-                    rcvr)`, targDatumReturner().key, prop, val, rcvr )
+                //console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
+                //    rcvr)`, targDatumReturner().key, prop, val, rcvr )
                 
                 //      This is upstream (via Proxy ( () => graph )'s set
                 //      handler ) graph.setVertex/2 already does a
@@ -431,42 +460,57 @@ switch ( args.length )
     }
 
     //  Graph()
-    constructor ( node ) {
+    constructor ( ... args ) {
+
 
         // initialisers
 
-            //  'graphReturner' and 'graphServer' have been renamed more
-            //  succinctly to 'returner' and 'server' respectively. 
-            //
-            //  Reasons to reverse this decision:
-            //
-            //  It may aid in the reading of code,
-            //  and to help the reader learn the semantics of this framework.
-            //  Perhaps in the future, the shorter names could be used. For now,
-            //  aliases will be introduced.
-
         this.vertices       = {} 
-
-        this.parentKey      = Symbol()
 
         this.returner       = () => this
 
         this.serverHandler  = this.getServerHandler()
 
-        this.server         = new Proxy (   this.returner, this.serverHandler )
+        this.server         = new Proxy ( this.returner, this.serverHandler )
 
         this.datumHandler   = this.getDatumHandler()
 
+        /*
         if ( ! ( node instanceof Serl.Node ) ) {
             
             // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
             
             node = new Serl.Node ( 'node created by Graph::constructor()' )
         }
+        */
 
-        return  {   serlNode    : node, 
-                    graph       : this,
-                    server      : this.server  }
+        return this.server
+        
+        switch ( args.length ) {
+            case 0:
+                return  {   //serlNode    : node, 
+                            graph       : this,
+                            server      : this.server  }
+
+            case 1:
+                switch ( args[0] ) {
+                    case 'server':
+                        return this.server
+
+                    case 'graph':
+                        return this
+                        
+                    default:
+                        throw Error (`Graph.constructor/1 called, the argument
+                        was not understood.`)
+                }
+                break
+
+            default:
+                throw Error (`Graph.constructor/n called, where no branch was
+                defined for arity-n.`)
+        }
+        
 
     } // Graph.constructor
 
@@ -492,16 +536,13 @@ new Exam.Exam ( {
 {   test : `Build a reactive datastore, where each datum is represented by a Proc instance.`,
     code : function () {
 
-        let {   serlNode    : node, 
-                graph       : g,
-                server      : SERVER } = new Graph 
+        let SERVER = new Graph ( 'server' )
 
 console.group ('3.0.    Creating a graph server')
 
-    console.log ( SERVER )      //  a proxy around the Graph object
-    console.log ( SERVER() )    //  the Graph object
-    console.log ( g )           //  the Graph object
-    console.log ( g.vertices )  //  empty object 
+    console.log ( SERVER )                  //  a proxy around the Graph object
+    console.log ( SERVER('graph') )         //  the Graph object
+    console.log ( SERVER('graph').vertices )//  empty object 
 
 console.groupEnd (`3.0.    Creating a graph server`)
 
@@ -687,7 +728,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
 */
 
 {   
-    console.log ( SERVER().vertices )  
+    console.log ( SERVER('graph').vertices )  
 }
 /*
 console.groupCollapsed('3.2.    Reading a Vertice   OK')
