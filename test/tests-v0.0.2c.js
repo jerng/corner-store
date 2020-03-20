@@ -319,6 +319,28 @@ globalThis.Graph = class Graph {
         { return value } 
     }
 
+    //  Operates on an instance of Datum, whose value has typeof 'object'
+    // 
+    //  Generally used to unflatten vertices from the graph index, before
+    //  returning the unflatted object to the user.
+    //
+    recoverEnumerableProperties ( datum  ) {
+
+        for ( const key in this.vertices ) {
+
+            // this is probably up for some regex perf? optimisation...
+            if ( key.startsWith ( datum.key + '.' ) ) {   
+                
+                let propKey = key.slice ( datum.key.length + 1 )
+
+                // ... because there is another string filter here; TODO
+                if ( ! propKey.includes ( '.' ) ) {
+                    datum.value[ propKey ] = this.vertices[ key ]()
+                } 
+            }
+        }
+    }
+
     // TODO consider, should this be a static method? Performance? Safety? 
     getServerHandler () {
         
@@ -402,30 +424,18 @@ switch ( args.length )
         //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
         //    thisArg, args) `, targDatumReturner().key,
         //    targDatumReturner().value, thisArg, args )
-        
+
         let datum = targDatumReturner()
 
         if ( typeof datum.value == 'object' ) 
         {
-
             //console.log (`graph.datumHandler.apply : datum.value is an
             //    object`)
 
-            let reducer = 
-                ( acc, cur, ind, arr ) => {
-                    if ( cur.startsWith ( datum.key + '.' ) ) {   
-                        let key = cur.slice ( datum.key.length + 1 )
-                        if ( ! key.includes ( '.' ) ) {
-                            acc[ key ] = graph.vertices[ cur ]()
-                        } 
-                    }
-                    return acc
-                }
-
-            Object.keys ( graph.vertices ).reduce ( reducer, datum.value )
+            graph.recoverEnumerableProperties ( datum )
         }
         return datum.value
-
+    
     case 1:
         //console.log (`graph.datumHandler.apply/1 : `)
         switch (args[0])
@@ -727,7 +737,7 @@ console.groupEnd (`3.0.    Creating a graph server`)
     console.groupEnd ('3.1.    Creating a Vertice  OK ')
 }
 
-{   console.group ('3.4.    Vertex deletion')
+{   console.groupCollapsed ('3.4.    Vertex deletion')
 
     {   SERVER.deletable = 'hi'
         console.warn ( SERVER.deletable )
