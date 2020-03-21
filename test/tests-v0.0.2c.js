@@ -165,6 +165,58 @@ globalThis.Graph = class Graph {
 
     // A graph server, actually.
 
+    //  Graph()
+    constructor ( ... args ) {
+
+
+        // initialisers
+
+        this.vertices       = {} 
+
+        this.returner       = () => this
+
+        this.datumHandler   = this.getDatumHandler()
+
+        this.serverHandler  = this.getServerHandler()
+
+        this.server         = new Proxy ( this.returner, this.serverHandler )
+
+        /*
+        if ( ! ( node instanceof Serl.Node ) ) {
+            
+            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
+            
+            node = new Serl.Node ( 'node created by Graph::constructor()' )
+        }
+        */
+
+        switch ( args.length ) {
+            case 0:
+                return  {   //serlNode    : node, 
+                            graph       : this,
+                            server      : this.server  }
+
+            case 1:
+                switch ( args[0] ) {
+                    case 'server':
+                        return this.server
+
+                    case 'graph':
+                        return this
+                        
+                    default:
+                        throw Error (`Graph.constructor/1 called, the argument
+                        was not understood.`)
+                }
+                break
+
+            default:
+                throw Error (`Graph.constructor/n called, where no branch was
+                defined for arity-n.`)
+        }
+
+    } // Graph.constructor
+
     deleteVertex ( key ) {
 
         if ( ! ( key in this.vertices ) ) { return true }
@@ -184,6 +236,42 @@ globalThis.Graph = class Graph {
         delete this.vertices[ key ]
 
         return ! ( key in this.vertices )
+    }
+
+    getVertex ( key ) {
+        if ( ! ( key in this.vertices ) )
+        { 
+            //console.log(this)
+            //console.log (`graph.getVertex/1 could not find the key (${key}) in
+            //graph.vertices`)
+
+            return undefined 
+        }
+
+        let value = this.vertices[ key ]()
+            //console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
+            //}' ]() : `, this.vertices [ key ]() )
+
+        if ( value instanceof Algo ) { 
+            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
+            return value.lambda ( this.server ) 
+        } 
+
+        else
+
+        if ( typeof value == 'object' )
+        {
+            // Wherein. if we find that the user has previously set an
+            // object as the value, we try to intercept the call to that
+            // object's keyerties...
+            //console.log (`graph.getVertex/1 : found that datum.value is
+            //an object, so will return graph.vertices ['${key}'] `)
+
+            return this.vertices[ key ] 
+        } 
+
+        else
+        { return value } 
     }
 
     setVertex ( ... args ) {
@@ -283,60 +371,74 @@ globalThis.Graph = class Graph {
                 : false
     }
 
-    getVertex ( key ) {
-        if ( ! ( key in this.vertices ) )
-        { 
-            //console.log(this)
-            //console.log (`graph.getVertex/1 could not find the key (${key}) in
-            //graph.vertices`)
+    // TODO consider, should this be a static method? Performance? Safety?
+    getDatumHandler () {
 
-            return undefined 
-        }
+        let graph = this
 
-        let value = this.vertices[ key ]()
-            //console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
-            //}' ]() : `, this.vertices [ key ]() )
+        return {
 
-        if ( value instanceof Algo ) { 
-            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
-            return value.lambda ( this.server ) 
-        } 
+            // datumHandler
+            apply : function( targDatumReturner, thisArg, args ) { 
 
-        else
+                switch ( args.length ) {
+                    case 0:
+                        //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
+                        //    thisArg, args) `, targDatumReturner().key,
+                        //    targDatumReturner().value, thisArg, args )
 
-        if ( typeof value == 'object' )
-        {
-            // Wherein. if we find that the user has previously set an
-            // object as the value, we try to intercept the call to that
-            // object's keyerties...
-            //console.log (`graph.getVertex/1 : found that datum.value is
-            //an object, so will return graph.vertices ['${key}'] `)
+                        let datum = targDatumReturner()
 
-            return this.vertices[ key ] 
-        } 
+                        return  typeof datum.value == 'object'
+                                    ? graph.recoverEnumerableProperties ( datum )
+                                    : datum.value
+                    
+                    case 1:
+                        //console.log (`graph.datumHandler.apply/1 : `)
+                        switch (args[0])
+                        {
+                            case 'datum':
+                                return targDatumReturner()
 
-        else
-        { return value } 
-    }
+                            default:
+                                throw Error (`graph.datumHandler.apply/1 : the argument was
+                                not understood`)
+                        }
 
-    //  Operates on an instance of Datum, whose value has typeof 'object'
-    // 
-    //  Generally used to unflatten vertices from the graph index, before
-    //  returning the unflatted object to the user.
-    //
-    recoverEnumerableProperties ( datum  ) {
+                    default:
+                        throw Error (`graph.datumHandler.apply/n, where arity-n has no defined branch`)
+                }
 
-        for ( const key in this.vertices ) {
+            },
 
-            // this is probably up for some regex perf? optimisation...
-            if ( key.startsWith ( datum.key + '.' ) ) {   
+            // datumHandler
+            deleteProperty : function ( targDatumReturner, prop ) {
+                return graph.deleteVertex ( prop )    
+            },
+
+            // datumHandler
+            get : function( targDatumReturner, prop, rcvr ) {
+
+                //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
+                //    targDatumReturner().key, prop, rcvr, targDatumReturner(),
+                //    graph.vertices[ targDatumReturner().key + '.' + prop ] )
+
+                return graph.getVertex ( targDatumReturner().key + '.' + prop )
+            },
+
+            // datumHandler
+            set : function( targDatumReturner, prop, val, rcvr) {
+
+                //console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
+                //    rcvr)`, targDatumReturner().key, prop, val, rcvr )
                 
-                let propKey = key.slice ( datum.key.length + 1 )
-
-                // ... because there is another string filter here; TODO
-                if ( ! propKey.includes ( '.' ) ) {
-                    datum.value[ propKey ] = this.vertices[ key ]()
-                } 
+                //      This is upstream (via Proxy ( () => graph )'s set
+                //      handler ) graph.setVertex/2 already does a
+                //      redundant check that the graph.vertices['prop'] was
+                //      set correctly.
+                return  graph.setVertex ( 
+                            targDatumReturner().key + '.' + prop, 
+                            val                                     )
             }
         }
     }
@@ -353,8 +455,7 @@ globalThis.Graph = class Graph {
            
                 switch ( args.length ) {
                     case 0:
-                        throw Error (`graph.serverHandler/0 called, where no
-                        branch is defined for arity-n`)
+                        return graph.recoverEnumerableProperties ( {} )
                     
                     case 1:
                         switch ( args[0] ) {
@@ -408,139 +509,38 @@ globalThis.Graph = class Graph {
         } // serverHandler
     }
 
-    // TODO consider, should this be a static method? Performance? Safety?
-    getDatumHandler () {
+    //  Operates on an instance of Datum, whose value has typeof 'object'
+    // 
+    //  Generally used to unflatten vertices from the graph index, before
+    //  returning the unflatted object to the user.
+    //
+    recoverEnumerableProperties ( object ) {
 
-        let graph = this
+        if ( object instanceof Datum ) {
 
-        return {
-
-            // datumHandler
-            apply : function( targDatumReturner, thisArg, args ) { 
-
-switch ( args.length ) 
-{
-    case 0:
-        //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
-        //    thisArg, args) `, targDatumReturner().key,
-        //    targDatumReturner().value, thisArg, args )
-
-        let datum = targDatumReturner()
-
-        if ( typeof datum.value == 'object' ) 
-        {
-            //console.log (`graph.datumHandler.apply : datum.value is an
-            //    object`)
-
-            graph.recoverEnumerableProperties ( datum )
-        }
-        return datum.value
-    
-    case 1:
-        //console.log (`graph.datumHandler.apply/1 : `)
-        switch (args[0])
-        {
-            case 'datum':
-                return targDatumReturner()
-
-            default:
-                throw Error (`graph.datumHandler.apply/1 : the argument was
-                not understood`)
-        }
-
-    default:
-        throw Error (`graph.datumHandler.apply/n, where arity-n has no defined branch`)
-}
-
-            },
-
-            // datumHandler
-            deleteProperty : function ( targDatumReturner, prop ) {
-                return graph.deleteVertex ( prop )    
-            },
-
-            // datumHandler
-            get : function( targDatumReturner, prop, rcvr ) {
-
-                //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
-                //    targDatumReturner().key, prop, rcvr, targDatumReturner(),
-                //    graph.vertices[ targDatumReturner().key + '.' + prop ] )
-
-                return graph.getVertex ( targDatumReturner().key + '.' + prop )
-            },
-
-            // datumHandler
-            set : function( targDatumReturner, prop, val, rcvr) {
-
-                //console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
-                //    rcvr)`, targDatumReturner().key, prop, val, rcvr )
-                
-                //      This is upstream (via Proxy ( () => graph )'s set
-                //      handler ) graph.setVertex/2 already does a
-                //      redundant check that the graph.vertices['prop'] was
-                //      set correctly.
-                return  graph.setVertex ( 
-                            targDatumReturner().key + '.' + prop, 
-                            val                                     )
+            for ( const key in this.vertices ) {
+                // this is probably up for some regex perf? optimisation...
+                if ( key.startsWith ( object.key + '.' ) ) {   
+                    let propKey = key.slice ( object.key.length + 1 )
+                    // ... because there is another string filter here; TODO
+                    if ( ! propKey.includes ( '.' ) ) {
+                        object.value[ propKey ] = this.vertices[ key ]()
+                    } 
+                }
             }
+            return object.value
+        } 
+
+        else {
+        
+            for ( const key in this.vertices ) {
+                if ( ! key.includes ( '.' ) ) {
+                    object[ key ] = this.vertices[ key ]()
+                } 
+            }
+            return object
         }
     }
-
-    //  Graph()
-    constructor ( ... args ) {
-
-
-        // initialisers
-
-        this.vertices       = {} 
-
-        this.returner       = () => this
-
-        this.serverHandler  = this.getServerHandler()
-
-        this.server         = new Proxy ( this.returner, this.serverHandler )
-
-        this.datumHandler   = this.getDatumHandler()
-
-        /*
-        if ( ! ( node instanceof Serl.Node ) ) {
-            
-            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
-            
-            node = new Serl.Node ( 'node created by Graph::constructor()' )
-        }
-        */
-
-        return this.server
-        
-        switch ( args.length ) {
-            case 0:
-                return  {   //serlNode    : node, 
-                            graph       : this,
-                            server      : this.server  }
-
-            case 1:
-                switch ( args[0] ) {
-                    case 'server':
-                        return this.server
-
-                    case 'graph':
-                        return this
-                        
-                    default:
-                        throw Error (`Graph.constructor/1 called, the argument
-                        was not understood.`)
-                }
-                break
-
-            default:
-                throw Error (`Graph.constructor/n called, where no branch was
-                defined for arity-n.`)
-        }
-        
-
-    } // Graph.constructor
-
 }
 
 new Exam.Exam ( { 
@@ -730,6 +730,8 @@ console.groupEnd (`3.0.    Creating a graph server`)
         } )
 
         console.warn ( SERVER.tree() ) 
+
+        console.warn ( SERVER() ) 
         
         console.groupEnd ('3.1.3.    Tree-insertion into the graph server')
     }
