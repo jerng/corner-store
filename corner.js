@@ -162,7 +162,7 @@ class DatumReturner extends Function {
     } 
 }
 
-class Graph {
+class Graph extends Function {
     // Do not declare fields here! (non-standard feature)
 
     // A graph server, actually.
@@ -170,6 +170,7 @@ class Graph {
     //  Graph()
     constructor ( ... args ) {
 
+        super()
 
         // initialisers
 
@@ -181,7 +182,7 @@ class Graph {
 
         this.serverHandler  = this.getServerHandler()
 
-        this.server         = new Proxy ( this.returner, this.serverHandler )
+        this.server         = new Proxy ( this, this.serverHandler )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
