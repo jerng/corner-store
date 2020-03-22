@@ -1,5 +1,5 @@
-import * as Serl from   '../lib/serl.js'
-import * as SSON from   '../lib/sson/sson.js'
+//import * as Serl from   '../lib/serl.js'
+//import * as SSON from   '../lib/sson/sson.js'
 import * as Exam from '../lib/submodules/exam.js/exam.js'
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -789,14 +789,14 @@ console.log (`valueHandler.set: set a compoundKey (${compoundKey}) with a non-ob
 
         this.valueHandler   = this.getValueHandler()
 
-        if ( ! ( node instanceof Serl.Node ) ) {
-            
-            // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
-            
-            node = new Serl.Node ( 'node created by Graph::constructor()' )
-        }
+      //if ( ! ( node instanceof Serl.Node ) ) {
+      //    
+      //    // throw Error ( `Graph::constructor() called, first argument was not an instance of Serl.Node.` )
+      //    
+      //    node = new Serl.Node ( 'node created by Graph::constructor()' )
+      //}
 
-        return  {   serlNode    : node, 
+        return  {   //serlNode    : node, 
                     graph       : this,
                     server      : this.server  }
 

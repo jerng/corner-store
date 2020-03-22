@@ -1,0 +1,3 @@
+[submodule "lib/submodules/exam.js"]
+	path = lib/submodules/exam.js
+	url = https://github.com/jerng/exam.js.git

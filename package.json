@@ -1,8 +1,8 @@
 {
-  "name": "serl",
+  "name": "corner",
   "version": "pre-release",
-  "description": "Javascript/OTP",
-  "main": "serl.js",
+  "description": "developer oriented, minimal, reactive, graph, datastore, in Javascript",
+  "main": "",
   "directories": {
     "doc": "docs",
     "lib": "lib",
@@ -19,18 +19,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jerng/serl.git"
+    "url": "git+https://github.com/jerng/corner.git"
   },
   "keywords": [
     "javascript",
-    "erlang",
-    "otp",
+    "graph",
+    "reactive",
     "ecmascript"
   ],
   "author": "Jerng",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jerng/serl/issues"
+    "url": "https://github.com/jerng/corner/issues"
   },
-  "homepage": "https://github.com/jerng/serl#readme"
+  "homepage": "https://github.com/jerng/corner#readme"
 }
