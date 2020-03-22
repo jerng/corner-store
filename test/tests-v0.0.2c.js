@@ -2,7 +2,6 @@
 //import * as SSON from   '../lib/sson/sson.js'
 import * as Exam from '../lib/submodules/exam.js/exam.js'
 
-
 // data type for use in Datum
 class ArrowOut {
 
