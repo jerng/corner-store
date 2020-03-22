@@ -71,7 +71,7 @@ class Algo {
 
         // this.verticeKeys = []
         // It is possible to extract this data here, but currently it has been
-        // delegated to Graph.serverHandler.set
+        // delegated to Graph.graphHandler.set
 
         let _lambda = this.lambda = args[0]
 
@@ -96,11 +96,13 @@ class Algo {
  *      Array ?     ... to be implemented as lists of the above...       
  */
 
-class Datum {
+class Datum extends Function {
     // Do not declare fields here! (non-standard feature)
 
     constructor ( ...args ) {
-  
+ 
+        super()
+
         // initialisers
         this.key
         this.value
@@ -151,17 +153,6 @@ class Datum {
     }
 }
 
-class DatumReturner extends Function {
-    constructor ( datum ) {
-        super()
-        return new Proxy ( this, {
-                apply: function ( targ, thisArg, args ) {
-                    return datum
-                }
-            } )
-    } 
-}
-
 class Graph extends Function {
     // Do not declare fields here! (non-standard feature)
 
@@ -176,13 +167,11 @@ class Graph extends Function {
 
         this.vertices       = {} 
 
-        this.returner       = () => this
-
         this.datumHandler   = this.getDatumHandler()
 
-        this.serverHandler  = this.getServerHandler()
+        this.graphHandler  = this.getGraphHandler()
 
-        this.server         = new Proxy ( this, this.serverHandler )
+        this.server         = new Proxy ( this, this.graphHandler )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
@@ -282,9 +271,6 @@ class Graph extends Function {
         //  this.c = this.createVertice 
 
         let datum
-            // Because we want to Proxy this, and have an (apply)
-            // handler: the proxied value must be a function, which will wrap
-            // around the datum with a DatumReturner.
 
         switch ( args.length ) 
         {
@@ -300,7 +286,7 @@ class Graph extends Function {
                 datum   = new Datum ( key )
 
                 this.vertices [ datum.key ] 
-                    = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
+                    = new Proxy (  datum, this.datumHandler )
 
                 break
         }
@@ -331,7 +317,7 @@ class Graph extends Function {
                 
                 get : ( ksTarg, ksProp, ksRcvr ) => {
                   
-                    //console.log (`serverHandler.set, val is an Algo, :`,
+                    //console.log (`graphHandler.set, val is an Algo, :`,
                     //this.vertices[ ksProp ]('Datum') )
 
                     //  Configure dependent to track dependencies:
@@ -363,7 +349,7 @@ class Graph extends Function {
         } // (value instanceof Algo)
 
         this.vertices [ datum.key ] 
-            = new Proxy ( new DatumReturner ( datum ), this.datumHandler )
+            = new Proxy ( datum, this.datumHandler )
 
         //console.log( `graph.setVertex/[n>1] :`, datum.key, this.vertices [
         //datum.key ]() )
@@ -382,15 +368,15 @@ class Graph extends Function {
         let datumHandler = {
 
             // datumHandler
-            apply : function( targDatumReturner, thisArg, args ) { 
+            apply : function( targ, thisArg, args ) { 
 
                 switch ( args.length ) {
                     case 0:
                         //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
-                        //    thisArg, args) `, targDatumReturner().key,
-                        //    targDatumReturner().value, thisArg, args )
+                        //    thisArg, args) `, targ().key,
+                        //    targ().value, thisArg, args )
 
-                        let datum = targDatumReturner()
+                        let datum = targ
 
                         return  typeof datum.value == 'object'
                                     ? graph.recoverEnumerableProperties ( datum )
@@ -401,7 +387,7 @@ class Graph extends Function {
                         switch (args[0])
                         {
                             case 'datum':
-                                return targDatumReturner()
+                                return targ
 
                             default:
                                 throw Error (`graph.datumHandler.apply/1 : the argument was
@@ -415,32 +401,32 @@ class Graph extends Function {
             },
 
             // datumHandler
-            deleteProperty : function ( targDatumReturner, prop ) {
+            deleteProperty : function ( targ, prop ) {
                 return graph.deleteVertex ( prop )    
             },
 
             // datumHandler
-            get : function( targDatumReturner, prop, rcvr ) {
+            get : function( targ, prop, rcvr ) {
 
                 //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
-                //    targDatumReturner().key, prop, rcvr, targDatumReturner(),
-                //    graph.vertices[ targDatumReturner().key + '.' + prop ] )
+                //    targ().key, prop, rcvr, targ(),
+                //    graph.vertices[ targ().key + '.' + prop ] )
 
-                return graph.getVertex ( targDatumReturner().key + '.' + prop )
+                return graph.getVertex ( targ.key + '.' + prop )
             },
 
             // datumHandler
-            set : function( targDatumReturner, prop, val, rcvr) {
+            set : function( targ, prop, val, rcvr) {
 
                 //console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
-                //    rcvr)`, targDatumReturner().key, prop, val, rcvr )
+                //    rcvr)`, targ().key, prop, val, rcvr )
                 
                 //      This is upstream (via Proxy ( () => graph )'s set
                 //      handler ) graph.setVertex/2 already does a
                 //      redundant check that the graph.vertices['prop'] was
                 //      set correctly.
                 return  graph.setVertex ( 
-                            targDatumReturner().key + '.' + prop, 
+                            targ.key + '.' + prop, 
                             val                                     )
             }
         }
@@ -448,14 +434,14 @@ class Graph extends Function {
     }
 
     // TODO consider, should this be a static method? Performance? Safety? 
-    getServerHandler () {
+    getGraphHandler () {
         
         let graph = this
 
-        let serverHandler = {
+        let graphHandler = {
 
-            // serverHandler
-            apply : function( targGraphReturner, thisArg, args ) { 
+            // graphHandler
+            apply : function( targ, thisArg, args ) { 
            
                 switch ( args.length ) {
                     case 0:
@@ -471,48 +457,49 @@ class Graph extends Function {
                             */
 
                             case 'graph' :
-                                return graph // same as targGraphReturner()
+                                return graph // same as targ()
                             
                             case 'server' :
                                 return graph.server 
                             
                             default:
-                                throw Error (`graph.serverHandler/1 called;
+                                throw Error (`graph.graphHandler/1 called;
                                 the argument was not understood`)
                         }    
                     
                     default:
-                        throw Error (`graph.serverHandler/n called, where no
+                        throw Error (`graph.graphHandler/n called, where no
                         branch is defined for arity-n`)
                 }
             
             },
 
-            // serverHandler
-            deleteProperty : function ( targGraphReturner, prop ) {
+            // graphHandler
+            deleteProperty : function ( targ, prop ) {
                 return graph.deleteVertex ( prop )    
             },
 
-            // serverHandler
-            get : function( targGraphReturner, prop, rcvr ) {
+            // graphHandler
+            get : function( targ, prop, rcvr ) {
 
-                //console.log (`serverHandler.get : graph.vertices['${prop}'].`)
+                //console.log (`graphHandler.get : graph.vertices['${prop}'].`)
 
                 return graph.getVertex ( prop )
             },
 
-            // serverHandler
-            set : function( targGraphReturner, prop, val, rcvr ) {
+            // graphHandler
+            set : function( targ, prop, val, rcvr ) {
 
-                //console.log ( `serverHandler.set : Try to set graph.vertices['${prop}'] to (${val}).` ) 
+                //console.log ( `graphHandler.set : Try to set
+                //graph.vertices['${prop}'] to (${val}).` ) 
 
                 return graph.setVertex ( prop, val )
             
-            } // serverHandler.set
+            } // graphHandler.set
         
-        } // serverHandler
+        } // graphHandler
 
-        return serverHandler
+        return graphHandler
     }
 
     //  Operates on an instance of Datum, whose value has typeof 'object'
@@ -521,6 +508,8 @@ class Graph extends Function {
     //  returning the unflatted object to the user.
     //
     recoverEnumerableProperties ( object ) {
+
+        //console.log (`graph.recoverEnumerableProperties/1`)
 
         if ( object instanceof Datum ) {
 
@@ -549,7 +538,6 @@ class Graph extends Function {
     }
 }
 
-globalThis.Graph            = Graph 
-globalThis.Algo             = Algo
-globalThis.DatumReturner    = DatumReturner 
-
+globalThis.Algo     = Algo
+globalThis.Datum    = Datum
+globalThis.Graph    = Graph 

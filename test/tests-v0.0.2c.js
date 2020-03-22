@@ -16,6 +16,8 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
+{   warning : `make Graph an extension of Datum?`,
+},
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 {   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
