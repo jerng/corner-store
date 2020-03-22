@@ -49,7 +49,6 @@ class ArrowIn {
 }
 
 // data type for use in Datum
-//globalThis.Algo = 
 
 class Algo {
 
@@ -109,10 +108,10 @@ class Datum {
 
         this.arrows     = {
             in      : { 
-                // type: [ ArrowIn ]
+                // variousTypeKeys: [ ArrowIn ]
             },
             out     : {
-                // type: [ ArrowOut ]
+                // variousTypeKeys: [ ArrowOut ]
             }
         }
 
@@ -152,13 +151,16 @@ class Datum {
     }
 }
 
-class DatumReturner {
+class DatumReturner extends Function {
     constructor ( datum ) {
-        return () => datum
+        super()
+        return new Proxy ( this, {
+                apply: function ( targ, thisArg, args ) {
+                    return datum
+                }
+            } )
     } 
 }
-
-globalThis.Graph = Graph 
 
 class Graph {
     // Do not declare fields here! (non-standard feature)
@@ -376,7 +378,7 @@ class Graph {
 
         let graph = this
 
-        return {
+        let datumHandler = {
 
             // datumHandler
             apply : function( targDatumReturner, thisArg, args ) { 
@@ -441,6 +443,7 @@ class Graph {
                             val                                     )
             }
         }
+        return datumHandler
     }
 
     // TODO consider, should this be a static method? Performance? Safety? 
@@ -448,7 +451,7 @@ class Graph {
         
         let graph = this
 
-        return {
+        let serverHandler = {
 
             // serverHandler
             apply : function( targGraphReturner, thisArg, args ) { 
@@ -507,6 +510,8 @@ class Graph {
             } // serverHandler.set
         
         } // serverHandler
+
+        return serverHandler
     }
 
     //  Operates on an instance of Datum, whose value has typeof 'object'
@@ -542,3 +547,8 @@ class Graph {
         }
     }
 }
+
+globalThis.Graph            = Graph 
+globalThis.Algo             = Algo
+globalThis.DatumReturner    = DatumReturner 
+
