@@ -99,6 +99,17 @@ class Algo {
 class Datum extends Function {
     // Do not declare fields here! (non-standard feature)
 
+    toString () {
+        return  [   'Datum.toString/0 returned:',
+                    [   'a shallow copy of enumerable properties, { ... this }',
+                        { ... this }
+                    ],
+                    [   'Object.getOwnPropertyDescriptors ( this )',
+                        Object.getOwnPropertyDescriptors ( this )
+                    ],
+                ]
+    }
+
     constructor ( ...args ) {
  
         super()
@@ -158,9 +169,12 @@ class Datum extends Function {
 class Graph extends Datum {
     // Do not declare fields here! (non-standard feature)
 
-    // A graph server, actually.
+    toString () {
+        return  [   'Graph.toString/0 returned:', 
+                    super.toString()
+                ]
+    }
 
-    //  Graph()
     constructor ( ... args ) {
 
         super()
@@ -482,8 +496,14 @@ class Graph extends Datum {
                             case 'graph' :
                                 return graph // same as targ()
                             
+                            case 'gopds' :
+                                return Object.getOwnPropertyDescriptors ( graph )
+                            
                             case 'server' :
                                 return graph.proxy 
+                            
+                            case 'vertices' :
+                                return graph.vertices 
                             
                             default:
                                 throw Error (`graph.graphHandler/1 called;
