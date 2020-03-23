@@ -43,7 +43,161 @@
 
 
     <section>
-        <article><h1>Project: corner (store.js)</h1></article>
+        <article><h1>Project : corner(store).js</h1>
+<p>An introduction via pretty slides is found
+<a href="https://docs.google.com/presentation/d/1esYQhtpjGjE9KsLmrdkGLD642FO-jTEeEuHlg4h6MWk/edit#slide=id.p">here</a>.</p>
+<p>This is a datastore frontend which I’ve developed for personal use.</p>
+<h1>Project : Design Goals</h1>
+<ul>
+<li>Reactive</li>
+<li>Keystroke-minimal</li>
+<li>Easy to Run</li>
+<li>
+<ul>
+<li>Pure Javascript - no illegal syntax, sigils, brackets, or pre-compilation needed.</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Pop the module into a browser, run code without a buildstep.</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>It can be compiled, built, performance enhanced, what-have-you, later.</li>
+</ul>
+</li>
+</ul>
+<h1>Project : Minified... just run it now!</h1>
+<h2>Here is the code.</h2>
+<p>You can paste it into your console and follow along the next slides.</p>
+<pre class="prettyprint source lang-javascript"><code>class ArrowOut{constructor(e){return
+this.okey=e,this.reads=[],this.updates=[],this.deletes=[],this}}class
+ArrowIn{constructor(e){return
+this.ikey=e,this.reads=[],this.updates=[],this.deletes=[],this}}class
+Algo{constructor(...e){if(1!==e.length)throw Error(`Algo.constructor : expected
+one and only one argument, received (${e.length})
+arguments`);if(&quot;function&quot;!=typeof e[0])throw Error(&quot;Algo.constructor : typeof
+(argument provided) was not 'function'&quot;);this.lambda=e[0];return this}}class
+Datum extends
+Function{constructor(...e){switch(super(),this.key,this.value,this.arrows={in:{},out:{}},this.log={reads:[],updates:[],deletes:[]},this.cache={stale:!1,hits:[],misses:[]},e.length){case
+1:switch(typeof e[0]){case&quot;string&quot;:return this.key=e[0],this;case&quot;object&quot;:return
+this.key=Object.keys(e[0])[0],this.value=e[0][this.key],this;default:throw
+Error(&quot;Datum::constructor/1 called on n, where\n                        (typeof
+n) is not 'string' or 'object';  branch undefined&quot;)}default:throw
+Error(&quot;datum.constructor/n called, branch for this arity is undefined.&quot;)}}}class
+Graph extends
+Function{constructor(...e){switch(super(),this.vertices={},this.datumHandler=this.getDatumHandler(),this.graphHandler=this.getGraphHandler(),this.server=new
+Proxy(this,this.graphHandler),e.length){case
+0:return{graph:this,server:this.server};case 1:switch(e[0]){case&quot;server&quot;:return
+this.server;case&quot;graph&quot;:return this;default:throw Error(&quot;Graph.constructor/1
+called, the argument\n                        was not
+understood.&quot;)}break;default:throw Error(&quot;Graph.constructor/n called, where no
+branch was\n                defined for arity-n.&quot;)}}deleteVertex(e){if(!(e in
+this.vertices))return!0;if(&quot;object&quot;==typeof
+this.vertices[e](&quot;datum&quot;).value)for(const t in
+this.vertices)if(t.startsWith(e+&quot;.&quot;)&&!this.deleteVertex(t))return!1;return
+delete this.vertices[e],!(e in this.vertices)}getVertex(e){if(!(e in
+this.vertices))return;let t=this.vertices[e]();return t instanceof
+Algo?t.lambda(this.server):&quot;object&quot;==typeof
+t?this.vertices[e]:t}setVertex(...e){let t;switch(e.length){case 0:throw
+Error(&quot;graph.setVertex/0 called; unsupported arity.&quot;);case
+1:console.warn(&quot;graph.setVertex/1 : rewrite & test for this branch&quot;);let
+r=e[0];t=new Datum(r),this.vertices[t.key]=new Proxy(t,this.datumHandler)}let
+r=e[0],s=e[1];if(!this.deleteVertex(r))return!1;if(t=new
+Datum({[r]:s}),&quot;object&quot;==typeof s)for(const e in s){let
+t=r+&quot;.&quot;+e;if(!this.setVertex(t,s[e]))return!1}if(s instanceof Algo){let e=new
+Proxy({},{get:(e,s,n)=>{&quot;causal&quot;in
+t.arrows.in||(t.arrows.in.causal=[]),t.arrows.in.causal.push(new ArrowIn(s));let
+a=this.vertices[s](&quot;datum&quot;);&quot;causal&quot;in
+a.arrows.out||(a.arrows.out.causal=[]),a.arrows.out.causal.push(new
+ArrowOut(r))}});s.lambda(e)}return this.vertices[t.key]=new
+Proxy(t,this.datumHandler),this.vertices[t.key]()==e[1]}getDatumHandler(){let
+e=this;return{apply:function(t,r,s){switch(s.length){case 0:let
+r=t;return&quot;object&quot;==typeof r.value?e.recoverEnumerableProperties(r):r.value;case
+1:switch(s[0]){case&quot;datum&quot;:return t;default:throw
+Error(&quot;graph.datumHandler.apply/1 : the argument was\n
+not understood&quot;)}default:throw Error(&quot;graph.datumHandler.apply/n, where arity-n
+has no defined branch&quot;)}},deleteProperty:function(t,r){return
+e.deleteVertex(r)},get:function(t,r,s){return
+e.getVertex(t.key+&quot;.&quot;+r)},set:function(t,r,s,n){return
+e.setVertex(t.key+&quot;.&quot;+r,s)}}}getGraphHandler(){let
+e=this;return{apply:function(t,r,s){switch(s.length){case 0:return
+e.recoverEnumerableProperties({});case 1:switch(s[0]){case&quot;graph&quot;:return
+e;case&quot;server&quot;:return e.server;default:throw Error(&quot;graph.graphHandler/1
+called;\n                                the argument was not
+understood&quot;)}default:throw Error(&quot;graph.graphHandler/n called, where no\n
+branch is defined for arity-n&quot;)}},deleteProperty:function(t,r){return
+e.deleteVertex(r)},get:function(t,r,s){return
+e.getVertex(r)},set:function(t,r,s,n){return
+e.setVertex(r,s)}}}recoverEnumerableProperties(e){if(e instanceof
+Datum){for(const t in this.vertices)if(t.startsWith(e.key+&quot;.&quot;)){let
+r=t.slice(e.key.length+1);r.includes(&quot;.&quot;)||(e.value[r]=this.vertices[t]())}return
+e.value}for(const t in
+this.vertices)t.includes(&quot;.&quot;)||(e[t]=this.vertices[t]());return
+e}}globalThis.Algo=Algo,globalThis.Datum=Datum,globalThis.Graph=Graph;
+</code></pre>
+<h1>Transcript from Demo Slides</h1>
+<h2>slide</h2>
+<p>Here's all the demo code so far.</p>
+<pre class="prettyprint source lang-javascript"><code>G = new Graph('server')
+G.a = 1
+G.b = 2
+G.c = new Algo ( g => g.a + g.b )
+G.c
+G.d = { m:1, n:2, o:3 }
+G.d.n = [ 77, 88, 99 ]
+G.d
+G.d()
+G()
+</code></pre>
+<h2>slide</h2>
+<p>A central concept to this tool is graphs. Graphs data structures have become
+very popular, with the rise of social networking and recommendation engines.</p>
+<p>But application data is often not structured as graphs because the languages
+developers use do not come with built-in graph data structures.</p>
+<p>For example, JavaScript has Arrays, and Objects, and Weak Maps, and Sets, but
+all of these are simply nested trees of data. This is un-brainlike, and
+generally it feels restrictive.</p>
+<h6>The <strong>Graph.constructor/0</strong> will return a bunch of useful things, but we don’t need</h6>
+<p>all of them for the demo.</p>
+<h2>slide</h2>
+<h6><strong>Graph.constructor/1</strong> can give you a simple server, to get started.</h6>
+<p>The real graph data is a few layers beneath, but what you get here is a proxy,
+which intercepts your calls to the graph data.</p>
+<p>From the developer’s point of view, the graph server is a simple user-interface
+to a datastore.</p>
+<p>The developer doesn’t need to know how the datastore works.</p>
+<p>Underneath, it’s just JavaScript.</p>
+<h2>slide</h2>
+<h6>For this demo, the variable <strong>G</strong> refers to our graph server.</h6>
+<p>G is very easy to use.</p>
+<h6>Here we <strong>set</strong> two literal values in G.</h6>
+<h6>Then we <strong>set</strong> a computed value.</h6>
+<p>The Algo class is not complex. It simply functions as a type marker which tells
+the proxy how to handle getters and setters.</p>
+<h6>Voila, if we <strong>get</strong> the computed value, it just works.</h6>
+<p>ECMAScript has always been a shameful mess, and as it grows older and uglier, I
+spend too much time wondering why global standards must be so hard to use.</p>
+<p>For what it’s worth, jQuery has been a gold standard in minimalist ease of
+access. Follow jQuery.</p>
+<h2>slide</h2>
+<p>We can put anything into our graph via the server. The server behaves just like
+a POJO, most of the time. But you’re about to see when it doesn’t.</p>
+<p>In order for the server to track every single item under its namespace, it
+proxies every single subobject.</p>
+<p>But our applications don’t care about these proxies, we just want our data.</p>
+<h6>Use <strong>a function call (arity 0)</strong> to extract a tree of data from any non-leaf node</h6>
+<p>in the graph.</p>
+<h2>slide</h2>
+<h6>We can <strong>call the server with arity 0</strong> to extract the total tree.</h6>
+<p>Time for a peek under the hood.</p>
+<p>We can <strong>call the server with arity 1</strong> to access the un-proxied target Graph
+instance. But most developers would probably not bother, most of the time.</p>
+<p>But if you take an interest in how this is working, you will note that the
+server deconstructs every single POJO tree when it is inserted to the graph.</p>
+<h6>The graph data is actually stored in a flat index of compound keys.</h6>
+<h2>slide</h2></article>
     </section>
 
 
@@ -60,7 +214,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Mar 23 2020 09:02:47 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Mar 23 2020 09:32:08 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>
