@@ -97,7 +97,6 @@ class Algo {
  */
 
 class Datum extends Function {
-    // Do not declare fields here! (non-standard feature)
 
     toString () {
         return  [   'Datum.toString/0 returned:',
@@ -167,7 +166,6 @@ class Datum extends Function {
 }
 
 class Graph extends Datum {
-    // Do not declare fields here! (non-standard feature)
 
     toString () {
         return  [   'Graph.toString/0 returned:', 
@@ -185,9 +183,19 @@ class Graph extends Datum {
 
         this.value          = {} 
 
-        this.datumHandler   = this.getDatumHandler ( this )
+        this.datumHandler   = {
 
-        this.graphHandler   = this.getGraphHandler ( this )
+            apply           : this.datumHandlerApply,
+            deleteProperty  : this.datumHandlerDeleteProperty,
+            get             : this.datumHandlerGet,
+            set             : this.datumHandlerSet 
+        }
+
+        this.graphHandler   = { ... this.datumHandler,
+
+            apply           : this.graphHandlerApply,
+        }                               // overwrites datumHandlerApply
+
 
         this.proxy          = new Proxy ( this, this.graphHandler )
 
@@ -398,153 +406,135 @@ class Graph extends Datum {
                 : false
     }
 
-    // TODO consider, should this be a static method? Performance? Safety?
-    getDatumHandler ( graph ) {
-        return  {
 
-            // datumHandler
-            apply : function( targ, thisArg, args ) { 
+    datumHandlerApply = ( targ, thisArg, args ) => { 
+                 
+        switch ( args.length ) {
 
-                switch ( args.length ) {
+            case 0:
+                //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
+                //    thisArg, args) `, targ().key,
+                //    targ().value, thisArg, args )
 
-                    case 0:
+                let datum = targ
+                return  typeof datum.value == 'object'
+                            ? this.recoverEnumerableProperties ( datum )
+                            : datum.value
+            case 1:
+                //console.log (`graph.datumHandler.apply/1 : `)
 
-                        //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
-                        //    thisArg, args) `, targ().key,
-                        //    targ().value, thisArg, args )
+                switch (args[0]) {
 
-                        let datum = targ
+                    case 'unproxy':
+                        return targ // unambiguous; 'this' would be  ambiguous 
 
-                        return  typeof datum.value == 'object'
-                                    ? graph.recoverEnumerableProperties ( datum )
-                                    : datum.value
+                    case 'gopds' :
+                        return Object.getOwnPropertyDescriptors ( this )
                     
-                    case 1:
-
-                        //console.log (`graph.datumHandler.apply/1 : `)
-
-                        switch (args[0])
-                        {
-                            case 'datum':
-                                return targ
-
-                            default:
-                                throw Error (`graph.datumHandler.apply/1 : the argument was
-                                not understood`)
-                        }
+                    // DIFFERENT FROM Graph
+                    case 'datum':
+                        return targ // unambiguous; 'this' would be  ambiguous 
 
                     default:
-                        throw Error (`graph.datumHandler.apply/n, where arity-n has no defined branch`)
+                        throw Error (`graph.datumHandleApply/1 : the argument was
+                        not understood`)
                 }
 
-            },
-
-            // datumHandler
-            deleteProperty : function ( targ, prop ) {
-                return graph.deleteVertex ( prop )    
-            },
-
-            // datumHandler
-            get : function( targ, prop, rcvr ) {
-
-                //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
-                //    targ().key, prop, rcvr, targ(),
-                //    graph.value[ targ().key + '.' + prop ] )
-
-                return graph.getVertex ( targ.key + '.' + prop )
-            },
-
-            // datumHandler
-            set : function( targ, prop, val, rcvr) {
-
-                //console.log (`graph.datumHandler.set : (DATUMKEY, PROP, val,
-                //    rcvr)`, targ().key, prop, val, rcvr )
-                
-                //      This is upstream (via Proxy ( () => graph )'s set
-                //      handler ) graph.setVertex/2 already does a
-                //      redundant check that the graph.value['prop'] was
-                //      set correctly.
-                return  graph.setVertex ( 
-                            targ.key + '.' + prop, 
-                            val                                     )
-            }
+            default:
+                throw Error (`graph.datumHandlerApply/n, where arity-n has no defined branch`)
         }
     }
 
-    // TODO consider, should this be a static method? Performance? Safety? 
-    getGraphHandler ( graph ) {
-        return  {
+    datumHandlerDeleteProperty = ( targ, prop ) => {
+        return this.deleteVertex ( prop )    
+    }
 
+    datumHandlerGet = ( targ, prop, rcvr ) => {
+
+        //console.log (`graphHandler.get : graph.value['${prop}'].`)
+        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+            // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
-            apply : function( targ, thisArg, args ) { 
+
+        //console.log ( compoundKey )
+        //console.log ( graph.value )
+        return this.getVertex ( compoundKey )
+    }
+
+    datumHandlerSet = ( targ, prop, val, rcvr) => {
+
+        //console.log ( `graphHandler.set : Try to set
+        //graph.value['${prop}'] to (${val}).` ) 
+        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+            // performance optimisation opportunity? resplit datumHandler and
+            // graphHandler
+
+        //console.log ( compoundKey )
+        //console.log ( graph.value )
+        return  this.setVertex ( compoundKey, val )
+    }
+
+    graphHandlerApply = ( targ, thisArg, args ) => { 
            
-                switch ( args.length ) {
-                    case 0:
-                        return graph.recoverEnumerableProperties ( {} )
+        switch ( args.length ) {
+            case 0:
+                //return this.recoverEnumerableProperties ( {} )
+                let datum = targ
+                return  typeof datum.value == 'object'
+                            ? this.recoverEnumerableProperties ( datum )
+                            : datum.value
+            
+            case 1:
+                switch ( args[0] ) {
+
+                    /*
+                    case 'node' :
+                        // Serl Node, TODO
+                        break
+                    */
+
+                    case 'unproxy':
+                        return targ // unambiguous; 'this' would be  ambiguous 
+
+                    case 'gopds' :
+                        return Object.getOwnPropertyDescriptors ( this )
                     
-                    case 1:
-                        switch ( args[0] ) {
-
-                            /*
-                            case 'node' :
-                                // Serl Node, TODO
-                                break
-                            */
-
-                            case 'graph' :
-                                return graph // same as targ()
-                            
-                            case 'gopds' :
-                                return Object.getOwnPropertyDescriptors ( graph )
-                            
-                            case 'server' :
-                                return graph.proxy 
-                            
-                            case 'vertices' :
-                                return graph.value 
-                            
-                            default:
-                                throw Error (`graph.graphHandler/1 called;
-                                the argument was not understood`)
-                        }    
+                    // DIFFERENT FROM Datum 
+                    case 'graph' :
+                        return targ // unambiguous; 'this' would be  ambiguous 
+                    
+                    // DIFFERENT FROM Datum 
+                    case 'server' :
+                        return this.proxy 
                     
                     default:
-                        throw Error (`graph.graphHandler/n called, where no
-                        branch is defined for arity-n`)
-                }
+                        throw Error (`graph.graphHandlerApply/1 called;
+                        the argument was not understood`)
+                }    
             
-            },
+            default:
+                throw Error (`graph.graphHandlerApply/n called, where no
+                branch is defined for arity-n`)
+        }
+    
+    }
 
+    graphHandlerDeleteProperty = ( targ, prop ) => {
+        return this.datumHandlerDeleteProperty (targ, prop )
+            // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
-            deleteProperty : function ( targ, prop ) {
-                return graph.deleteVertex ( prop )    
-            },
-
+    }
+    
+    graphHandlerGet = ( targ, prop, rcvr ) => {
+        return this.datumHandlerGet ( targ, prop, rcvr ) 
+            // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
-            get : function( targ, prop, rcvr ) {
-
-                //console.log (`graphHandler.get : graph.value['${prop}'].`)
-                let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
-
-                //console.log ( compoundKey )
-                //console.log ( graph.value )
-                return graph.getVertex ( compoundKey )
-            },
-
+    }
+    
+    graphHandlerSet = ( targ, prop, val, rcvr ) => {
+        return this.datumHandlerSet ( targ, prop, val, rcvr )
+            // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
-            set : function( targ, prop, val, rcvr ) {
-
-                //console.log ( `graphHandler.set : Try to set
-                //graph.value['${prop}'] to (${val}).` ) 
-                let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
-
-                //console.log ( compoundKey )
-                //console.log ( graph.value )
-                return  graph.setVertex ( compoundKey, val )
-            
-            } // graphHandler.set
-        
-        } // graphHandler
     }
 
     //  Operates on an instance of Datum, whose value has typeof 'object'
