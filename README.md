@@ -21,7 +21,127 @@ This is a datastore frontend which I’ve developed for personal use.
 You can paste it into your console and follow along the next slides.
 
 ```javascript
-class ArrowOut{constructor(e){return this.okey=e,this.reads=[],this.updates=[],this.deletes=[],this}}class ArrowIn{constructor(e){return this.ikey=e,this.reads=[],this.updates=[],this.deletes=[],this}}class Algo{constructor(...e){if(1!==e.length)throw Error(`Algo.constructor : expected one and only one argument, received (${e.length}) arguments`);if("function"!=typeof e[0])throw Error("Algo.constructor : typeof (argument provided) was not 'function'");this.lambda=e[0];return this}}class Datum extends Function{constructor(...e){switch(super(),this.key,this.value,this.arrows={in:{},out:{}},this.log={reads:[],updates:[],deletes:[]},this.cache={stale:!1,hits:[],misses:[]},e.length){case 1:switch(typeof e[0]){case"string":return this.key=e[0],this;case"object":return this.key=Object.keys(e[0])[0],this.value=e[0][this.key],this;default:throw Error("Datum::constructor/1 called on n, where\n                        (typeof n) is not 'string' or 'object';  branch undefined")}default:throw Error("datum.constructor/n called, branch for this arity is undefined.")}}}class Graph extends Function{constructor(...e){switch(super(),this.vertices={},this.datumHandler=this.getDatumHandler(),this.graphHandler=this.getGraphHandler(),this.server=new Proxy(this,this.graphHandler),e.length){case 0:return{graph:this,server:this.server};case 1:switch(e[0]){case"server":return this.server;case"graph":return this;default:throw Error("Graph.constructor/1 called, the argument\n                        was not understood.")}break;default:throw Error("Graph.constructor/n called, where no branch was\n                defined for arity-n.")}}deleteVertex(e){if(!(e in this.vertices))return!0;if("object"==typeof this.vertices[e]("datum").value)for(const t in this.vertices)if(t.startsWith(e+".")&&!this.deleteVertex(t))return!1;return delete this.vertices[e],!(e in this.vertices)}getVertex(e){if(!(e in this.vertices))return;let t=this.vertices[e]();return t instanceof Algo?t.lambda(this.server):"object"==typeof t?this.vertices[e]:t}setVertex(...e){let t;switch(e.length){case 0:throw Error("graph.setVertex/0 called; unsupported arity.");case 1:console.warn("graph.setVertex/1 : rewrite & test for this branch");let r=e[0];t=new Datum(r),this.vertices[t.key]=new Proxy(t,this.datumHandler)}let r=e[0],s=e[1];if(!this.deleteVertex(r))return!1;if(t=new Datum({[r]:s}),"object"==typeof s)for(const e in s){let t=r+"."+e;if(!this.setVertex(t,s[e]))return!1}if(s instanceof Algo){let e=new Proxy({},{get:(e,s,n)=>{"causal"in t.arrows.in||(t.arrows.in.causal=[]),t.arrows.in.causal.push(new ArrowIn(s));let a=this.vertices[s]("datum");"causal"in a.arrows.out||(a.arrows.out.causal=[]),a.arrows.out.causal.push(new ArrowOut(r))}});s.lambda(e)}return this.vertices[t.key]=new Proxy(t,this.datumHandler),this.vertices[t.key]()==e[1]}getDatumHandler(){let e=this;return{apply:function(t,r,s){switch(s.length){case 0:let r=t;return"object"==typeof r.value?e.recoverEnumerableProperties(r):r.value;case 1:switch(s[0]){case"datum":return t;default:throw Error("graph.datumHandler.apply/1 : the argument was\n                                not understood")}default:throw Error("graph.datumHandler.apply/n, where arity-n has no defined branch")}},deleteProperty:function(t,r){return e.deleteVertex(r)},get:function(t,r,s){return e.getVertex(t.key+"."+r)},set:function(t,r,s,n){return e.setVertex(t.key+"."+r,s)}}}getGraphHandler(){let e=this;return{apply:function(t,r,s){switch(s.length){case 0:return e.recoverEnumerableProperties({});case 1:switch(s[0]){case"graph":return e;case"server":return e.server;default:throw Error("graph.graphHandler/1 called;\n                                the argument was not understood")}default:throw Error("graph.graphHandler/n called, where no\n                        branch is defined for arity-n")}},deleteProperty:function(t,r){return e.deleteVertex(r)},get:function(t,r,s){return e.getVertex(r)},set:function(t,r,s,n){return e.setVertex(r,s)}}}recoverEnumerableProperties(e){if(e instanceof Datum){for(const t in this.vertices)if(t.startsWith(e.key+".")){let r=t.slice(e.key.length+1);r.includes(".")||(e.value[r]=this.vertices[t]())}return e.value}for(const t in this.vertices)t.includes(".")||(e[t]=this.vertices[t]());return e}}globalThis.Algo=Algo,globalThis.Datum=Datum,globalThis.Graph=Graph;
+class ArrowOut{constructor(_okey){this.okey=_okey
+this.reads=[]
+this.updates=[]
+this.deletes=[]
+return this}}
+class ArrowIn{constructor(_ikey){this.ikey=_ikey
+this.reads=[]
+this.updates=[]
+this.deletes=[]
+return this}}
+class Algo{constructor(...args){if(args.length!==1){throw Error(`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`)}
+if(typeof args[0]!=='function'){throw Error(`Algo.constructor : typeof (argument provided) was not 'function'`)}
+let _lambda=this.lambda=args[0]
+return this}}
+class Datum extends Function{toString(){return['Datum.toString/0 returned:',['a shallow copy of enumerable properties, { ... this }',{...this}],['Object.getOwnPropertyDescriptors ( this )',Object.getOwnPropertyDescriptors(this)],]}
+constructor(...args){super()
+this.key
+this.value
+this.arrows={in:{},out:{}}
+this.log={reads:[],updates:[],deletes:[]}
+this.cache={stale:!1,hits:[],misses:[]}
+switch(args.length)
+{case 0:return
+case 1:switch(typeof args[0])
+{case 'string':this.key=args[0]
+return this
+case 'object':this.key=Object.keys(args[0])[0]
+this.value=args[0][this.key]
+return this
+default:throw Error(`Datum::constructor/1 called on n, where
+                        (typeof n) is not 'string' or 'object';  branch undefined`)}
+default:throw Error(`datum.constructor/n called, branch for this arity is undefined.`)}}}
+class Graph extends Datum{toString(){return['Graph.toString/0 returned:',super.toString()]}
+constructor(...args){super()
+this.key=''
+this.value={}
+this.datumHandler={apply:this.datumHandlerApply,deleteProperty:this.datumHandlerDeleteProperty,get:this.datumHandlerGet,set:this.datumHandlerSet}
+this.graphHandler={...this.datumHandler,apply:this.graphHandlerApply,}
+this.proxy=new Proxy(this,this.graphHandler)
+switch(args.length){case 0:return{graph:this,server:this.proxy}
+case 1:switch(args[0]){case 'server':return this.proxy
+case 'graph':return this
+default:throw Error(`Graph.constructor/1 called, the argument
+                        was not understood.`)}
+break
+default:throw Error(`Graph.constructor/n called, where no branch was
+                defined for arity-n.`)}}
+deleteVertex(key){if(!(key in this.value)){return!0}
+if((typeof this.value[key]('datum').value=='object'))
+{for(const loopKey in this.value){if(loopKey.startsWith(key+'.')){if(!this.deleteVertex(loopKey)){return!1}}}}
+delete this.value[key]
+return!(key in this.value)}
+getVertex(key){if(!(key in this.value))
+{return undefined}
+let value=this.value[key]()
+if(value instanceof Algo){return value.lambda(this.proxy)}
+else if(typeof value=='object')
+{return this.value[key]}
+else{return value}}
+setVertex(...args){let datum
+switch(args.length)
+{case 0:throw Error(`graph.setVertex/0 called; unsupported arity.`)
+case 1:console.warn(`graph.setVertex/1 : rewrite & test for this branch`)
+let key=args[0]
+datum=new Datum(key)
+this.value[datum.key]=new Proxy(datum,this.datumHandler)
+break}
+let key=args[0]
+let value=args[1]
+if(!this.deleteVertex(key)){return!1}
+datum=new Datum({[key]:value})
+if(typeof value=='object'){for(const subKey in value){let compoundKey=key+'.'+subKey
+if(!this.setVertex(compoundKey,value[subKey]))
+{return!1}}}
+if(value instanceof Algo){let keySniffer=new Proxy({},{get:(ksTarg,ksProp,ksRcvr)=>{if(!('causal' in datum.arrows.in)){datum.arrows.in.causal=[]}
+datum.arrows.in.causal.push(new ArrowIn(ksProp))
+let dependencyDatum=this.value[ksProp]('datum')
+if(!('causal' in dependencyDatum.arrows.out)){dependencyDatum.arrows.out.causal=[]}
+dependencyDatum.arrows.out.causal.push(new ArrowOut(key))},set:(ksTarg,ksProp,ksVal,ksRcvr)=>{if(!('causal' in datum.arrows.out)){datum.arrows.out.causal=[]}
+datum.arrows.out.causal.push(new ArrowOut(ksProp))
+if(!(ksProp in this.value)){this.setVertex(ksProp,undefined)}
+let dependentDatum=this.value[ksProp]('datum')
+if(!('causal' in dependentDatum.arrows.in)){dependencyDatum.arrows.in.causal=[]}
+dependentDatum.arrows.in.causal.push(new ArrowIn(key))}})
+value.lambda(keySniffer)}
+this.value[datum.key]=new Proxy(datum,this.datumHandler)
+return(this.value[datum.key]()==args[1])?!0:!1}
+datumHandlerApply=(targ,thisArg,args)=>{switch(args.length){case 0:let datum=targ
+return typeof datum.value=='object'?this.recoverEnumerableProperties(datum):datum.value
+case 1:switch(args[0]){case 'unproxy':return targ
+case 'gopds':return Object.getOwnPropertyDescriptors(this)
+case 'datum':return targ
+default:throw Error(`graph.datumHandleApply/1 : the argument was
+                        not understood`)}
+default:throw Error(`graph.datumHandlerApply/n, where arity-n has no defined branch`)}}
+datumHandlerDeleteProperty=(targ,prop)=>{return this.deleteVertex(prop)}
+datumHandlerGet=(targ,prop,rcvr)=>{let compoundKey=(targ.key?targ.key+'.':'')+prop
+return this.getVertex(compoundKey)}
+datumHandlerSet=(targ,prop,val,rcvr)=>{let compoundKey=(targ.key?targ.key+'.':'')+prop
+return this.setVertex(compoundKey,val)}
+graphHandlerApply=(targ,thisArg,args)=>{switch(args.length){case 0:let datum=targ
+return typeof datum.value=='object'?this.recoverEnumerableProperties(datum):datum.value
+case 1:switch(args[0]){case 'unproxy':return targ
+case 'gopds':return Object.getOwnPropertyDescriptors(this)
+case 'graph':return targ
+case 'server':return this.proxy
+default:throw Error(`graph.graphHandlerApply/1 called;
+                        the argument was not understood`)}
+default:throw Error(`graph.graphHandlerApply/n called, where no
+                branch is defined for arity-n`)}}
+graphHandlerDeleteProperty=(targ,prop)=>{return this.datumHandlerDeleteProperty(targ,prop)}
+graphHandlerGet=(targ,prop,rcvr)=>{return this.datumHandlerGet(targ,prop,rcvr)}
+graphHandlerSet=(targ,prop,val,rcvr)=>{return this.datumHandlerSet(targ,prop,val,rcvr)}
+recoverEnumerableProperties(object){if(object instanceof Datum){for(const key in this.value){if(key.startsWith(object.key+'.')){let propKey=key.slice(object.key.length+1)
+if(!propKey.includes('.')){object.value[propKey]=this.value[key]()}}}
+return object.value}
+else{for(const key in this.value){if(!key.includes('.')){object[key]=this.value[key]()}}
+return object}}}
+globalThis.Algo=Algo
+globalThis.Datum=Datum
+globalThis.Graph=Graph
 ```
 # Transcript from Demo Slides
 
