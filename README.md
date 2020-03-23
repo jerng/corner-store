@@ -1,11 +1,11 @@
-# Project : corner(store).js
+#  corner(store).js
 
 An introduction via pretty slides is found
 [here](https://docs.google.com/presentation/d/1esYQhtpjGjE9KsLmrdkGLD642FO-jTEeEuHlg4h6MWk/edit#slide=id.p).
 
 This is a datastore frontend which I’ve developed for personal use.
 
-# Project : Design Goals
+#  Design Goals
 
 - Reactive
 - Keystroke-minimal
@@ -14,7 +14,7 @@ This is a datastore frontend which I’ve developed for personal use.
   - Pop the module into a browser, run code without a buildstep. 
   - It can be compiled, built, performance enhanced, what-have-you, later.
 
-# Project : Minified... just run it now! 
+#  Minified... just run it now! 
 
 ## Here is the code.
 
