@@ -180,20 +180,21 @@ class Graph extends Datum {
         // initialisers
 
         this.key            = ''
-
         this.value          = {} 
 
+        this.handlers       = this.handlers()    
+                          
         this.datumHandler   = {
 
-            apply           : this.datumHandlerApply,
-            deleteProperty  : this.datumHandlerDeleteProperty,
-            get             : this.datumHandlerGet,
-            set             : this.datumHandlerSet 
+            apply           : this.handlers.datumHandlerApply,
+            deleteProperty  : this.handlers.datumHandlerDeleteProperty,
+            get             : this.handlers.datumHandlerGet,
+            set             : this.handlers.datumHandlerSet 
         }
 
         this.graphHandler   = { ... this.datumHandler,
 
-            apply           : this.graphHandlerApply,
+            apply           : this.handlers.graphHandlerApply,
         }                               // overwrites datumHandlerApply
 
 
@@ -405,9 +406,35 @@ class Graph extends Datum {
                 ? true
                 : false
     }
+  
+    handlers () { return {
+    'datumHandlerDeleteProperty': ( targ, prop ) => {
+        return this.deleteVertex ( prop )    
+    },
+    'datumHandlerGet':  ( targ, prop, rcvr ) => {
 
+        //console.log (`graphHandler.get : graph.value['${prop}'].`)
+        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+            // performance optimisation opportunity? resplit datumHandler and
+            // graphHandler
 
-    datumHandlerApply = ( targ, thisArg, args ) => { 
+        //console.log ( compoundKey )
+        //console.log ( graph.value )
+        return this.getVertex ( compoundKey )
+    },
+    'datumHandlerSet' : ( targ, prop, val, rcvr) => {
+
+        //console.log ( `graphHandler.set : Try to set
+        //graph.value['${prop}'] to (${val}).` ) 
+        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+            // performance optimisation opportunity? resplit datumHandler and
+            // graphHandler
+
+        //console.log ( compoundKey )
+        //console.log ( graph.value )
+        return  this.setVertex ( compoundKey, val )
+    },
+    'datumHandlerApply' : ( targ, thisArg, args ) => { 
                  
         switch ( args.length ) {
 
@@ -443,38 +470,8 @@ class Graph extends Datum {
             default:
                 throw Error (`graph.datumHandlerApply/n, where arity-n has no defined branch`)
         }
-    }
-
-    datumHandlerDeleteProperty = ( targ, prop ) => {
-        return this.deleteVertex ( prop )    
-    }
-
-    datumHandlerGet = ( targ, prop, rcvr ) => {
-
-        //console.log (`graphHandler.get : graph.value['${prop}'].`)
-        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-
-        //console.log ( compoundKey )
-        //console.log ( graph.value )
-        return this.getVertex ( compoundKey )
-    }
-
-    datumHandlerSet = ( targ, prop, val, rcvr) => {
-
-        //console.log ( `graphHandler.set : Try to set
-        //graph.value['${prop}'] to (${val}).` ) 
-        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-
-        //console.log ( compoundKey )
-        //console.log ( graph.value )
-        return  this.setVertex ( compoundKey, val )
-    }
-
-    graphHandlerApply = ( targ, thisArg, args ) => { 
+    },
+    'graphHandlerApply': ( targ, thisArg, args ) => { 
            
         switch ( args.length ) {
             case 0:
@@ -518,24 +515,8 @@ class Graph extends Datum {
         }
     
     }
-
-    graphHandlerDeleteProperty = ( targ, prop ) => {
-        return this.datumHandlerDeleteProperty (targ, prop )
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-    }
-    
-    graphHandlerGet = ( targ, prop, rcvr ) => {
-        return this.datumHandlerGet ( targ, prop, rcvr ) 
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-    }
-    
-    graphHandlerSet = ( targ, prop, val, rcvr ) => {
-        return this.datumHandlerSet ( targ, prop, val, rcvr )
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-    }
+    }   }
+      
 
     //  Operates on an instance of Datum, whose value has typeof 'object'
     // 
