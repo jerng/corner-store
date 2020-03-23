@@ -242,9 +242,39 @@ new Exam.Exam ( {
 
 {   test : `Computed properties; dependent setter / pusher`,
     code : function () {
+        let SERVER = new Graph ( 'server' )
+        SERVER.source1 = 'theFIRSTpart;' 
+        SERVER.source2 = 'theSECONDpart;' 
+
+        SERVER.computer3 = new Algo ( s => { 
+            let computed = s.source1 + s.source2
+            s.sink4 = `Yo mama, I got two parts : ${computed}`
+        } ) 
+        SERVER.sink4
+        
+        return SERVER.sink4
     },
-    //want : 'legible'
-    //vfun :
+    want :`Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`
+},
+
+{   warning : `when arrows are created, we should check for existing arrows
+first to avoid duplicates (or change data structure to key =>) `,
+},
+
+{   warning : `when a pusher is created, should its dependents be made pullers
+also? can this be optional?`,
+},
+
+{   warning : `when a puller is created, should its dependencies be made pushers
+also? can this be optional?`,
+},
+
+{   warning : `standardise all handlers to either Function Expressions or Arrow
+Function Expressions`,
+},
+
+{   warning : `setVertex, Algo: does not require dependency/dependent keys to be in the
+                graph before dependents are set FIXME`,
 },
 
 {   warning : `Caching with arrows (push / pull)`,

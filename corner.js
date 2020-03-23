@@ -106,7 +106,6 @@ class Datum extends Function {
         // initialisers
         this.key
         this.value
-        //this.algo
 
         this.arrows     = {
             in      : { 
@@ -320,26 +319,47 @@ class Graph extends Function {
                     //console.log (`graphHandler.set, val is an Algo, :`,
                     //this.vertices[ ksProp ]('Datum') )
 
-                    //  Configure dependent to track dependencies:
+                    //  Configure (this) dependent to track dependencies:
                     if ( ! ( 'causal' in datum.arrows.in ) ) {
-
                         datum.arrows.in.causal = []
                     }
+
                     datum.arrows.in.causal.push ( new ArrowIn ( ksProp) )
 
                     // WARNING: does not require dependency keys to be in the graph
                     // before dependents are set FIXME
                     //
-                    //  Configure dependencies to track dependent:
+                    //  Configure dependencies to track (this) dependent:
 
                     let dependencyDatum = this.vertices[ ksProp ]('datum')
 
                         if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
-                            
                             dependencyDatum.arrows.out.causal = []
                         }
+
                         dependencyDatum
                             .arrows.out.causal.push ( new ArrowOut ( key) )
+                },
+                set : ( ksTarg, ksProp, ksVal, ksRcvr ) => {
+
+                    //  Configure (this) dependency to track dependents:
+                    if ( ! ( 'causal' in datum.arrows.out ) ) {
+                        datum.arrows.out.causal = []
+                    }
+
+                    datum.arrows.out.causal.push ( new ArrowOut ( ksProp) )
+
+                    //  Configure dependents to track (this) dependency:
+                    if ( ! ( ksProp in this.vertices ) ) {
+                        this.setVertex ( ksProp, undefined ) 
+                    }
+                    let dependentDatum = this.vertices[ ksProp ]('datum')
+                        if ( ! ( 'causal' in dependentDatum.arrows.in ) ) {
+                            
+                            dependencyDatum.arrows.in.causal = []
+                        }
+                        dependentDatum
+                            .arrows.in.causal.push ( new ArrowIn ( key) )
                 }
             } )
 
