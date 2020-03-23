@@ -130,6 +130,9 @@ class Datum extends Function {
 
         switch ( args.length )
         {
+            case 0 :
+                // Allow this through, for Graph subclass
+                return
             case 1 :
                 switch ( typeof args[0] ) 
                 {
@@ -152,7 +155,7 @@ class Datum extends Function {
     }
 }
 
-class Graph extends Function {
+class Graph extends Datum {
     // Do not declare fields here! (non-standard feature)
 
     // A graph server, actually.
@@ -170,7 +173,7 @@ class Graph extends Function {
 
         this.graphHandler  = this.getGraphHandler()
 
-        this.server         = new Proxy ( this, this.graphHandler )
+        this.proxy         = new Proxy ( this, this.graphHandler )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
@@ -185,12 +188,12 @@ class Graph extends Function {
             case 0:
                 return  {   //serlNode    : node, 
                             graph       : this,
-                            server      : this.server  }
+                            server      : this.proxy  }
 
             case 1:
                 switch ( args[0] ) {
                     case 'server':
-                        return this.server
+                        return this.proxy
 
                     case 'graph':
                         return this
@@ -244,8 +247,8 @@ class Graph extends Function {
             //}' ]() : `, this.vertices [ key ]() )
 
         if ( value instanceof Algo ) { 
-            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.server )`)
-            return value.lambda ( this.server ) 
+            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.proxy )`)
+            return value.lambda ( this.proxy ) 
         } 
 
         else
@@ -480,7 +483,7 @@ class Graph extends Function {
                                 return graph // same as targ()
                             
                             case 'server' :
-                                return graph.server 
+                                return graph.proxy 
                             
                             default:
                                 throw Error (`graph.graphHandler/1 called;

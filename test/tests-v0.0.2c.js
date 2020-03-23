@@ -16,8 +16,6 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-{   warning : `refactor away concept of 'server'?`,
-},
 {   warning : `make Graph an extension of Datum?`,
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
