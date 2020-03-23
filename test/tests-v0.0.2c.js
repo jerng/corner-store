@@ -7,7 +7,7 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 new Exam.Exam ( { 
     config : {
         expand : {
-          //initialContext : true,
+          initialContext : true,
           //tests : {
           //    legible : true,
           //    verifiable : true
@@ -40,12 +40,15 @@ new Exam.Exam ( {
     },
     want : undefined
 },
-{   test : `Assign value to key in server; does assignment statement return a normal value?`,
+{   test : `Assign value to key in server; does assignment statement return a
+            normal value? Is the assigned value at Graph.value.key?`,
     code : function () {
         let SERVER = new Graph ( 'server' )
-        return ( ( SERVER.location = 'Malaysia' ) )    
+        return  JSON.stringify ( [   SERVER.location = 'Malaysia' ,
+                    SERVER('vertices').location('datum').value
+                ] )
     },
-    want : 'Malaysia' 
+    want : JSON.stringify ( [ 'Malaysia', 'Malaysia' ] )
 },
 {   test : `Query graph server for key, where key has been assigned.`,
     code : function () {
@@ -277,7 +280,8 @@ Function Expressions`,
 
 {   warning : `Caching with arrows (push / pull)`,
 },
-
+/*
+*/
 /* Templates: 
 
 {   test : ``,

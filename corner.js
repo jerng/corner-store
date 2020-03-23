@@ -181,13 +181,15 @@ class Graph extends Datum {
 
         // initialisers
 
-        this.vertices       = {} 
+        this.key            = ''
 
-        this.datumHandler   = this.getDatumHandler()
+        this.value          = {} 
 
-        this.graphHandler  = this.getGraphHandler()
+        this.datumHandler   = this.getDatumHandler ( this )
 
-        this.proxy         = new Proxy ( this, this.graphHandler )
+        this.graphHandler   = this.getGraphHandler ( this )
+
+        this.proxy          = new Proxy ( this, this.graphHandler )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
@@ -227,12 +229,12 @@ class Graph extends Datum {
 
     deleteVertex ( key ) {
 
-        if ( ! ( key in this.vertices ) ) { return true }
+        if ( ! ( key in this.value ) ) { return true }
 
         // delete subkeys
-        if ( ( typeof this.vertices[ key ]('datum').value == 'object' ) ) 
+        if ( ( typeof this.value[ key ]('datum').value == 'object' ) ) 
         {
-            for ( const loopKey in this.vertices ) {
+            for ( const loopKey in this.value ) {
 
                 if ( loopKey.startsWith ( key + '.' ) ) {
                     
@@ -241,24 +243,24 @@ class Graph extends Datum {
             }
         }
         
-        delete this.vertices[ key ]
+        delete this.value[ key ]
 
-        return ! ( key in this.vertices )
+        return ! ( key in this.value )
     }
 
     getVertex ( key ) {
-        if ( ! ( key in this.vertices ) )
+        if ( ! ( key in this.value ) )
         { 
             //console.log(this)
             //console.log (`graph.getVertex/1 could not find the key (${key}) in
-            //graph.vertices`)
+            //graph.value`)
 
             return undefined 
         }
 
-        let value = this.vertices[ key ]()
-            //console.log ( `graph.getVertex/1 will get graph.vertices[ '${key
-            //}' ]() : `, this.vertices [ key ]() )
+        let value = this.value[ key ]()
+            //console.log ( `graph.getVertex/1 will get graph.value[ '${key
+            //}' ]() : `, this.value [ key ]() )
 
         if ( value instanceof Algo ) { 
             //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.proxy )`)
@@ -273,9 +275,9 @@ class Graph extends Datum {
             // object as the value, we try to intercept the call to that
             // object's keyerties...
             //console.log (`graph.getVertex/1 : found that datum.value is
-            //an object, so will return graph.vertices ['${key}'] `)
+            //an object, so will return graph.value ['${key}'] `)
 
-            return this.vertices[ key ] 
+            return this.value[ key ] 
         } 
 
         else
@@ -301,7 +303,7 @@ class Graph extends Datum {
 
                 datum   = new Datum ( key )
 
-                this.vertices [ datum.key ] 
+                this.value [ datum.key ] 
                     = new Proxy (  datum, this.datumHandler )
 
                 break
@@ -334,7 +336,7 @@ class Graph extends Datum {
                 get : ( ksTarg, ksProp, ksRcvr ) => {
                   
                     //console.log (`graphHandler.set, val is an Algo, :`,
-                    //this.vertices[ ksProp ]('Datum') )
+                    //this.value[ ksProp ]('Datum') )
 
                     //  Configure (this) dependent to track dependencies:
                     if ( ! ( 'causal' in datum.arrows.in ) ) {
@@ -348,7 +350,7 @@ class Graph extends Datum {
                     //
                     //  Configure dependencies to track (this) dependent:
 
-                    let dependencyDatum = this.vertices[ ksProp ]('datum')
+                    let dependencyDatum = this.value[ ksProp ]('datum')
 
                         if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
                             dependencyDatum.arrows.out.causal = []
@@ -367,10 +369,10 @@ class Graph extends Datum {
                     datum.arrows.out.causal.push ( new ArrowOut ( ksProp) )
 
                     //  Configure dependents to track (this) dependency:
-                    if ( ! ( ksProp in this.vertices ) ) {
+                    if ( ! ( ksProp in this.value ) ) {
                         this.setVertex ( ksProp, undefined ) 
                     }
-                    let dependentDatum = this.vertices[ ksProp ]('datum')
+                    let dependentDatum = this.value[ ksProp ]('datum')
                         if ( ! ( 'causal' in dependentDatum.arrows.in ) ) {
                             
                             dependencyDatum.arrows.in.causal = []
@@ -385,30 +387,28 @@ class Graph extends Datum {
 
         } // (value instanceof Algo)
 
-        this.vertices [ datum.key ] 
+        this.value [ datum.key ] 
             = new Proxy ( datum, this.datumHandler )
 
-        //console.log( `graph.setVertex/[n>1] :`, datum.key, this.vertices [
-        //datum.key ]() )
+        //console.log( `graph.setVertex/[n>1] :`, datum.key, this.value [ datum.key ]() )
 
         // redundant? check
-        return  ( this.vertices [ datum.key ]() == args[1] ) 
+        return  ( this.value [ datum.key ]() == args[1] ) 
                 ? true
                 : false
     }
 
     // TODO consider, should this be a static method? Performance? Safety?
-    getDatumHandler () {
-
-        let graph = this
-
-        let datumHandler = {
+    getDatumHandler ( graph ) {
+        return  {
 
             // datumHandler
             apply : function( targ, thisArg, args ) { 
 
                 switch ( args.length ) {
+
                     case 0:
+
                         //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
                         //    thisArg, args) `, targ().key,
                         //    targ().value, thisArg, args )
@@ -420,7 +420,9 @@ class Graph extends Datum {
                                     : datum.value
                     
                     case 1:
+
                         //console.log (`graph.datumHandler.apply/1 : `)
+
                         switch (args[0])
                         {
                             case 'datum':
@@ -447,7 +449,7 @@ class Graph extends Datum {
 
                 //console.log (`graph.datumHandler.get : (DATUMKEY, PROP, rcvr)`,
                 //    targ().key, prop, rcvr, targ(),
-                //    graph.vertices[ targ().key + '.' + prop ] )
+                //    graph.value[ targ().key + '.' + prop ] )
 
                 return graph.getVertex ( targ.key + '.' + prop )
             },
@@ -460,22 +462,18 @@ class Graph extends Datum {
                 
                 //      This is upstream (via Proxy ( () => graph )'s set
                 //      handler ) graph.setVertex/2 already does a
-                //      redundant check that the graph.vertices['prop'] was
+                //      redundant check that the graph.value['prop'] was
                 //      set correctly.
                 return  graph.setVertex ( 
                             targ.key + '.' + prop, 
                             val                                     )
             }
         }
-        return datumHandler
     }
 
     // TODO consider, should this be a static method? Performance? Safety? 
-    getGraphHandler () {
-        
-        let graph = this
-
-        let graphHandler = {
+    getGraphHandler ( graph ) {
+        return  {
 
             // graphHandler
             apply : function( targ, thisArg, args ) { 
@@ -503,7 +501,7 @@ class Graph extends Datum {
                                 return graph.proxy 
                             
                             case 'vertices' :
-                                return graph.vertices 
+                                return graph.value 
                             
                             default:
                                 throw Error (`graph.graphHandler/1 called;
@@ -525,24 +523,28 @@ class Graph extends Datum {
             // graphHandler
             get : function( targ, prop, rcvr ) {
 
-                //console.log (`graphHandler.get : graph.vertices['${prop}'].`)
+                //console.log (`graphHandler.get : graph.value['${prop}'].`)
+                let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
 
-                return graph.getVertex ( prop )
+                //console.log ( compoundKey )
+                //console.log ( graph.value )
+                return graph.getVertex ( compoundKey )
             },
 
             // graphHandler
             set : function( targ, prop, val, rcvr ) {
 
                 //console.log ( `graphHandler.set : Try to set
-                //graph.vertices['${prop}'] to (${val}).` ) 
+                //graph.value['${prop}'] to (${val}).` ) 
+                let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
 
-                return graph.setVertex ( prop, val )
+                //console.log ( compoundKey )
+                //console.log ( graph.value )
+                return  graph.setVertex ( compoundKey, val )
             
             } // graphHandler.set
         
         } // graphHandler
-
-        return graphHandler
     }
 
     //  Operates on an instance of Datum, whose value has typeof 'object'
@@ -556,13 +558,13 @@ class Graph extends Datum {
 
         if ( object instanceof Datum ) {
 
-            for ( const key in this.vertices ) {
+            for ( const key in this.value ) {
                 // this is probably up for some regex perf? optimisation...
                 if ( key.startsWith ( object.key + '.' ) ) {   
                     let propKey = key.slice ( object.key.length + 1 )
                     // ... because there is another string filter here; TODO
                     if ( ! propKey.includes ( '.' ) ) {
-                        object.value[ propKey ] = this.vertices[ key ]()
+                        object.value[ propKey ] = this.value[ key ]()
                     } 
                 }
             }
@@ -571,9 +573,9 @@ class Graph extends Datum {
 
         else {
         
-            for ( const key in this.vertices ) {
+            for ( const key in this.value ) {
                 if ( ! key.includes ( '.' ) ) {
-                    object[ key ] = this.vertices[ key ]()
+                    object[ key ] = this.value[ key ]()
                 } 
             }
             return object
