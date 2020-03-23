@@ -30,6 +30,7 @@ class ArrowOut{constructor(e){return this.okey=e,this.reads=[],this.updates=[],t
 Here's all the demo code so far.
 
 ```javascript
+new Graph
 G = new Graph('server')
 G.a = 1
 G.b = 2
