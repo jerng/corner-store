@@ -54,12 +54,12 @@ For example, JavaScript has Arrays, and Objects, and Weak Maps, and Sets, but
 all of these are simply nested trees of data. This is un-brainlike, and
 generally it feels restrictive.
 
-##### The **Graph.constructor/0** will return a bunch of useful things, but we don’t need
+#### The **Graph.constructor/0** will return a bunch of useful things, but we don’t need
 all of them for the demo.
 
 ## slide
 
-##### **Graph.constructor/1** can give you a simple server, to get started.
+#### **Graph.constructor/1** can give you a simple server, to get started.
 
 The real graph data is a few layers beneath, but what you get here is a proxy,
 which intercepts your calls to the graph data.
@@ -73,18 +73,18 @@ Underneath, it’s just JavaScript.
 
 ## slide
 
-##### For this demo, the variable **G** refers to our graph server.
+#### For this demo, the variable **G** refers to our graph server.
 
 G is very easy to use.
 
-##### Here we **set** two literal values in G.
+#### Here we **set** two literal values in G.
 
-##### Then we **set** a computed value.
+#### Then we **set** a computed value.
 
 The Algo class is not complex. It simply functions as a type marker which tells
 the proxy how to handle getters and setters.
 
-##### Voila, if we **get** the computed value, it just works.
+#### Voila, if we **get** the computed value, it just works.
 
 ECMAScript has always been a shameful mess, and as it grows older and uglier, I
 spend too much time wondering why global standards must be so hard to use.
@@ -102,12 +102,12 @@ proxies every single subobject.
 
 But our applications don’t care about these proxies, we just want our data.
 
-##### Use **a function call (arity 0)** to extract a tree of data from any non-leaf node
+#### Use **a function call (arity 0)** to extract a tree of data from any non-leaf node
 in the graph.
 
 ## slide
 
-##### We can **call the server with arity 0** to extract the total tree.
+#### We can **call the server with arity 0** to extract the total tree.
 
 Time for a peek under the hood.
 
@@ -117,6 +117,6 @@ instance. But most developers would probably not bother, most of the time.
 But if you take an interest in how this is working, you will note that the
 server deconstructs every single POJO tree when it is inserted to the graph.
 
-##### The graph data is actually stored in a flat index of compound keys.
+#### The graph data is actually stored in a flat index of compound keys.
 
 ## end of slides
