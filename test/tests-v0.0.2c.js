@@ -16,6 +16,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
+//*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -262,15 +263,17 @@ new Exam.Exam ( {
     },
     expectError: true
 },
-{   test : `Computed properties; dependent setter / pusher - pushed computation
-should not be written until the the Algo is run; the Algo is run when the Algo's
-Datum is read (gotten/get); also check arrows on dependents and dependencies`,
+//*/
+{   test : `Computed properties; dependent setter / pusher : 
+- pushed computation should not be written until the the Algo is run; 
+- the Algo is run when the Algo's Datum is read (gotten/get); 
+- also check arrows on dependents and dependencies`, 
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computer3 = new Algo ( s => { 
+        SERVER.computed3 = new Algo ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
@@ -285,16 +288,37 @@ Datum is read (gotten/get); also check arrows on dependents and dependencies`,
             return computed
         } ) 
         
+        console.log( SERVER('vertices').sink4('unproxy').arrows.in )
+
         return JSON.stringify ( {
-            sink4Before : SERVER.sink4,
-            computer3   : SERVER.computer3,
-            sink4After  : SERVER.sink4
+            sink4Before     : SERVER.sink4,
+            computed3       : SERVER.computed3,
+            sink4After      : SERVER.sink4,
+            computed3Arrows :   [   SERVER('unproxy').value
+                                        .computed3('datum').arrows.in.causal[0].ikey,
+                                    SERVER('unproxy').value
+                                        .computed3('datum').arrows.in.causal[1].ikey 
+            ],
+            source1Arrow    :   SERVER('unproxy').value
+                                    .source1('unproxy')
+                                    .arrows.out.causal[0].okey,
+            source2Arrow    :   SERVER('vertices')
+                                    .source2('datum')
+                                    .arrows.out.causal[0].okey,
+            sink4Arrow      :   SERVER('vertices')
+                                    .sink4('unproxy')
+                                    .arrows.in
         } )
     },
     want : JSON.stringify ( {
-        sink4Before : undefined,
-        computer3   : `theFIRSTpart;theSECONDpart;`,
-        sink4After  : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`
+        sink4Before         : undefined,
+        computed3           : `theFIRSTpart;theSECONDpart;`,
+        sink4After          : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`,
+        computed3Arrows     : [ 'source1', 'source2' ],
+        source1Arrow        : 'computed3',
+        source2Arrow        : 'computed3',
+        sink4Arrow          : 'computed3'
+
     } )
 },
 {   warning : `when arrows are created, we should check for existing arrows
@@ -312,7 +336,7 @@ also? can this be optional?`,
 },
 {   warning : `Review Graph() and Datum() application API`
 },
-{   warning : `Review exam.js depth`
+{   warning : `Review exam.js depth - it is hiding traces`
 },
 {   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
 },

@@ -306,8 +306,8 @@ class Graph extends Datum {
 
                 //console.warn (`graph.setVertex/1 : rewrite & test for this branch`)
                 
-                let key = args[0]  
-                datum   = new Datum ( key )
+                let setKey = args[0]  
+                datum   = new Datum ( setKey )
 
                 this.value [ datum.key ] 
                     = new Proxy (  datum, this.datumHandler )
@@ -316,28 +316,47 @@ class Graph extends Datum {
         }
         // HEREON: args.length > 1
 
-        let key     = args[0]
-        let value   = args[1]
+        let setKey     = args[0]
+        let setValue   = args[1]
 
         //console.log (`graph.setVertex/[n>1], BEGIN, key:`, key, 'value:', value)
 
-        // updates are destructive
-        if ( ! this.deleteVertex ( key ) ) { return false }
+        console.log ( `graph.setVertex/[n>1], initial value : `,
+        this.value[setKey], `update value:`, setValue )
 
-        datum = new Datum ( { [key] : value } )
+/*
+        // If the node already exists...
+        if (this.value[setKey] instanceof Datum)
+        {
+            // ... then moderate the update ...
+            datum       = this.value[setKey]('datum')
+            datum.value = setValue
+        } 
+        else
+        {
+            // ... otherwise, updates are quite destructive.
+
+        }
+*/
+console.warn(`WIP`)
+
+        if ( ! this.deleteVertex ( setKey ) ) { return false }
+        
+        datum = new Datum ( { [setKey] : setValue } )
+
 
         // update sub-vertices
-        if ( typeof value == 'object' ) {
+        if ( typeof setValue == 'object' ) {
          
-            for ( const subKey in value ) {
+            for ( const subSetKey in setValue ) {
 
-                let compoundKey = key + '.' + subKey
-                if ( !  this.setVertex ( compoundKey, value[ subKey ] ) )       
+                let compoundKey = setKey + '.' + subSetKey
+                if ( !  this.setVertex ( compoundKey, setValue[ subSetKey ] ) )       
                 { return false }
             }
         }
 
-        if ( value instanceof Algo ) {
+        if ( setValue instanceof Algo ) {
 
             //console.log (`graph.setVertex/[n>1] : value instanceof Algo `)
     
@@ -367,7 +386,7 @@ class Graph extends Datum {
                         }
 
                         dependencyDatum
-                            .arrows.out.causal.push ( new ArrowOut ( key ) )
+                            .arrows.out.causal.push ( new ArrowOut ( setKey ) )
 
                     //console.log (`graph.setVertex/>1 : Algo : keySnifferHandler.get: ended`)
 
@@ -397,7 +416,7 @@ class Graph extends Datum {
                             dependentDatum.arrows.in.causal = []
                         }
                         dependentDatum
-                            .arrows.in.causal.push ( new ArrowIn ( key ) )
+                            .arrows.in.causal.push ( new ArrowIn ( setKey ) )
 
                         //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
                     
@@ -408,7 +427,7 @@ class Graph extends Datum {
             //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
 
             // Detect dependencies and plant arrows.
-            value.lambda ( keySniffer )
+            setValue.lambda ( keySniffer )
             
             //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
 
