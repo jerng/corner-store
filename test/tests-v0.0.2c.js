@@ -264,7 +264,7 @@ new Exam.Exam ( {
     expectError: true
 },
 //*/
-/*
+//*
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Algo is run; 
 - the Algo is run when the Algo's Datum is read (gotten/get); 
@@ -289,7 +289,7 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        console.log( SERVER('vertices').sink4('unproxy').arrows.in )
+        //console.log( SERVER('vertices').sink4('unproxy').arrows.in )
 
         return JSON.stringify ( {
             sink4Before     : SERVER.sink4,
@@ -308,7 +308,7 @@ new Exam.Exam ( {
                                     .arrows.out.causal[0].okey,
             sink4Arrow      :   SERVER('vertices')
                                     .sink4('unproxy')
-                                    .arrows.in
+                                    .arrows.in.causal[0].ikey
         } )
     },
     want : JSON.stringify ( {
@@ -322,9 +322,9 @@ new Exam.Exam ( {
 
     } )
 },
-*/
-{   warning : `when arrows are created, we should check for existing arrows
-first to avoid duplicates (or change data structure to key =>) `,
+//*/
+{   warning : `When a vertex's value is updated, the vertex's arrows, cache, and
+log, are untouched.`,
 },
 
 {   warning : `when a pusher is created, should its dependents be made pullers
