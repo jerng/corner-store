@@ -263,8 +263,6 @@ new Exam.Exam ( {
     },
     expectError: true
 },
-//*/
-//*
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Algo is run; 
 - the Algo is run when the Algo's Datum is read (gotten/get); 
@@ -341,6 +339,9 @@ also? can this be optional?`,
 {   warning : `Review exam.js depth - it is hiding traces`
 },
 {   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
+},
+{   warning: `Algo is safe by default; Safe extends Algo just for synonymy;
+Danger extends Safe; EventListener extends Danger.`
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },

@@ -50,6 +50,7 @@ class ArrowIn {
 
 // data type for use in Datum
 
+// This should be made safe by default. No pushing allowed.
 class Algo {
 
     constructor ( ... args ) {
@@ -60,24 +61,31 @@ class Algo {
         if ( typeof args[0] !== 'function' ) {
             throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
         }
-        /*if ( ! ( 'prototype' in args[0] ) ) {
-            throw Error (`Algo.constructor : you appear to have passed in an
-            arrow function expression; AFE bodies do not have internal bindings
-            for the (this) keyword, instead inheriting (this) from their surrounding
-            scope. Therefore, Algo.constructor cannot use Reflect.apply ( AFE,
-            this = (new Proxy) ) to sniff the props called on (this) in the AFE's
-            function body. Please use a non-arrow function expression instead.`)
-        }*/
 
-        // this.verticeKeys = []
-        // It is possible to extract this data here, but currently it has been
-        // delegated to Graph.graphHandler.set
-
-        let _lambda = this.lambda = args[0]
-
+        Object.defineProperty ( this, 'lambda', {
+            enumerable  : false,
+            value       : args[0]
+        } )
         return this
 
     }
+
+}
+
+// Synonym for Algo.
+class Safe extends Algo {
+}
+
+// Pushing should be enabled here.
+class Danger extends Safe {
+}
+
+// Listeners usually need to have side effects; a listener with handlers that
+// could only read memory (but not write it) would be a ... passive listern,
+// being practically useless.
+//
+// Here, how do we expect to trigger events?
+class EventListener extends Danger {
 
 }
 
