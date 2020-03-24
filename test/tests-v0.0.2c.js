@@ -16,10 +16,6 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-{   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
-},
-{   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
-},
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -227,37 +223,80 @@ new Exam.Exam ( {
     ] )
 },
 
-{   test : `Computed properties; dependency getter / puller`,
+{   test : `Computed properties; dependency getter / puller - also check arrows on dependents and dependencies.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a = new Algo ( s => s.source1 + s.source2 )
-        
-        return SERVER.computed2a 
-
+        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+        let computed2aArrows    = [
+            SERVER('unproxy').value.computed2a('datum').arrows.in.causal[0].ikey,
+            SERVER('unproxy').value.computed2a('datum').arrows.in.causal[1].ikey 
+        ]
+        return JSON.stringify ( {
+            computedValue   :   SERVER.computed2a,
+            computed2aArrows:   computed2aArrows,
+            source1Arrow    :   SERVER('unproxy').value
+                                    .source1('unproxy')
+                                    .arrows.out.causal[0].okey,
+            source2Arrow    :   SERVER('vertices')
+                                    .source2('datum')
+                                    .arrows.out.causal[0].okey,
+        } )
     },
-    want : 'theFIRSTpart;theSECONDpart;'
+    want : JSON.stringify ( {
+        computedValue   :   'theFIRSTpart;theSECONDpart;',
+        computed2aArrows:   [ 'source1', 'source2' ],
+        source1Arrow    :   'computed2a',
+        source2Arrow    :   'computed2a'
+    } )
 },
+{   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
+    code : function () {
+        let SERVER = new Graph ( 'server' )
+        //SERVER.source1 = 'theFIRSTpart;' 
+        SERVER.source2 = 'theSECONDpart;' 
 
-{   test : `Computed properties; dependent setter / pusher`,
+        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+    },
+    expectError: true
+},
+{   test : `Computed properties; dependent setter / pusher - pushed computation
+should not be written until the the Algo is run; the Algo is run when the Algo's
+Datum is read (gotten/get); also check arrows on dependents and dependencies`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
         SERVER.computer3 = new Algo ( s => { 
-            let computed = s.source1 + s.source2
-            s.sink4 = `Yo mama, I got two parts : ${computed}`
-        } ) 
-        SERVER.sink4
-        
-        return SERVER.sink4
-    },
-    want :`Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`
-},
 
+            // pull
+            let computed = s.source1 + s.source2
+            
+            //console.log (`IN ALGO: BEFORE PUSH`) 
+
+            // push
+            s.sink4 = `Yo mama, I got two parts : ${computed}`
+            
+            //console.log (`IN ALGO: AFTER PUSH`) 
+
+            return computed
+        } ) 
+        
+        return JSON.stringify ( {
+            sink4Before : SERVER.sink4,
+            computer3   : SERVER.computer3,
+            sink4After  : SERVER.sink4
+        } )
+    },
+    want : JSON.stringify ( {
+        sink4Before : undefined,
+        computer3   : `theFIRSTpart;theSECONDpart;`,
+        sink4After  : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`
+    } )
+},
 {   warning : `when arrows are created, we should check for existing arrows
 first to avoid duplicates (or change data structure to key =>) `,
 },
@@ -269,16 +308,15 @@ also? can this be optional?`,
 {   warning : `when a puller is created, should its dependencies be made pushers
 also? can this be optional?`,
 },
-
-{   warning : `standardise all handlers to either Function Expressions or Arrow
-Function Expressions`,
-},
-
-{   warning : `setVertex, Algo: does not require dependency/dependent keys to be in the
-                graph before dependents are set FIXME`,
-},
-
 {   warning : `Caching with arrows (push / pull)`,
+},
+{   warning : `Review Graph() and Datum() application API`
+},
+{   warning : `Review exam.js depth`
+},
+{   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
+},
+{   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 /*
 */
