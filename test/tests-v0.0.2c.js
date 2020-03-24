@@ -264,6 +264,7 @@ new Exam.Exam ( {
     expectError: true
 },
 //*/
+/*
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Algo is run; 
 - the Algo is run when the Algo's Datum is read (gotten/get); 
@@ -321,6 +322,7 @@ new Exam.Exam ( {
 
     } )
 },
+*/
 {   warning : `when arrows are created, we should check for existing arrows
 first to avoid duplicates (or change data structure to key =>) `,
 },
