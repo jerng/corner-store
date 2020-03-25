@@ -429,9 +429,6 @@ class Graph extends Datum {
 
         // datumToSet MUST BE DEFINED BY THIS POINT...
 
-
-
-
         // If datumToSet.value is an Algo, call it on a keySniffer to plant Arrows.
             // (But datumToSet IS needed here.)
         if ( datumToSet.value instanceof Algo )
@@ -440,7 +437,7 @@ class Graph extends Datum {
             // Assign all old Datum's enumerable properties except 'lambda' to
             // Algo.
             delete datumToSet.lambda
-                // what about .value?
+            delete datumToSet.value
 
             let algoToSet 
                     =   Object.defineProperties ( 
