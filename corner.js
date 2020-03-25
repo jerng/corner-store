@@ -405,9 +405,14 @@ class Graph extends Datum {
             //console.log ( datumToSet.value )
         } 
 
-        // If the node/vertex already exists...
-        if ( proxiedOldDatum = this.value[ keyToSet ] ) { 
-      
+        // If the node/vertex does not yet exist ...
+        if ( ! ( proxiedOldDatum = this.value[ keyToSet ] ) ) {
+
+            datumToSet = new Datum ( { [keyToSet] : valueToSet } )
+        }
+         
+        else { // ... the node/vertex already exists...
+
             // ... then check its datum;
             let oldDatum = proxiedOldDatum('unproxy')
 
@@ -421,18 +426,27 @@ class Graph extends Datum {
             datumToSet          = oldDatum
             datumToSet.value    = valueToSet
         }
-        else
-        { datumToSet = new Datum ( { [keyToSet] : valueToSet } ) }
 
-        // datumToSet MUST BE DEFINED BY THIS POINT...
+// datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value is an Algo, call it on a keySniffer to plant Arrows.
-            // (But datumToSet IS needed here.)
-        if ( datumToSet.value instanceof Algo )
+        // If datumToSet.value is NOT an Algo, then complete the assignment.
+        if ( ! ( datumToSet.value instanceof Algo ) )
         {
+            this.value [ datumToSet.key ] 
+                    = new Proxy ( datumToSet, this.datumHandler )   
 
-            // Assign all old Datum's enumerable properties except 'lambda' to
-            // Algo.
+                  //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+                  //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
+                  //](),'==', args[1] )
+
+            return  ( this.value [ keyToSet ]() == args[1] ) 
+                    ? true
+                    : false
+        } 
+
+        else {  // datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
+
+            // Assign all old Datum's enumerable properties except 'lambda' to Algo.
             delete datumToSet.lambda
             delete datumToSet.value
 
@@ -448,45 +462,27 @@ class Graph extends Datum {
                 set : this.handlers.scopedAlgoKeySnifferHandlerSet ( algoToSet )
             } )
 
-            //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
-
+                    //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
             
             // Detect dependencies and plant arrows.
             algoToSet.lambda ( keySniffer )
 
-            //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
-
-            // console.log ( algoToSet.toString() )
+                    //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
+                    // console.log ( algoToSet.toString() )
 
             this.value [ keyToSet ]
                 = new Proxy ( algoToSet, this.datumHandler )   
 
-              //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
-              //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
-              //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
+                  //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+                  //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
+                  //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
 
             // redundant? check
             return  ( this.value [ keyToSet ]('datum') == args[1] ) 
                     ? true
                     : false
 
-        } // (value instanceof Algo)
-
-        else {  
-            
-            this.value [ datumToSet.key ] 
-                    = new Proxy ( datumToSet, this.datumHandler )   
-
-              //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
-              //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
-              //](),'==', args[1] )
-
-            // redundant? check
-            return  ( this.value [ keyToSet ]() == args[1] ) 
-                    ? true
-                    : false
-        }
-
+        } // End of block where: (value instanceof Algo) 
 
     }
   
