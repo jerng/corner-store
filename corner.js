@@ -66,14 +66,13 @@ class ArrowIn {
 class Datum extends Function {
 
     toString () {
-        return  [   'Datum.toString/0 returned:',
-                    [   'a shallow copy of enumerable properties, { ... this }',
-                        { ... this }
-                    ],
-                    [   'Object.getOwnPropertyDescriptors ( this )',
-                        Object.getOwnPropertyDescriptors ( this )
-                    ],
-                ]
+        return  {   'Datum.toString/0 returned:' : 
+                    {   'a shallow copy of enumerable properties, { ... this }':
+                            { ... this },
+                        'Object.getOwnPropertyDescriptors ( this )':
+                            Object.getOwnPropertyDescriptors ( this )
+                    }
+                }
     }
 
     constructor ( ...args ) {
@@ -81,31 +80,60 @@ class Datum extends Function {
         super()
 
         // initialisers
-        this.key
-        this.value
 
-        this.arrows     = {
-            in      : { 
-                // variousTypeKeys: [ ArrowIn ]
+        Object.defineProperties ( this, {
+            
+            key     : {
+                configurable: true,
+                enumerable  : true, 
+                value       : undefined,
+                writable    : true
             },
-            out     : {
-                // variousTypeKeys: [ ArrowOut ]
-            }
-        }
 
-            // Move to class?
-        this.log        = {
-            gets    : [],   // microtime
-            sets    : [],   // [ microtime, value ]
-            deletes : []    // [ microtime, value ]
-        }
+            value   : {
+                configurable: true,
+                enumerable  : true,
+                value       : undefined,
+                writable    : true
+            },
 
-            // Move to class?
-        this.cache      = {
-            stale   : false,
-            hits    : [],   // microtime
-            misses  : []    // microtime
-        }
+            arrows  : {
+                configurable: true,
+                enumerable  : true,
+                value       : {
+                    in      : { 
+                        // variousTypeKeys: [ ArrowIn ]
+                    },
+                    out     : {
+                        // variousTypeKeys: [ ArrowOut ]
+                    }
+                },
+                writable    : true
+            },
+
+            log     : {
+                configurable: true,
+                enumerable  : true,
+                value       : {
+                    gets    : [],   // microtime
+                    sets    : [],   // [ microtime, value ]
+                    deletes : []    // [ microtime, value ]
+                },              // Move to class?
+                writable    : true
+            },
+
+            cache   : {
+                configurable: true,
+                enumerable  : true,
+                value       : {
+                    stale   : false,
+                    hits    : [],   // microtime
+                    misses  : []    // microtime
+                },              // Move to class?
+                writable    : true
+            },
+
+        } )
 
         switch ( args.length )
         {
@@ -140,9 +168,9 @@ class Datum extends Function {
 class Algo extends Datum {
 
     toString () {
-        return  [   'Algo.toString/0 returned:', 
+        return  {   'Algo.toString/0 returned:' : 
                     super.toString()
-                ]
+                }
     }
 
     constructor ( ... args ) {
@@ -190,9 +218,9 @@ class EventListener extends Danger {
 class Graph extends Datum {
 
     toString () {
-        return  [   'Graph.toString/0 returned:', 
+        return  {   'Graph.toString/0 returned:': 
                     super.toString()
-                ]
+                }
     }
 
     constructor ( ... args ) {
@@ -306,22 +334,25 @@ class Graph extends Datum {
             return undefined 
         }
 
-        let value = this.value[ key ]()
+        //console.log(this.value [key]('datum') )
+
+        let datum = this.value[ key ]('datum')
+
             //console.log ( `graph.getVertex/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
-        if ( value instanceof Algo ) { 
+        if ( datum instanceof Algo ) { 
             //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.proxy )`)
-            return value.lambda ( this.proxy ) 
+            return datum.lambda ( this.proxy ) 
         } 
 
         else
 
-        if ( typeof value == 'object' )
+        if ( typeof datum.value == 'object' )
         {
             // Wherein. if we find that the user has previously set an
             // object as the value, we try to intercept the call to that
-            // object's keyerties...
+            // object's properties...
             //console.log (`graph.getVertex/1 : found that datum.value is
             //an object, so will return graph.value ['${key}'] `)
 
@@ -329,7 +360,7 @@ class Graph extends Datum {
         } 
 
         else
-        { return value } 
+        { return datum.value } 
     }
 
     setVertex ( ... args ) {
@@ -361,7 +392,8 @@ class Graph extends Datum {
         let keyToSet     = args[0]
         let valueToSet   = args[1]
 
-            //console.log (`graph.setVertex/[n>1], BEGIN, key:`, key, 'value:', value)
+            //console.log (`graph.setVertex/[n>1], BEGIN, key:`, keyToSet,
+            //'value:', valueToSet)
             //console.log ( `graph.setVertex/[n>1], initial value : `,
             //this.value[keyToSet], `update value:`, valueToSet )
 
@@ -437,6 +469,8 @@ class Graph extends Datum {
                             dependencyDatum.arrows.out.causal = []
                         }
 
+                        //console.log (  algoToSet.key )
+
                         dependencyDatum
                             .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
 
@@ -489,19 +523,33 @@ class Graph extends Datum {
             this.value [ keyToSet ]
                 = new Proxy ( algoToSet, this.datumHandler )   
 
+              //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+              //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
+              //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
+
+            // redundant? check
+            return  ( this.value [ keyToSet ]('datum') == args[1] ) 
+                    ? true
+                    : false
+
         } // (value instanceof Algo)
 
-        else {  this.value [ datumToSet.key ] 
-                    = new Proxy ( datumToSet, this.datumHandler )   }
+        else {  
+            
+            this.value [ datumToSet.key ] 
+                    = new Proxy ( datumToSet, this.datumHandler )   
 
-        //console.log( `graph.setVertex/[n>1], END, key:`, datum.key, 'value:',
-        //this.value [ datum.key ](), 'succcess check:', this.value [ datum.key
-        //]() == args[1] )
+              //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+              //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
+              //](),'==', args[1] )
 
-        // redundant? check
-        return  ( this.value [ keyToSet ]() == args[1] ) 
-                ? true
-                : false
+            // redundant? check
+            return  ( this.value [ keyToSet ]() == args[1] ) 
+                    ? true
+                    : false
+        }
+
+
     }
   
     handlers () { return {

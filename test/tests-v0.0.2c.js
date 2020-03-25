@@ -223,7 +223,7 @@ new Exam.Exam ( {
                                     "n":2}}}}
     ] )
 },
-
+//*/
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -231,6 +231,8 @@ new Exam.Exam ( {
         SERVER.source2 = 'theSECONDpart;' 
 
         SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+        
+        //console.log (SERVER.computed2a)
 
         return JSON.stringify ( {
             computedValue   :   SERVER.computed2a,
@@ -373,8 +375,11 @@ new Exam.Exam ( {
 
     } )
 },
+/*
 /*/
 //*/
+{   warning : `Arrow creation generally doesn't check for old arrows.`,
+},
 {   warning : `When a Datum is replaced by an Algo, what happens to arrows
 initially known to the Datum?.`,
 },
