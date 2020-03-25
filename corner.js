@@ -105,11 +105,9 @@ class Datum extends Function {
                 configurable: true,
                 enumerable  : false,
                 value       : {
-                    in      : { 
-                        // variousTypeKeys: [ ArrowIn ]
+                    in      : { // variousTypeKeys: [ ArrowIn ]
                     },
-                    out     : {
-                        // variousTypeKeys: [ ArrowOut ]
+                    out     : { // variousTypeKeys: [ ArrowOut ]
                     }
                 },
                 writable    : true
@@ -287,37 +285,13 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
-    sproutVertex ( key, value ) {
-
-        for ( const subKey in value ) {
-
-            let compoundKey = key + '.' + subKey
-
-            if ( ! this.setVertex ( compoundKey, value[ subKey ] ) )       
-            { return false }
-        }
-        return true
-    }
-
-    pruneVertex ( key ) {
-
-        for ( const loopKey in this.value ) {
-
-            if ( loopKey.startsWith ( key + '.' ) ) {
-                
-                if ( ! this.deleteVertex ( loopKey ) ) { return false }
-            }
-        }
-        return true
-    }
-
-    deleteVertex ( key ) {
+    vertexDelete ( key ) {
 
         if ( ! ( key in this.value ) ) { return true }
 
         if ( ( typeof this.value[ key ]('datum').value == 'object' ) ) 
         {
-            if ( ! this.pruneVertex ( key ) ) { return false }
+            if ( ! this.vertexPrune ( key ) ) { return false }
         }
         
         delete this.value[ key ]
@@ -325,11 +299,11 @@ class Graph extends Datum {
         return ! ( key in this.value )
     }
 
-    getVertex ( key ) {
+    vertexGet ( key ) {
         if ( ! ( key in this.value ) )
         { 
             //console.log(this)
-            //console.log (`graph.getVertex/1 could not find the key (${key}) in
+            //console.log (`graph.vertexGet/1 could not find the key (${key}) in
             //graph.value`)
 
             return undefined 
@@ -339,11 +313,11 @@ class Graph extends Datum {
 
         let datum = this.value[ key ]('datum')
 
-            //console.log ( `graph.getVertex/1 will get graph.value[ '${key
+            //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
         if ( datum instanceof Algo ) { 
-            //console.log (`graph.getVertex/1 will now return datum.value.lambda ( graph.proxy )`)
+            //console.log (`graph.vertexGet/1 will now return datum.value.lambda ( graph.proxy )`)
             return datum.lambda ( this.proxy ) 
         } 
 
@@ -354,7 +328,7 @@ class Graph extends Datum {
             // Wherein. if we find that the user has previously set an
             // object as the value, we try to intercept the call to that
             // object's properties...
-            //console.log (`graph.getVertex/1 : found that datum.value is
+            //console.log (`graph.vertexGet/1 : found that datum.value is
             //an object, so will return graph.value ['${key}'] `)
 
             return this.value[ key ] 
@@ -364,7 +338,21 @@ class Graph extends Datum {
         { return datum.value } 
     }
 
-    setVertex ( ... args ) {
+    //  Deletes all child vertices.
+    //  Prune is to Sprout, what Delete is to Update.
+    vertexPrune ( key ) {
+
+        for ( const loopKey in this.value ) {
+
+            if ( loopKey.startsWith ( key + '.' ) ) {
+                
+                if ( ! this.vertexDelete ( loopKey ) ) { return false }
+            }
+        }
+        return true
+    }
+
+    vertexSet ( ... args ) {
 
         let proxiedOldDatum
         let datumToSet
@@ -372,11 +360,11 @@ class Graph extends Datum {
         switch ( args.length ) 
         {
             case 0:
-                throw Error (`graph.setVertex/0 called; unsupported arity.`)
+                throw Error (`graph.vertexSet/0 called; unsupported arity.`)
 
             case 1:
 
-                //console.warn (`graph.setVertex/1 : rewrite & test for this branch`)
+                //console.warn (`graph.vertexSet/1 : rewrite & test for this branch`)
                 
                 let keyToSet = args[0]  
                 datumToSet   = new Datum ( keyToSet )
@@ -393,9 +381,9 @@ class Graph extends Datum {
         let keyToSet     = args[0]
         let valueToSet   = args[1]
 
-            //console.log (`graph.setVertex/[n>1], BEGIN, key:`, keyToSet,
+            //console.log (`graph.vertexSet/[n>1], BEGIN, key:`, keyToSet,
             //'value:', valueToSet)
-            //console.log ( `graph.setVertex/[n>1], initial value : `,
+            //console.log ( `graph.vertexSet/[n>1], initial value : `,
             //this.value[keyToSet], `update value:`, valueToSet )
 
         // If valuetoset is an object ...
@@ -404,7 +392,7 @@ class Graph extends Datum {
                 valueToSetType == 'function'    )
         {
             // ... then set all of its child vertices;
-            if ( ! this.sproutVertex ( keyToSet, valueToSet ) ) 
+            if ( ! this.vertexSprout ( keyToSet, valueToSet ) ) 
             { return false }
 
             //console.log ( datumToSet.value )
@@ -423,7 +411,7 @@ class Graph extends Datum {
 
             // ... and if the datum's value is an object, then prune the graph;
             if ( typeof oldDatum.value == 'object' ) {
-                if ( ! this.pruneVertex ( keyToSet ) ) { return false } 
+                if ( ! this.vertexPrune ( keyToSet ) ) { return false } 
             }
 
             // ... and finally update datum.value, but not datum's other
@@ -440,7 +428,7 @@ class Graph extends Datum {
             this.value [ datumToSet.key ] 
                     = new Proxy ( datumToSet, this.datumHandler )   
 
-                  //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
                   //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
                   //](),'==', args[1] )
 
@@ -460,25 +448,25 @@ class Graph extends Datum {
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
 
-            //console.log (`graph.setVertex/[n>1] : value instanceof Algo `)
+            //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
     
             let keySniffer = new Proxy ( {}, {
                 get : this.handlers.scopedAlgoKeySnifferHandlerGet ( algoToSet ),
                 set : this.handlers.scopedAlgoKeySnifferHandlerSet ( algoToSet )
             } )
 
-                    //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
+                    //console.log (`graph.vertexSet/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
             
             // Detect dependencies and plant arrows.
             algoToSet.lambda ( keySniffer )
 
-                    //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
+                    //console.log (`graph.vertexSet/>1 : Algo : AFTER value.lambda(keySniffer)`)
                     // console.log ( algoToSet.toString() )
 
             this.value [ keyToSet ]
                 = new Proxy ( algoToSet, this.datumHandler )   
 
-                  //console.log( `graph.setVertex/[n>1], END, key:`, keyToSet, 'value:',
+                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
                   //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
                   //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
 
@@ -491,9 +479,23 @@ class Graph extends Datum {
 
     }
   
+    //  Updates all child vertices.
+    //  Prune is to Sprout, what Delete is to Update.
+    vertexSprout ( key, value ) {
+
+        for ( const subKey in value ) {
+
+            let compoundKey = key + '.' + subKey
+
+            if ( ! this.vertexSet ( compoundKey, value[ subKey ] ) )       
+            { return false }
+        }
+        return true
+    }
+
     handlers () { return {
     'datumHandlerDeleteProperty': ( targ, prop ) => {
-        return this.deleteVertex ( prop )    
+        return this.vertexDelete ( prop )    
     },
     'datumHandlerGet':  ( targ, prop, rcvr ) => {
 
@@ -504,7 +506,7 @@ class Graph extends Datum {
 
         //console.log ( compoundKey )
         //console.log ( graph.value )
-        return this.getVertex ( compoundKey )
+        return this.vertexGet ( compoundKey )
     },
     'datumHandlerSet' : ( targ, prop, val, rcvr) => {
 
@@ -515,7 +517,7 @@ class Graph extends Datum {
             // graphHandler
 
         //console.log ( compoundKey,  this.value )
-        return  this.setVertex ( compoundKey, val )
+        return  this.vertexSet ( compoundKey, val )
     },
     'datumHandlerApply' : ( targ, thisArg, args ) => { 
                  
@@ -610,7 +612,7 @@ class Graph extends Datum {
                 // on the other Datums-
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-            //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
+            //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
 
             //  Configure (this) dependent to track dependencies:
             if ( ! ( 'causal' in algoToSet.arrows.in ) ) {
@@ -634,7 +636,7 @@ class Graph extends Datum {
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
 
-            //console.log (`graph.setVertex/>1 : Algo : keySnifferHandler.get: ended`)
+            //console.log (`graph.vertexSet/>1 : Algo : keySnifferHandler.get: ended`)
 
         }
     },
@@ -646,7 +648,7 @@ class Graph extends Datum {
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
             if ( ! ( 'causal' in algoToSet.arrows.out ) ) {
@@ -654,11 +656,11 @@ class Graph extends Datum {
             }
             algoToSet.arrows.out.causal.push ( new ArrowOut ( ksProp ) )
 
-                //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
+                //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
 
             //  Configure dependents to track (this) dependency:
             if ( ! ( ksProp in this.value ) ) {
-                this.setVertex ( ksProp, undefined ) 
+                this.vertexSet ( ksProp, undefined ) 
             }
             let dependentDatum = this.value[ ksProp ]('datum')
 
@@ -668,7 +670,7 @@ class Graph extends Datum {
                 dependentDatum
                     .arrows.in.causal.push ( new ArrowIn ( algoToSet.key ) )
 
-                //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
+                //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
             
             return true // FIXME: arrows unchecked?
         }
