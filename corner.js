@@ -131,7 +131,12 @@ class Datum extends Function {
                         misses  : []    // microtime
                     },   
                     sets    : [],       // [ microtime, value ]
-                    deletes : []        // [ microtime, value ]
+
+                  //deletes : []        // [ microtime, value ]
+                    // This doesn't quite work that way for now. When we delete
+                    // a Datum, we really torch its existence in the Graph.
+                    // Maybe this can change in the future.
+
                 },                                              
                 writable    : true
             },
@@ -188,8 +193,10 @@ class Algo extends Datum {
         }
 
         Object.defineProperty ( this, 'lambda', {
+            configurable: true,
             enumerable  : false,
-            value       : args[0]
+            value       : args[0],
+            writable    : true
         } )
 
         return this
@@ -316,6 +323,9 @@ class Graph extends Datum {
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
+        // LOGGING
+        datum.log.gets.hits.push ( Date() )
+
         if ( datum instanceof Algo ) { 
             //console.log (`graph.vertexGet/1 will now return datum.value.lambda ( graph.proxy )`)
             return datum.lambda ( this.proxy ) 
@@ -422,6 +432,9 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
+        // LOGGING
+        datumToSet.log.sets.push ( Date() )
+
         // If datumToSet.value is NOT an Algo, then complete the assignment.
         if ( ! ( datumToSet.value instanceof Algo ) )
         {
@@ -439,7 +452,7 @@ class Graph extends Datum {
 
         else {  // datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
 
-            // Assign all old Datum's enumerable properties except 'lambda' to Algo.
+            // Assign all old Datum's own properties except 'lambda' to Algo.
             delete datumToSet.lambda
             delete datumToSet.value
 
