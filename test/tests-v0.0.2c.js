@@ -276,7 +276,7 @@ new Exam.Exam ( {
         source2Arrow    :   'computed2a'
     } )
 },
-/*/
+//*/
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
