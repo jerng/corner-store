@@ -61,10 +61,6 @@ class ArrowIn {
  *                  ... to be implement: object's other key/values as inputs... 
  *      
  *      Array ?     ... to be implemented as lists of the above...       
- *
- *
- *  
- *  It is important to note that internal logging is implemented via a proxy.
  */
 
 class Datum extends Function {
@@ -135,55 +131,12 @@ class Datum extends Function {
                         misses  : []    // microtime
                     },   
                     sets    : [],       // [ microtime, value ]
-                    dels    : []        // [ microtime, value ]
+                    deletes : []        // [ microtime, value ]
                 },                                              
                 writable    : true
             },
 
         } )
-
-        // Logging? This may have too many redundant checks.
-        //
-        // Failed approach
-        /*
-        let logEnabledThis = new Proxy ( this , {
-            get : ( targ, prop, rcvr) => {
-
-                let result = targ[ prop ]
-
-                // Logs undefined even when prop is not in targ.
-                if ( prop == 'value' ) {
-                    //console.log (`Datum logger: get: result:`, result)
-                    targ.log.gets.hits.push ( Date() )
-                } 
-                return result 
-            },
-            set : ( targ, prop, val, rcvr) => {
-
-                targ[ prop ]    = val
-                let result      = targ[ prop ] == val 
-
-                // Checks for actual success.
-                if ( result && ( prop == 'value' ) ) {
-                    console.log (`Datum logger: set: result:`, result)
-                    targ.log.sets.push ( Date() )
-                }
-                return result 
-            },
-            deleteProperty : ( targ, prop ) => {
-
-                delete targ[ prop ]
-                let result = ! ( prop in targ )
-
-                // Checks for actual success.
-                if ( result && ( prop == 'value' ) ) {
-                    //console.log (`Datum logger: deleteProperty: result:`, result)
-                    targ.log.dels.push ( Date() )
-                } 
-                return result
-            }
-        } )
-        */
 
         switch ( args.length )
         {
@@ -195,12 +148,12 @@ class Datum extends Function {
                 {
                     case 'string':
                         this.key = args[0]
-                        return this 
+                        return this
 
                     case 'object':
                         this.key = Object.keys( args[0] )[0]
                         this.value = args[0][this.key]
-                        return this 
+                        return this
 
                     default:
                         throw Error (`Datum::constructor/1 called on n, where
