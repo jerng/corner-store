@@ -133,8 +133,8 @@ class Datum extends Function {
 
                   //deletes : []        // [ microtime, value ]
                     // This doesn't quite work that way for now. When we delete
-                    // a Datum, we really torch its existence in the Graph.
-                    // Maybe this can change in the future.
+                    // a Datum, we really expunge it from the Graph.
+                    // Maybe this can change in the future. TODO
 
                 },                                              
                 writable    : true
@@ -337,7 +337,7 @@ class Graph extends Datum {
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
-        // LOGGING
+        // LOGGING - 3 scenarios below
         datum.log.gets.hits.push ( Date() )
 
         if ( datum instanceof Algo ) { 
@@ -446,9 +446,6 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // LOGGING
-        datumToSet.log.sets.push ( Date() )
-
         // If datumToSet.value is NOT an Algo, then complete the assignment.
         if ( ! ( datumToSet.value instanceof Algo ) )
         {
@@ -459,12 +456,17 @@ class Graph extends Datum {
                   //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
                   //](),'==', args[1] )
 
-            return  ( this.value [ keyToSet ]() == args[1] ) 
-                    ? true
-                    : false
+            let result = this.value [ keyToSet ]() == args[1]  
+            if ( result ) {
+            
+                // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
+                datumToSet.log.sets.push ( Date() )
+            } 
+            return result
         } 
 
-        else {  // datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
+        else 
+        {  // datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
 
             // Assign all old Datum's own properties except 'lambda' to Algo.
             delete datumToSet.lambda
@@ -497,10 +499,13 @@ class Graph extends Datum {
                   //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
                   //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
 
-            // redundant? check
-            return  ( this.value [ keyToSet ]('datum') == args[1] ) 
-                    ? true
-                    : false
+            let result = this.value [ keyToSet ]('datum') == args[1] 
+            if ( result ) {
+            
+                // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
+                datumToSet.log.sets.push ( Date() )
+            }
+            return result
 
         } // End of block where: (value instanceof Algo) 
 
@@ -556,6 +561,10 @@ class Graph extends Datum {
                 //    targ().value, thisArg, args )
 
                 let datum = targ
+
+                // LOGGING - 2 scenarios below
+                datum.log.gets.hits.push ( Date() )
+
                 return  typeof datum.value == 'object'
                             ? this.recoverEnumerableProperties ( datum )
                             : datum.value
@@ -589,6 +598,10 @@ class Graph extends Datum {
             case 0:
                 //return this.recoverEnumerableProperties ( {} )
                 let datum = targ
+
+                // LOGGING - 2 scenarios below
+                datum.log.gets.hits.push ( Date() )
+
                 return  typeof datum.value == 'object'
                             ? this.recoverEnumerableProperties ( datum )
                             : datum.value
@@ -639,7 +652,7 @@ class Graph extends Datum {
                 // on the other Datums-
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-            //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
+            //console.log (`graph.scopedAlgoKeySnifferHandlerGet/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
 
             //  Configure (this) dependent to track dependencies:
             if ( ! ( 'causal' in algoToSet.arrows.in ) ) {
@@ -663,7 +676,7 @@ class Graph extends Datum {
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
 
-            //console.log (`graph.vertexSet/>1 : Algo : keySnifferHandler.get: ended`)
+            //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
 
         }
     },
@@ -675,7 +688,7 @@ class Graph extends Datum {
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
             if ( ! ( 'causal' in algoToSet.arrows.out ) ) {
@@ -683,7 +696,7 @@ class Graph extends Datum {
             }
             algoToSet.arrows.out.causal.push ( new ArrowOut ( ksProp ) )
 
-                //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
+                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
 
             //  Configure dependents to track (this) dependency:
             if ( ! ( ksProp in this.value ) ) {
@@ -697,7 +710,7 @@ class Graph extends Datum {
                 dependentDatum
                     .arrows.in.causal.push ( new ArrowIn ( algoToSet.key ) )
 
-                //console.log (`graph.vertexSet/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
+                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
             
             return true // FIXME: arrows unchecked?
         }
