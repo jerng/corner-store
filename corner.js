@@ -85,21 +85,21 @@ class Datum extends Function {
             
             key     : {
                 configurable: true,
-                enumerable  : true, 
+                enumerable  : false, 
                 value       : undefined,
                 writable    : true
             },
 
             value   : {
                 configurable: true,
-                enumerable  : true,
+                enumerable  : false,
                 value       : undefined,
                 writable    : true
             },
 
             arrows  : {
                 configurable: true,
-                enumerable  : true,
+                enumerable  : false,
                 value       : {
                     in      : { 
                         // variousTypeKeys: [ ArrowIn ]
@@ -113,7 +113,7 @@ class Datum extends Function {
 
             log     : {
                 configurable: true,
-                enumerable  : true,
+                enumerable  : false,
                 value       : {
                     gets    : [],   // microtime
                     sets    : [],   // [ microtime, value ]
@@ -124,7 +124,7 @@ class Datum extends Function {
 
             cache   : {
                 configurable: true,
-                enumerable  : true,
+                enumerable  : false,
                 value       : {
                     stale   : false,
                     hits    : [],   // microtime
@@ -184,11 +184,10 @@ class Algo extends Datum {
             throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
         }
 
-      //Object.defineProperty ( this, 'lambda', {
-      //    enumerable  : false,
-      //    value       : args[0]
-      //} )
-        this.lambda = args[0]
+        Object.defineProperty ( this, 'lambda', {
+            enumerable  : false,
+            value       : args[0]
+        } )
 
         return this
 
@@ -441,7 +440,13 @@ class Graph extends Datum {
             // Assign all old Datum's enumerable properties except 'lambda' to
             // Algo.
             delete datumToSet.lambda
-            let algoToSet = Object.assign ( valueToSet, datumToSet )
+                // what about .value?
+
+            let algoToSet 
+                    =   Object.defineProperties ( 
+                            valueToSet, 
+                            Object.getOwnPropertyDescriptors ( datumToSet ) )
+
             //console.log (`graph.setVertex/[n>1] : value instanceof Algo `)
     
             let keySniffer = new Proxy ( {}, {

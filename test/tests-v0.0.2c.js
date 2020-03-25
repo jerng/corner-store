@@ -253,6 +253,11 @@ new Exam.Exam ( {
             SERVER('unproxy').value.computed2a('datum').arrows.in.causal[0].ikey,
             SERVER('unproxy').value.computed2a('datum').arrows.in.causal[1].ikey 
         ]
+              //console.log (
+              //                    SERVER('unproxy').value
+              //                    .source1('unproxy')
+              //                    .arrows.out.causal[0]//.okey,
+              //              ) 
         return JSON.stringify ( {
             computedValue   :   SERVER.computed2a,
             computed2aArrows:   computed2aArrows,
@@ -271,6 +276,7 @@ new Exam.Exam ( {
         source2Arrow    :   'computed2a'
     } )
 },
+/*/
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -375,8 +381,7 @@ new Exam.Exam ( {
 
     } )
 },
-/*
-/*/
+//*/
 //*/
 {   warning : `Arrow creation generally doesn't check for old arrows.`,
 },
