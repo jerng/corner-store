@@ -48,47 +48,6 @@ class ArrowIn {
 
 }
 
-// data type for use in Datum
-
-// This should be made safe by default. No pushing allowed.
-class Algo {
-
-    constructor ( ... args ) {
-        
-        if ( args.length !== 1 ) {
-            throw Error (`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`) 
-        }
-        if ( typeof args[0] !== 'function' ) {
-            throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
-        }
-
-        Object.defineProperty ( this, 'lambda', {
-            enumerable  : false,
-            value       : args[0]
-        } )
-        return this
-
-    }
-
-}
-
-// Synonym for Algo.
-class Safe extends Algo {
-}
-
-// Pushing should be enabled here.
-class Danger extends Safe {
-}
-
-// Listeners usually need to have side effects; a listener with handlers that
-// could only read memory (but not write it) would be a ... passive listern,
-// being practically useless.
-//
-// Here, how do we expect to trigger events?
-class EventListener extends Danger {
-
-}
-
 /**
  *  Arities:
  *
@@ -175,6 +134,59 @@ class Datum extends Function {
     }
 }
 
+// data type for use in Datum
+//
+// This should be made safe by default. No pushing allowed.
+class Algo extends Datum {
+
+    toString () {
+        return  [   'Algo.toString/0 returned:', 
+                    super.toString()
+                ]
+    }
+
+    constructor ( ... args ) {
+        
+        super()
+
+        if ( args.length !== 1 ) {
+            throw Error (`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`) 
+        }
+        if ( typeof args[0] !== 'function' ) {
+            throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
+        }
+
+      //Object.defineProperty ( this, 'lambda', {
+      //    enumerable  : false,
+      //    value       : args[0]
+      //} )
+        this.lambda = args[0]
+
+        return this
+
+    }
+
+}
+
+// Synonym for Algo.
+// Also maybe a perceptron.
+class Safe extends Algo {
+}
+
+// Pushing should be enabled here.
+// Also maybe a neuron.
+class Danger extends Safe {
+}
+
+// Listeners usually need to have side effects; a listener with handlers that
+// could only read memory (but not write it) would be a ... passive listern,
+// being practically useless.
+//
+// Here, how do we expect to trigger events?
+class EventListener extends Danger {
+
+}
+
 class Graph extends Datum {
 
     toString () {
@@ -245,6 +257,18 @@ class Graph extends Datum {
         }
 
     } // Graph.constructor
+
+    sproutVertex ( key, value ) {
+
+        for ( const subKey in value ) {
+
+            let compoundKey = key + '.' + subKey
+
+            if ( ! this.setVertex ( compoundKey, value[ subKey ] ) )       
+            { return false }
+        }
+        return true
+    }
 
     pruneVertex ( key ) {
 
@@ -332,12 +356,26 @@ class Graph extends Datum {
         }
         // HEREON: args.length > 1
 
+        let valueToSetType  = typeof args[1]
+
         let keyToSet     = args[0]
         let valueToSet   = args[1]
 
             //console.log (`graph.setVertex/[n>1], BEGIN, key:`, key, 'value:', value)
             //console.log ( `graph.setVertex/[n>1], initial value : `,
             //this.value[keyToSet], `update value:`, valueToSet )
+
+        // If valuetoset is an object ...
+        if (    valueToSetType == 'object' 
+                || 
+                valueToSetType == 'function'    )
+        {
+            // ... then set all of its child vertices;
+            if ( ! this.sproutVertex ( keyToSet, valueToSet ) ) 
+            { return false }
+
+            //console.log ( datumToSet.value )
+        } 
 
         // If the node/vertex already exists...
         if ( proxiedOldDatum = this.value[ keyToSet ] ) { 
@@ -360,109 +398,108 @@ class Graph extends Datum {
 
         // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If valueToSet is an object ...
-        if ( typeof datumToSet.value == 'object' ) {
-            
-            // ... then set all of its child vertices;
-                // (This goes before Algo handling, because this may return.)
-                // (datumToSet is not needed here.)
-            for ( const subSetKey in datumToSet.value ) {
 
-                let compoundKey = datumToSet.key + '.' + subSetKey
-                if ( ! this.setVertex ( compoundKey, datumToSet.value[ subSetKey ] ) )       
-                { return false }
-            }
 
-            // ... and if datumToSet.value is an Algo, call it on a keySniffer to plant Arrows.
-                // (But datumToSet IS needed here.)
-            if ( datumToSet.value instanceof Algo ) {
 
-                //console.log (`graph.setVertex/[n>1] : value instanceof Algo `)
-        
-                let keySniffer = new Proxy ( {}, {
-                    
-                    // If you're pulling data into your Algo, you'll trigger getters
-                    // on the other Datums-
-                    get : ( ksTarg, ksProp, ksRcvr ) => {
-                      
-                        //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
+        // If datumToSet.value is an Algo, call it on a keySniffer to plant Arrows.
+            // (But datumToSet IS needed here.)
+        if ( datumToSet.value instanceof Algo )
+        {
 
-                        //  Configure (this) dependent to track dependencies:
-                        if ( ! ( 'causal' in datumToSet.arrows.in ) ) {
-                            datumToSet.arrows.in.causal = []
-                        }
-                        datumToSet.arrows.in.causal.push ( new ArrowIn ( ksProp) )
-
-                        // WARNING: does not require dependency keys to be in the graph
-                        // before dependents are set FIXME
-                        //
-                        //  Configure dependencies to track (this) dependent:
-
-                        let dependencyDatum = this.value[ ksProp ]('datum')
-
-                            if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
-                                dependencyDatum.arrows.out.causal = []
-                            }
-
-                            dependencyDatum
-                                .arrows.out.causal.push ( new ArrowOut ( datumToSet.key ) )
-
-                        //console.log (`graph.setVertex/>1 : Algo : keySnifferHandler.get: ended`)
-
-                    },
-
-                    // If you're pushing data from your Algo, you'll trigger setters
-                    // on the other Datums-
-                    set : ( ksTarg, ksProp, ksVal, ksRcvr ) => {
-
-                        //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
-
-                        //  Configure (this) dependency to track dependents:
-                        if ( ! ( 'causal' in datumToSet.arrows.out ) ) {
-                            datumToSet.arrows.out.causal = []
-                        }
-                        datumToSet.arrows.out.causal.push ( new ArrowOut ( ksProp ) )
-
-                            //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
-
-                        //  Configure dependents to track (this) dependency:
-                        if ( ! ( ksProp in this.value ) ) {
-                            this.setVertex ( ksProp, undefined ) 
-                        }
-                        let dependentDatum = this.value[ ksProp ]('datum')
-
-                            if ( ! ( 'causal' in dependentDatum.arrows.in ) ) {
-                                dependentDatum.arrows.in.causal = []
-                            }
-                            dependentDatum
-                                .arrows.in.causal.push ( new ArrowIn ( datumToSet.key ) )
-
-                            //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
-                        
-                        return true // FIXME: arrows unchecked?
-                    }
-                } )
-
-                //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
-
-                // Detect dependencies and plant arrows.
-                valueToSet.lambda ( keySniffer )
+            // Assign all old Datum's enumerable properties except 'lambda' to
+            // Algo.
+            delete datumToSet.lambda
+            let algoToSet = Object.assign ( valueToSet, datumToSet )
+            //console.log (`graph.setVertex/[n>1] : value instanceof Algo `)
+    
+            let keySniffer = new Proxy ( {}, {
                 
-                //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
+                // If you're pulling data into your Algo, you'll trigger getters
+                // on the other Datums-
+                get : ( ksTarg, ksProp, ksRcvr ) => {
+                  
+                    //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
 
-            } // (value instanceof Algo)
+                    //  Configure (this) dependent to track dependencies:
+                    if ( ! ( 'causal' in algoToSet.arrows.in ) ) {
+                        algoToSet.arrows.in.causal = []
+                    }
+                    algoToSet.arrows.in.causal.push ( new ArrowIn ( ksProp) )
 
-        } // valueToSet == 'object'
+                    // WARNING: does not require dependency keys to be in the graph
+                    // before dependents are set FIXME
+                    //
+                    //  Configure dependencies to track (this) dependent:
 
-        this.value [ datumToSet.key ] 
-            = new Proxy ( datumToSet, this.datumHandler )
+                    let dependencyDatum = this.value[ ksProp ]('datum')
 
-            //console.log( `graph.setVertex/[n>1], END, key:`, datum.key, 'value:',
-            //this.value [ datum.key ](), 'succcess check:', this.value [ datum.key
-            //]() == args[1] )
+                        if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
+                            dependencyDatum.arrows.out.causal = []
+                        }
+
+                        dependencyDatum
+                            .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
+
+                    //console.log (`graph.setVertex/>1 : Algo : keySnifferHandler.get: ended`)
+
+                },
+
+                // If you're pushing data from your Algo, you'll trigger setters
+                // on the other Datums-
+                set : ( ksTarg, ksProp, ksVal, ksRcvr ) => {
+
+                    //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+
+                    //  Configure (this) dependency to track dependents:
+                    if ( ! ( 'causal' in algoToSet.arrows.out ) ) {
+                        algoToSet.arrows.out.causal = []
+                    }
+                    algoToSet.arrows.out.causal.push ( new ArrowOut ( ksProp ) )
+
+                        //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
+
+                    //  Configure dependents to track (this) dependency:
+                    if ( ! ( ksProp in this.value ) ) {
+                        this.setVertex ( ksProp, undefined ) 
+                    }
+                    let dependentDatum = this.value[ ksProp ]('datum')
+
+                        if ( ! ( 'causal' in dependentDatum.arrows.in ) ) {
+                            dependentDatum.arrows.in.causal = []
+                        }
+                        dependentDatum
+                            .arrows.in.causal.push ( new ArrowIn ( algoToSet.key ) )
+
+                        //console.log (`graph.setVertex/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
+                    
+                    return true // FIXME: arrows unchecked?
+                }
+            } )
+
+            //console.log (`graph.setVertex/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
+
+            
+            // Detect dependencies and plant arrows.
+            algoToSet.lambda ( keySniffer )
+
+            //console.log (`graph.setVertex/>1 : Algo : AFTER value.lambda(keySniffer)`)
+
+            // console.log ( algoToSet.toString() )
+
+            this.value [ keyToSet ]
+                = new Proxy ( algoToSet, this.datumHandler )   
+
+        } // (value instanceof Algo)
+
+        else {  this.value [ datumToSet.key ] 
+                    = new Proxy ( datumToSet, this.datumHandler )   }
+
+        //console.log( `graph.setVertex/[n>1], END, key:`, datum.key, 'value:',
+        //this.value [ datum.key ](), 'succcess check:', this.value [ datum.key
+        //]() == args[1] )
 
         // redundant? check
-        return  ( this.value [ datumToSet.key ]() == args[1] ) 
+        return  ( this.value [ keyToSet ]() == args[1] ) 
                 ? true
                 : false
     }

@@ -224,6 +224,22 @@ new Exam.Exam ( {
     ] )
 },
 
+{   test : `Computed properties; dependency getter / puller.`,
+    code : function () {
+        let SERVER = new Graph ( 'server' )
+        SERVER.source1 = 'theFIRSTpart;' 
+        SERVER.source2 = 'theSECONDpart;' 
+
+        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+
+        return JSON.stringify ( {
+            computedValue   :   SERVER.computed2a,
+        } )
+    },
+    want : JSON.stringify ( {
+        computedValue   :   'theFIRSTpart;theSECONDpart;'
+    } )
+},
 {   test : `Computed properties; dependency getter / puller - also check arrows on dependents and dependencies.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -262,6 +278,43 @@ new Exam.Exam ( {
         SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
     },
     expectError: true
+},
+{   test : `Computed properties; dependent setter / pusher : 
+- pushed computation should not be written until the the Algo is run; 
+- the Algo is run when the Algo's Datum is read (gotten/get);`,
+    code : function () {
+        let SERVER = new Graph ( 'server' )
+        SERVER.source1 = 'theFIRSTpart;' 
+        SERVER.source2 = 'theSECONDpart;' 
+
+        SERVER.computed3 = new Algo ( s => { 
+
+            // pull
+            let computed = s.source1 + s.source2
+            
+            //console.log (`IN ALGO: BEFORE PUSH`) 
+
+            // push
+            s.sink4 = `Yo mama, I got two parts : ${computed}`
+            
+            //console.log (`IN ALGO: AFTER PUSH`) 
+
+            return computed
+        } ) 
+        
+        //console.log( SERVER('vertices').sink4('unproxy').arrows.in )
+
+        return JSON.stringify ( {
+            sink4Before     : SERVER.sink4,
+            computed3       : SERVER.computed3,
+            sink4After      : SERVER.sink4,
+        } )
+    },
+    want : JSON.stringify ( {
+        sink4Before         : undefined,
+        computed3           : `theFIRSTpart;theSECONDpart;`,
+        sink4After          : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`,
+    } )
 },
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Algo is run; 
@@ -320,7 +373,11 @@ new Exam.Exam ( {
 
     } )
 },
+/*/
 //*/
+{   warning : `When a Datum is replaced by an Algo, what happens to arrows
+initially known to the Datum?.`,
+},
 {   warning : `When a vertex's value is updated, the vertex's arrows, cache, and
 log, are untouched.`,
 },
