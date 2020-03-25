@@ -80,7 +80,6 @@ class Datum extends Function {
         super()
 
         // initialisers
-
         Object.defineProperties ( this, {
             
             // This is used as the id.
@@ -236,25 +235,40 @@ class Graph extends Datum {
 
         super()
 
-        // initialisers
-
+        // configuration (initialised by super())
         this.key            = ''
         this.value          = {} 
 
-        this.handlers       = this.handlers()    
-                          
-        this.datumHandler   = {
-            apply           : this.handlers.datumHandlerApply,
-            deleteProperty  : this.handlers.datumHandlerDeleteProperty,
-            get             : this.handlers.datumHandlerGet,
-            set             : this.handlers.datumHandlerSet 
-        }
+        // initialisers
+        Object.defineProperty ( this, 'handlers', {
+            enumerable  : false, 
+            value       : this.handlers(),
+        } )
 
-        this.graphHandler   = { ... this.datumHandler,
-            apply           : this.handlers.graphHandlerApply,
-        }                               // overwrites datumHandlerApply
+        Object.defineProperty ( this, 'datumHandler', {
+            enumerable  : false, 
+            value       : {
+                apply           : this.handlers.datumHandlerApply,
+                deleteProperty  : this.handlers.datumHandlerDeleteProperty,
+                get             : this.handlers.datumHandlerGet,
+                set             : this.handlers.datumHandlerSet 
+            }
+        } )
 
-        this.proxy          = new Proxy ( this, this.graphHandler )
+        Object.defineProperty ( this, 'graphHandler', {
+            enumerable  : false, 
+            value       : { 
+                
+                ... this.datumHandler,
+                
+                apply           : this.handlers.graphHandlerApply,
+            }                              // overwrites datumHandlerApply
+        } )
+
+        Object.defineProperty ( this, 'proxy', {
+            enumerable  : false, 
+            value       : new Proxy ( this, this.graphHandler )        
+        } )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
