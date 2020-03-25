@@ -83,6 +83,7 @@ class Datum extends Function {
 
         Object.defineProperties ( this, {
             
+            // This is used as the id.
             key     : {
                 configurable: true,
                 enumerable  : false, 
@@ -90,6 +91,8 @@ class Datum extends Function {
                 writable    : true
             },
 
+            // This is used both by Datum and its subclass Algo. 
+            // In Algo, it is used to store the return value of Algos.
             value   : {
                 configurable: true,
                 enumerable  : false,
@@ -97,6 +100,7 @@ class Datum extends Function {
                 writable    : true
             },
 
+            // These are used to store edges or pointers between data.
             arrows  : {
                 configurable: true,
                 enumerable  : false,
@@ -111,25 +115,26 @@ class Datum extends Function {
                 writable    : true
             },
 
-            log     : {
+            // This is used to mark a stale cache.
+            stale   : {
                 configurable: true,
                 enumerable  : false,
-                value       : {
-                    gets    : [],   // microtime
-                    sets    : [],   // [ microtime, value ]
-                    deletes : []    // [ microtime, value ]
-                },              // Move to class?
+                value       : false,    
                 writable    : true
             },
 
-            cache   : {
+            // TODO: we've not thought this out thoroughly.
+            log     : {
                 configurable: true,
                 enumerable  : false,
-                value       : {
-                    stale   : false,
-                    hits    : [],   // microtime
-                    misses  : []    // microtime
-                },              // Move to class?
+                value       : {         // MOVE TO CLASS?
+                    gets    : {
+                        hits    : [],   // microtime
+                        misses  : []    // microtime
+                    },   
+                    sets    : [],       // [ microtime, value ]
+                    deletes : []        // [ microtime, value ]
+                },                                              
                 writable    : true
             },
 
