@@ -48,6 +48,29 @@ class ArrowIn {
 
 }
 
+// data type for use in Datum
+class MSLog {
+    
+    constructor () {
+        this.book = []
+        return this 
+    }
+
+    note ( value ) {
+        this.book.push( [
+            
+            (   performance.timeOrigin
+                ||  performance.timing.navigationStart 
+            ) + performance.now(),
+
+            value
+        ] )
+        console.log ( this.book[ this.book.length -1 ] )
+    }
+}
+
+
+
 /**
  *  Arities:
  *
@@ -124,12 +147,12 @@ class Datum extends Function {
             log     : {
                 configurable: true,
                 enumerable  : false,
-                value       : {         // MOVE TO CLASS?
+                value       : {         
                     gets    : {
-                        hits    : [],   // microtime
-                        misses  : []    // microtime
+                        hits    : new MSLog,   
+                        misses  : new MSLog    
                     },   
-                    sets    : [],       // [ microtime, value ]
+                    sets    : new MSLog, 
 
                   //deletes : []        // [ microtime, value ]
                     // This doesn't quite work that way for now. When we delete
@@ -334,19 +357,19 @@ class Graph extends Datum {
 
         let datum = this.value[ key ]('datum')
 
+        let result
+
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
-        // LOGGING - 3 scenarios below
-        datum.log.gets.hits.push ( Date() )
 
         if ( datum instanceof Algo ) { 
             //console.log (`graph.vertexGet/1 will now return datum.value.lambda ( graph.proxy )`)
-            return datum.lambda ( this.proxy ) 
+
+            result = datum.lambda ( this.proxy ) 
         } 
 
         else
-
         if ( typeof datum.value == 'object' )
         {
             // Wherein. if we find that the user has previously set an
@@ -355,11 +378,17 @@ class Graph extends Datum {
             //console.log (`graph.vertexGet/1 : found that datum.value is
             //an object, so will return graph.value ['${key}'] `)
 
-            return this.value[ key ] 
+            result = this.value[ key ] 
         } 
 
-        else
-        { return datum.value } 
+        else { result  =  datum.value 
+        } 
+
+        // LOGGING - 3 scenarios in vertexGet; more scenarios in 
+        //              graphHandlerApply, datumHandlerApply
+        datum.log.gets.hits.note ( result )
+        
+        return result
     }
 
     //  Deletes all child vertices.
@@ -460,7 +489,7 @@ class Graph extends Datum {
             if ( result ) {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
-                datumToSet.log.sets.push ( Date() )
+                datumToSet.log.sets.note ( args[1] )
             } 
             return result
         } 
@@ -503,7 +532,7 @@ class Graph extends Datum {
             if ( result ) {
             
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
-                datumToSet.log.sets.push ( Date() )
+                datumToSet.log.sets.note ( args[1] )
             }
             return result
 
@@ -562,12 +591,16 @@ class Graph extends Datum {
 
                 let datum = targ
 
-                // LOGGING - 2 scenarios below
-                datum.log.gets.hits.push ( Date() )
+                let result = typeof datum.value == 'object'
+                    ? this.recoverEnumerableProperties ( datum )
+                    : datum.value
 
-                return  typeof datum.value == 'object'
-                            ? this.recoverEnumerableProperties ( datum )
-                            : datum.value
+                // LOGGING - 2 scenario above; more scenarios in
+                //                  graphHandlerApply, vertexGet
+                datum.log.gets.hits.note ( result )
+                
+                return result
+
             case 1:
                 //console.log (`graph.datumHandler.apply/1 : `)
 
@@ -599,13 +632,15 @@ class Graph extends Datum {
                 //return this.recoverEnumerableProperties ( {} )
                 let datum = targ
 
-                // LOGGING - 2 scenarios below
-                datum.log.gets.hits.push ( Date() )
+                let result = typeof datum.value == 'object'
+                    ? this.recoverEnumerableProperties ( datum )
+                    : datum.value
 
-                return  typeof datum.value == 'object'
-                            ? this.recoverEnumerableProperties ( datum )
-                            : datum.value
-            
+                // LOGGING - 2 scenario above; more scenarios in
+                //                  graphHandlerApply, vertexGet
+                datum.log.gets.hits.note ( result )
+                
+                return result
             case 1:
                 switch ( args[0] ) {
 
