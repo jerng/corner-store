@@ -222,7 +222,6 @@ new Exam.Exam ( {
                                     "n":2}}}}
     ] )
 },
-//*/
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -241,6 +240,7 @@ new Exam.Exam ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;'
     } )
 },
+//*/
 {   test : `Computed properties; dependency getter / puller - also check arrows on dependents and dependencies.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -275,7 +275,6 @@ new Exam.Exam ( {
         source2Arrow    :   'computed2a'
     } )
 },
-//*/
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
     code : function () {
         let SERVER = new Graph ( 'server' )

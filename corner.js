@@ -49,7 +49,7 @@ class ArrowIn {
 }
 
 // data type for use in Datum
-class MSLog {
+class MillisecondLog {
     
     constructor () {
         this.book = []
@@ -88,15 +88,17 @@ class MSLog {
 
 class Datum extends Function {
 
-    toString () {
-        return  {   'Datum.toString/0 returned:' : 
-                    {   'a shallow copy of enumerable properties, { ... this }':
-                            { ... this },
-                        'Object.getOwnPropertyDescriptors ( this )':
-                            Object.getOwnPropertyDescriptors ( this )
-                    }
-                }
-    }
+    toString () { return  {   
+        'Datum.toString/0 returned:' : {
+            
+            'a shallow copy of enumerable properties, { ... this }': { 
+                ... this 
+             },
+            
+            'Object.getOwnPropertyDescriptors ( this )':
+                Object.getOwnPropertyDescriptors ( this )
+        }
+    } }
 
     constructor ( ...args ) {
  
@@ -143,21 +145,22 @@ class Datum extends Function {
                 writable    : true
             },
 
-            // TODO: we've not thought this out thoroughly.
             log     : {
                 configurable: true,
                 enumerable  : false,
                 value       : {         
                     gets    : {
-                        hits    : new MSLog,   
-                        misses  : new MSLog    
+                        hits    : new MillisecondLog,   
+                        misses  : new MillisecondLog    
                     },   
-                    sets    : new MSLog, 
+                    sets    : new MillisecondLog, 
 
                   //deletes : []        // [ microtime, value ]
                     // This doesn't quite work that way for now. When we delete
                     // a Datum, we really expunge it from the Graph.
                     // Maybe this can change in the future. TODO
+
+                  // Should we log cache invalidations?
 
                 },                                              
                 writable    : true
@@ -364,27 +367,40 @@ class Graph extends Datum {
 
 
         if ( datum instanceof Algo ) { 
-            //console.log (`graph.vertexGet/1 will now return datum.value.lambda ( graph.proxy )`)
+            //console.log (`graph.vertexGet/1 will now return datum.stale : `,
+            //datum.stale, 'datum.value', datum.value, 'key', key )
+            
+            if ( datum.stale ) {
+                
+                result      = datum.value = datum.lambda ( this.proxy )
+                datum.stale = false
 
-            result = datum.lambda ( this.proxy ) 
+                // LOGGING - 1 cache miss scenario
+                datum.log.gets.misses.note ( result )
+                
+                return result
+            }
+
+            else {  result = datum.value        // cache hit, scenario 1
+            }                                       // Algo
         } 
 
         else
-        if ( typeof datum.value == 'object' )
-        {
+        if ( typeof datum.value == 'object' ) {
             // Wherein. if we find that the user has previously set an
             // object as the value, we try to intercept the call to that
             // object's properties...
             //console.log (`graph.vertexGet/1 : found that datum.value is
             //an object, so will return graph.value ['${key}'] `)
 
-            result = this.value[ key ] 
-        } 
+            
+                    result = this.value[ key ]  // cache hit, scenario 2
+        }                                           //  not an Algo, no cache 
 
-        else { result  =  datum.value 
-        } 
+        else {      result  =  datum.value      // cache hit, scenario 3
+        }                                           //  not an Algo, no cache  
 
-        // LOGGING - 3 scenarios in vertexGet; more scenarios in 
+        // LOGGING - 3 cache hit scenarios in vertexGet; more scenarios in 
         //              graphHandlerApply, datumHandlerApply
         datum.log.gets.hits.note ( result )
         
@@ -521,6 +537,9 @@ class Graph extends Datum {
 
                     //console.log (`graph.vertexSet/>1 : Algo : AFTER value.lambda(keySniffer)`)
                     // console.log ( algoToSet.toString() )
+
+            algoToSet.stale = true
+                // Algo will not run until the next get (no gets here)
 
             this.value [ keyToSet ]
                 = new Proxy ( algoToSet, this.datumHandler )   
