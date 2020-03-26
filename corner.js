@@ -615,6 +615,9 @@ class Graph extends Datum {
                     ? this.recoverEnumerableProperties ( datum )
                     : datum.value
 
+console.error (`datum.value; algo not being checked; refer to vset and vget for
+done code`)
+
                 // LOGGING - 2 scenario above; more scenarios in
                 //                  graphHandlerApply, vertexGet
                 datum.log.gets.hits.note ( result )
@@ -655,6 +658,9 @@ class Graph extends Datum {
                 let result = typeof datum.value == 'object'
                     ? this.recoverEnumerableProperties ( datum )
                     : datum.value
+
+console.error (`datum.value; algo not being checked; refer to vset and vget for
+done code`)
 
                 // LOGGING - 2 scenario above; more scenarios in
                 //                  graphHandlerApply, vertexGet
