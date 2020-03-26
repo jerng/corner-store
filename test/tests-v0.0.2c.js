@@ -240,7 +240,6 @@ new Exam.Exam ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;'
     } )
 },
-//*/
 {   test : `Computed properties; dependency getter / puller - also check arrows on dependents and dependencies.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -381,6 +380,56 @@ new Exam.Exam ( {
 },
 //*/
 //*/
+{   test : `graph() and datum() should eject the same thing`,
+    code : function () {
+
+        let g = new Graph('server')
+        let h = new Graph('server')
+
+    //console.warn ( 'Prepare DATUM', g.a = {}, g.a.i = 4, g.a.j = 5, g)
+    //console.warn ( 'Apply DATUM', g.a() )
+    //
+    //console.warn ( 'Prepare SERVER', h.i = 4, h.j = 5, h)
+    //console.warn ( 'Apply SERVER', h())
+
+        g.a = {}, g.a.i = 4, g.a.j = 5, g
+
+        g.a()
+
+        h.i = 4, h.j = 5, h
+        
+        h()
+
+        return  JSON.stringify( {
+                    applyDatum : g.a(),
+                    applyGraph : h()
+                } ) 
+    },
+    want :  JSON.stringify( {
+        applyDatum: {
+            i:4,
+            j:5
+        },
+        applyGraph: {
+            i:4,
+            j:5
+        },
+    } )
+},
+{   test : `Sourcing subkeys in Algos`,
+    code : function () {
+
+        let g = new Graph('server')
+
+console.log ('server')
+
+        g.h = new Algo ( e => e.h.i + e.h.j )
+
+        return JSON.stringify( g() ) 
+    },
+    expectError : true
+},
+//*
 {   warning : `Arrow creation generally doesn't check for old arrows.`,
 },
 {   warning : `When a Datum is replaced by an Algo, what happens to arrows
@@ -410,8 +459,26 @@ Danger extends Safe; EventListener extends Danger.`
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
-/*
+//*/
+/* Testing conveniences for the browser:
+
+g = new Graph('server')
+
+//g.d = new Algo ( e => e.a + e.b )
+
+g.e = 1
+g.f = 2
+g.g = new Algo ( e => e.e + e.f )
+
+g.h = {}
+g.h.i = 4
+g.h.j = 5
+g.h.k = new Algo ( e => e.h.i + e.h.j )
+
+g('vertices')
+
 */
+
 /* Templates: 
 
 {   test : ``,

@@ -59,9 +59,7 @@ class MillisecondLog {
     note ( value ) {
         this.book.push( [
             
-            (   performance.timeOrigin
-                ||  performance.timing.navigationStart 
-            ) + performance.now(),
+            performance.now(),
 
             value
         ] )
@@ -356,14 +354,20 @@ class Graph extends Datum {
             return undefined 
         }
 
-        //console.log(this.value [key]('datum') )
+        //console.log ( `vertexGet/1, 1`,key )
 
         let datum = this.value[ key ]('datum')
+
+        //console.log ( `vertexGet/1, 2`, key )
 
         let result
 
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
+
+//////////////////////////////////////////////////////////////////////////////////
+
+
 
 
         if ( datum instanceof Algo ) { 
@@ -383,13 +387,15 @@ class Graph extends Datum {
 
             else {  result = datum.value        // cache hit, scenario 1
             }                                       // Algo
-        } 
+        }
 
         else
-        if ( typeof datum.value == 'object' ) {
+        if ( typeof datum.value == 'object' ) { // ( 'function's are not sprouted )
+
             // Wherein. if we find that the user has previously set an
             // object as the value, we try to intercept the call to that
             // object's properties...
+
             //console.log (`graph.vertexGet/1 : found that datum.value is
             //an object, so will return graph.value ['${key}'] `)
 
@@ -402,6 +408,8 @@ class Graph extends Datum {
 
         // LOGGING - 3 cache hit scenarios in vertexGet; more scenarios in 
         //              graphHandlerApply, datumHandlerApply
+
+        //console.log(datum, this.value[key])
         datum.log.gets.hits.note ( result )
         
         return result
@@ -455,18 +463,6 @@ class Graph extends Datum {
             //console.log ( `graph.vertexSet/[n>1], initial value : `,
             //this.value[keyToSet], `update value:`, valueToSet )
 
-        // If valuetoset is an object ...
-        if (    valueToSetType == 'object' 
-                || 
-                valueToSetType == 'function'    )
-        {
-            // ... then set all of its child vertices;
-            if ( ! this.vertexSprout ( keyToSet, valueToSet ) ) 
-            { return false }
-
-            //console.log ( datumToSet.value )
-        } 
-
         // If the node/vertex does not yet exist ...
         if ( ! ( proxiedOldDatum = this.value[ keyToSet ] ) ) {
 
@@ -491,28 +487,9 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value is NOT an Algo, then complete the assignment.
-        if ( ! ( datumToSet.value instanceof Algo ) )
+        // If datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
+        if ( datumToSet.value instanceof Algo )
         {
-            this.value [ datumToSet.key ] 
-                    = new Proxy ( datumToSet, this.datumHandler )   
-
-                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
-                  //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
-                  //](),'==', args[1] )
-
-            let result = this.value [ keyToSet ]() == args[1]  
-            if ( result ) {
-            
-                // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
-                datumToSet.log.sets.note ( args[1] )
-            } 
-            return result
-        } 
-
-        else 
-        {  // datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
-
             // Assign all old Datum's own properties except 'lambda' to Algo.
             delete datumToSet.lambda
             delete datumToSet.value
@@ -551,9 +528,38 @@ class Graph extends Datum {
             let result = this.value [ keyToSet ]('datum') == args[1] 
             if ( result ) {
             
-                // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
+                // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
                 datumToSet.log.sets.note ( args[1] )
             }
+            return result
+        } 
+
+        else 
+        {  // If datumToSet.value is NOT an Algo, then complete the assignment.
+
+            // If valuetoset is an object ...
+            if ( valueToSetType == 'object' ) // ( 'function's are not sprouted )
+            {
+                // ... then set all of its child vertices;
+                if ( ! this.vertexSprout ( keyToSet, valueToSet ) ) 
+                { return false }
+
+                //console.log ( datumToSet.value )
+            } 
+
+            this.value [ datumToSet.key ] 
+                    = new Proxy ( datumToSet, this.datumHandler )   
+
+                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
+                  //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
+                  //](),'==', args[1] )
+
+            let result = this.value [ keyToSet ]() == args[1]  
+            if ( result ) {
+            
+                // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
+                datumToSet.log.sets.note ( args[1] )
+            } 
             return result
 
         } // End of block where: (value instanceof Algo) 
@@ -601,6 +607,8 @@ class Graph extends Datum {
         return  this.vertexSet ( compoundKey, val )
     },
     'datumHandlerApply' : ( targ, thisArg, args ) => { 
+      
+     //console.log(`datumHandlerApply`, args, targ.key, targ)           
                  
         switch ( args.length ) {
 
@@ -611,18 +619,60 @@ class Graph extends Datum {
 
                 let datum = targ
 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//console.log (datum instanceof Graph)
+//console.log(  datum.value )
+
+
+
+
+                //  this.recoverEnumerableProperties recursively calls
+                //  datum() (this block of code)
+
                 let result = typeof datum.value == 'object'
                     ? this.recoverEnumerableProperties ( datum )
                     : datum.value
+                        // Algo is a Datum. 
+                        // Datum.value is never going to be Algo.  
 
-console.error (`datum.value; algo not being checked; refer to vset and vget for
-done code`)
 
-                // LOGGING - 2 scenario above; more scenarios in
+
+
+//console.log (result)
+
+
+
+
+
+
+
+
+
+
+
+//console.error (`datum.value; algo not being checked; refer to vset and vget for done code`)
+
+                // LOGGING - 2 scenarios above; more scenarios in
                 //                  graphHandlerApply, vertexGet
                 datum.log.gets.hits.note ( result )
                 
                 return result
+
+
+
+
+
+
+
+
+
+
+
+
 
             case 1:
                 //console.log (`graph.datumHandler.apply/1 : `)
@@ -649,24 +699,55 @@ done code`)
         }
     },
     'graphHandlerApply': ( targ, thisArg, args ) => { 
-           
+
+        //console.log(`graphHandlerApply`,args, targ.key, targ)           
+
         switch ( args.length ) {
             case 0:
                 //return this.recoverEnumerableProperties ( {} )
                 let datum = targ
 
+
+
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+//console.log (datum instanceof Graph)
+//console.log( datum.value )
+
+
+
+
+
                 let result = typeof datum.value == 'object'
-                    ? this.recoverEnumerableProperties ( datum )
+                    ? this.recoverEnumerableProperties ( {} )
+                    //? this.recoverEnumerableProperties ( datum )
                     : datum.value
 
-console.error (`datum.value; algo not being checked; refer to vset and vget for
-done code`)
+
+
+//console.log (result)
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+
+
+//console.error (`datum.value; algo not being checked; refer to vset and vget for
+//done code; also see 616`)
+
+
+
+
+
 
                 // LOGGING - 2 scenario above; more scenarios in
                 //                  graphHandlerApply, vertexGet
                 datum.log.gets.hits.note ( result )
                 
                 return result
+
             case 1:
                 switch ( args[0] ) {
 
@@ -787,13 +868,24 @@ done code`)
     //                  end here
 
     }   } // graph.handlers()
-      
-
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //  
+    //  This is recursively called by datumHandlerApply.
+    //
     //  Operates on an instance of Datum, whose value has typeof 'object'
     // 
     //  Generally used to unflatten vertices from the graph index, before
     //  returning the unflatted object to the user.
     //
+    //  Not efficient. A lot of room for optimisation. Will run 
+    //
+    //      for ( const key in  this.value ) wayyy too many times for each
+    //      tree..? FIXME.
+    //
+    ///////////////////////////////////////////////////////////////////////////
+      
     recoverEnumerableProperties ( object ) {
 
         //console.log (`graph.recoverEnumerableProperties/1`)
@@ -801,11 +893,14 @@ done code`)
         if ( object instanceof Datum ) {
 
             for ( const key in this.value ) {
+
                 // this is probably up for some regex perf? optimisation...
                 if ( key.startsWith ( object.key + '.' ) ) {   
+
                     let propKey = key.slice ( object.key.length + 1 )
                     // ... because there is another string filter here; TODO
                     if ( ! propKey.includes ( '.' ) ) {
+
                         object.value[ propKey ] = this.value[ key ]()
                     } 
                 }
@@ -814,7 +909,14 @@ done code`)
         } 
 
         else {
-        
+            
+            //  Any object that reaches here will be used as a target, to
+            //  recover data stored in all vertices of the graph.
+            //
+            //  Similar to vertexSprout, except that it builds the data in an
+            //  object to be ejected from the graph instead; whereas
+            //  vertexSprout builds an injected object's data into the graph.
+            //
             for ( const key in this.value ) {
                 if ( ! key.includes ( '.' ) ) {
                     object[ key ] = this.value[ key ]()
