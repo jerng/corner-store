@@ -378,8 +378,6 @@ new Exam.Exam ( {
 
     } )
 },
-//*/
-//*/
 {   test : `graph() and datum() should eject the same thing`,
     code : function () {
 
@@ -420,14 +418,46 @@ new Exam.Exam ( {
     code : function () {
 
         let g = new Graph('server')
-
-console.log ('server')
-
         g.h = new Algo ( e => e.h.i + e.h.j )
 
         return JSON.stringify( g() ) 
     },
     expectError : true
+},
+//*/
+//*/
+{   test : `Tree insertion should handle Algos smoothly; Algos should be handled
+smoothly by tree extraction; caching works? Lazy reads?`,
+    code : function () {
+
+        let G = new Graph('server')
+
+        G.a = 1
+        G.b = 2
+
+        G.m = new Algo ( e => e.a + e.b )
+        G.n = { o: new Algo ( e => e.a + e.b ) }
+
+      //G.y = G.m
+      //G.z = G.n
+
+//console.log ( G.n.o ) 
+
+        return JSON.stringify( G() ) 
+    },
+    want : JSON.stringify ( {
+        a: 1,
+        b: 2,
+
+        m: 3,
+        n: {
+            o : 3
+        },
+
+      //y: 3,
+      //z: 3
+
+    } )
 },
 //*
 {   warning : `Arrow creation generally doesn't check for old arrows.`,

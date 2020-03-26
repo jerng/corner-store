@@ -354,23 +354,24 @@ class Graph extends Datum {
             return undefined 
         }
 
-        //console.log ( `vertexGet/1, 1`,key )
+            //console.log ( `vertexGet/1, 1`,key )
 
         let datum = this.value[ key ]('datum')
 
-        //console.log ( `vertexGet/1, 2`, key )
-
-        let result
-
+            //console.log ( `vertexGet/1, 2`, key )
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
             //}' ]() : `, this.value [ key ]() )
 
-//////////////////////////////////////////////////////////////////////////////////
+        return this.vertexGetTyped ( datum ) 
+    }
 
+    // Lower-level call, used by vertexGet and datumHandlerApply
+    vertexGetTyped ( datum ) {
 
-
+        let result 
 
         if ( datum instanceof Algo ) { 
+
             //console.log (`graph.vertexGet/1 will now return datum.stale : `,
             //datum.stale, 'datum.value', datum.value, 'key', key )
             
@@ -400,20 +401,20 @@ class Graph extends Datum {
             //an object, so will return graph.value ['${key}'] `)
 
             
-                    result = this.value[ key ]  // cache hit, scenario 2
+                    result = this.value[ datum.key ]  // cache hit, scenario 2
         }                                           //  not an Algo, no cache 
 
         else {      result  =  datum.value      // cache hit, scenario 3
         }                                           //  not an Algo, no cache  
 
-        // LOGGING - 3 cache hit scenarios in vertexGet; more scenarios in 
+        // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
         //              graphHandlerApply, datumHandlerApply
 
         //console.log(datum, this.value[key])
         datum.log.gets.hits.note ( result )
         
         return result
-    }
+    }    
 
     //  Deletes all child vertices.
     //  Prune is to Sprout, what Delete is to Update.
@@ -613,68 +614,28 @@ class Graph extends Datum {
         switch ( args.length ) {
 
             case 0:
+
                 //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
                 //    thisArg, args) `, targ().key,
                 //    targ().value, thisArg, args )
 
                 let datum = targ
 
-//////////////////////////////////////////////////////////////////////////////////
+                    //console.log (datum instanceof Graph)
+                    //console.log(  datum.value )
 
-
-
-
-//console.log (datum instanceof Graph)
-//console.log(  datum.value )
-
-
-
+                    //console.error (`datum.value; algo not being checked; refer to vset and vget for done code`)
+                
 
                 //  this.recoverEnumerableProperties recursively calls
                 //  datum() (this block of code)
 
-                let result = typeof datum.value == 'object'
+                return typeof datum.value == 'object'
                     ? this.recoverEnumerableProperties ( datum )
-                    : datum.value
-                        // Algo is a Datum. 
-                        // Datum.value is never going to be Algo.  
-
-
-
-
-//console.log (result)
-
-
-
-
-
-
-
-
-
-
-
-//console.error (`datum.value; algo not being checked; refer to vset and vget for done code`)
-
-                // LOGGING - 2 scenarios above; more scenarios in
-                //                  graphHandlerApply, vertexGet
-                datum.log.gets.hits.note ( result )
-                
-                return result
-
-
-
-
-
-
-
-
-
-
-
-
+                    : this.vertexGetTyped ( datum ) 
 
             case 1:
+
                 //console.log (`graph.datumHandler.apply/1 : `)
 
                 switch (args[0]) {
@@ -703,52 +664,20 @@ class Graph extends Datum {
         //console.log(`graphHandlerApply`,args, targ.key, targ)           
 
         switch ( args.length ) {
+
             case 0:
-                //return this.recoverEnumerableProperties ( {} )
+
                 let datum = targ
 
+                    //console.log (datum instanceof Graph)
+                    //console.log( datum.value )
 
-
-//////////////////////////////////////////////////////////////////////////////////
-
-
-
-//console.log (datum instanceof Graph)
-//console.log( datum.value )
-
-
-
-
-
-                let result = typeof datum.value == 'object'
+                return typeof datum.value == 'object'
                     ? this.recoverEnumerableProperties ( {} )
-                    //? this.recoverEnumerableProperties ( datum )
-                    : datum.value
-
-
-
-//console.log (result)
-
-
-
-//////////////////////////////////////////////////////////////////////////////////
-
-
-//console.error (`datum.value; algo not being checked; refer to vset and vget for
-//done code; also see 616`)
-
-
-
-
-
-
-                // LOGGING - 2 scenario above; more scenarios in
-                //                  graphHandlerApply, vertexGet
-                datum.log.gets.hits.note ( result )
-                
-                return result
+                    : this.vertexGetTyped ( datum ) 
 
             case 1:
+
                 switch ( args[0] ) {
 
                     /*
