@@ -65,7 +65,7 @@ class MSLog {
 
             value
         ] )
-        console.log ( this.book[ this.book.length -1 ] )
+        //console.log ( this.book[ this.book.length -1 ] )
     }
 }
 
@@ -513,7 +513,8 @@ class Graph extends Datum {
                 set : this.handlers.scopedAlgoKeySnifferHandlerSet ( algoToSet )
             } )
 
-                    //console.log (`graph.vertexSet/>1 : Algo : BEFORE value.lambda(keySniffer), value.lambda: `, value.lambda)
+                    //console.log (`graph.vertexSet/>1 : Algo : BEFORE
+                    //algoToSet.lambda(keySniffer), algoToSet.lambda: `, algoToSet.lambda)
             
             // Detect dependencies and plant arrows.
             algoToSet.lambda ( keySniffer )
@@ -699,6 +700,12 @@ class Graph extends Datum {
             // before dependents are set FIXME
             //
             //  Configure dependencies to track (this) dependent:
+                   
+            if ( ! ( ksProp in this.value ) ) {
+                throw Error (`graph.vertexSet/n tried to set an Algo, but the
+                        Algo referred to a source address which has not been
+                        set: (${ ksProp })`)
+            }
 
             let dependencyDatum = this.value[ ksProp ]('datum')
 

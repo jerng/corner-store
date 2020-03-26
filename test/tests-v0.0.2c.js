@@ -3,6 +3,7 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
+console.time()
 
 new Exam.Exam ( { 
     config : {
@@ -434,3 +435,4 @@ Danger extends Safe; EventListener extends Danger.`
 */
     ] } )
 
+console.timeEnd()
