@@ -19,6 +19,8 @@ new Exam.Exam ( {
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
+        //console.log( SERVER )
+        //console.log( SERVER ('graph') )
         return {    graphInstance   : SERVER ('graph'),
                     literalTree     : SERVER ()             }
     },
@@ -38,8 +40,8 @@ new Exam.Exam ( {
             normal value? Is the assigned value at Graph.value.key?`,
     code : function () {
         let SERVER = new Graph ( 'server' )
-
         SERVER.location = 'France'
+        //console.log (SERVER('graph').value.location('datum').value)
         return  JSON.stringify ( [   SERVER.location = 'Malaysia' ,
                     SERVER('graph').value.location('datum').value
                 ] )
@@ -146,8 +148,9 @@ new Exam.Exam ( {
                     },
                     "location": "Malaysia"
                 }
+
         return JSON.stringify ( { 
-            aDatum  : SERVER.tree instanceof Datum,
+            aDatum  : SERVER.tree('datum') instanceof Datum,
             aPOJO   : SERVER.tree() 
         }, null, 2 )
     },
@@ -228,8 +231,12 @@ new Exam.Exam ( {
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
+        //console.log (`Before setting SERVER.computed2a`)
+
         SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
         
+        //console.log (`After setting SERVER.computed2a`)
+
         //console.log (SERVER.computed2a)
 
         return JSON.stringify ( {
@@ -247,20 +254,28 @@ new Exam.Exam ( {
         SERVER.source2 = 'theSECONDpart;' 
 
         SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+
+        //console.log(`Before getting arrows.`)
+
+        //console.log(SERVER('datum').value.computed2a('datum').arrows.in.causal[0].ikey
+        //)
+
         let computed2aArrows    = [
-            SERVER('unproxy').value.computed2a('datum').arrows.in.causal[0].ikey,
-            SERVER('unproxy').value.computed2a('datum').arrows.in.causal[1].ikey 
+            SERVER('datum').value.computed2a('datum').arrows.in.causal[0].ikey,
+            SERVER('datum').value.computed2a('datum').arrows.in.causal[1].ikey 
         ]
-              //console.log (
-              //                    SERVER('unproxy').value
-              //                    .source1('unproxy')
-              //                    .arrows.out.causal[0]//.okey,
-              //              ) 
+          //console.log(`After getting arrows.`)
+
+          //console.log (SERVER('datum').value
+          //                            .source1('datum')
+          //                            .arrows.out.causal[0].okey
+          //)
+
         return JSON.stringify ( {
             computedValue   :   SERVER.computed2a,
             computed2aArrows:   computed2aArrows,
-            source1Arrow    :   SERVER('unproxy').value
-                                    .source1('unproxy')
+            source1Arrow    :   SERVER('datum').value
+                                    .source1('datum')
                                     .arrows.out.causal[0].okey,
             source2Arrow    :   SERVER('vertices')
                                     .source2('datum')
@@ -351,19 +366,19 @@ new Exam.Exam ( {
             sink4Before     : SERVER.sink4,
             computed3       : SERVER.computed3,
             sink4After      : SERVER.sink4,
-            computed3Arrows :   [   SERVER('unproxy').value
+            computed3Arrows :   [   SERVER('datum').value
                                         .computed3('datum').arrows.in.causal[0].ikey,
-                                    SERVER('unproxy').value
+                                    SERVER('datum').value
                                         .computed3('datum').arrows.in.causal[1].ikey 
             ],
-            source1Arrow    :   SERVER('unproxy').value
-                                    .source1('unproxy')
+            source1Arrow    :   SERVER('datum').value
+                                    .source1('datum')
                                     .arrows.out.causal[0].okey,
             source2Arrow    :   SERVER('vertices')
                                     .source2('datum')
                                     .arrows.out.causal[0].okey,
             sink4Arrow      :   SERVER('vertices')
-                                    .sink4('unproxy')
+                                    .sink4('datum')
                                     .arrows.in.causal[0].ikey
         } )
     },

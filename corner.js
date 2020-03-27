@@ -84,7 +84,7 @@ class MillisecondLog {
  *      Array ?     ... to be implemented as lists of the above...       
  */
 
-class Datum extends Function {
+class Datum /*extends Function*/ {
 
     toString () { return  {   
         'Datum.toString/0 returned:' : {
@@ -100,11 +100,23 @@ class Datum extends Function {
 
     constructor ( ...args ) {
  
-        super()
+        //super()
 
         // initialisers
         Object.defineProperties ( this, {
             
+            // This is used to enable proxied application
+            proxyTarget     : {
+                configurable: true,
+                enumerable  : false, 
+                value       : Object.defineProperty( 
+                    ()=>{}, 
+                    'datum', 
+                    {'value' : this }                  
+                ),
+                writable    : true
+            },
+
             // This is used as the id.
             key     : {
                 configurable: true,
@@ -214,6 +226,10 @@ class Datum extends Function {
 
 
 
+
+
+
+
 //  Generally, when defining an Algo:
 //  
 //  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
@@ -234,6 +250,13 @@ class Datum extends Function {
 //
 //  }     
 //        
+
+
+
+
+
+
+
 //  SAFE_COMPUTED_SOURCE pattern, differences from default:
 //      
 //  {   hasSinks        : FALSE   
@@ -344,7 +367,14 @@ class Graph extends Datum {
         this.key            = ''
         this.value          = {} 
 
-        // initialisers
+        // an alias
+        Object.defineProperty ( this.proxyTarget, 'graph', {
+            enumerable  : false, 
+            value       : this.proxyTarget.datum,
+        } )
+
+        // further initialisers
+
         Object.defineProperty ( this, 'handlers', {
             enumerable  : false, 
             value       : this.handlers(),
@@ -372,7 +402,7 @@ class Graph extends Datum {
 
         Object.defineProperty ( this, 'proxy', {
             enumerable  : false, 
-            value       : new Proxy ( this, this.graphHandler )        
+            value       : new Proxy ( this.proxyTarget, this.graphHandler )        
         } )
 
         /*
@@ -395,6 +425,9 @@ class Graph extends Datum {
                     case 'server':
                         return this.proxy
 
+                    case 'proxyTarget':
+                        return this.proxyTarget // () => this 
+                        
                     case 'graph':
                         return this
                         
@@ -516,6 +549,8 @@ class Graph extends Datum {
 
     vertexSet ( ... args ) {
 
+        //console.log(`graph.vertexSet/n START`)
+
         let proxiedOldDatum
         let datumToSet
 
@@ -532,11 +567,13 @@ class Graph extends Datum {
                 datumToSet   = new Datum ( keyToSet )
 
                 this.value [ datumToSet.key ] 
-                    = new Proxy ( datumToSet, this.datumHandler )
+                    = new Proxy ( datumToSet.proxyTarget, this.datumHandler )
 
                 break
         }
         // HEREON: args.length > 1
+
+        //console.log(`graph.vertexSet/[n>1] checked`)
 
         let valueToSetType  = typeof args[1]
 
@@ -557,7 +594,9 @@ class Graph extends Datum {
         else { // ... the node/vertex already exists...
 
             // ... then check its datum;
-            let oldDatum = proxiedOldDatum('unproxy')
+            let oldDatum = proxiedOldDatum('unproxy').datum
+
+                //console.log (oldDatum)
 
             // ... and if the datum's value is an object, then prune the graph;
             if ( typeof oldDatum.value == 'object' ) {
@@ -570,21 +609,24 @@ class Graph extends Datum {
             datumToSet.value    = valueToSet
         }
 
+        //console.log(`graph.vertexSet/[n>1] datumToSet has been defined.`)
+
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
         // If datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
         if ( datumToSet.value instanceof Algo )
         {
-            // Assign all old Datum's own properties except 'lambda' to Algo.
+            //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
+
+            // Assign all old Datum's own properties except (those listed below) to Algo.
             delete datumToSet.lambda
             delete datumToSet.value
+            delete datumToSet.proxyTarget
 
             let algoToSet 
                     =   Object.defineProperties ( 
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
-
-            //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
     
             let keySniffer = new Proxy ( {}, {
                 get : this.handlers.scopedAlgoKeySnifferHandlerGet ( algoToSet ),
@@ -604,13 +646,18 @@ class Graph extends Datum {
                 // Algo will not run until the next get (no gets here)
 
             this.value [ keyToSet ]
-                = new Proxy ( algoToSet, this.datumHandler )   
+                = new Proxy ( algoToSet.proxyTarget, this.datumHandler )   
 
-                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
-                  //this.value [ keyToSet ]('datum'), 'success check components :', this.value [ keyToSet
-                  //]('datum'),'==', args[1] ,'result:', this.value [ keyToSet ]('datum') == args[1] )
+                //console.log(  `graph.vertexSet/[n>1], Algo, AFTER SET,
+                //keyToSet:`, keyToSet, 
+                //  'value which was set:', this.value [ keyToSet ]('datum'), 
+                //  'success check components :', this.value [ keyToSet ]('datum'),'==', args[1] ,
+                //  'result:', this.value [ keyToSet ]('datum') == args[1] )
 
             let result = this.value [ keyToSet ]('datum') == args[1] 
+            
+            //console.log (`graph.vertexSet/[n>1], Algo, result obtained: result`)
+
             if ( result ) {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
@@ -622,22 +669,29 @@ class Graph extends Datum {
         else 
         {  // If datumToSet.value is NOT an Algo, then complete the assignment.
 
+            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Algo `)
+
+
             // If valuetoset is an object ...
             if ( valueToSetType == 'object' ) // ( 'function's are not sprouted )
             {
+            
+                //console.log (`graph.vertexSet/[n>1] : value is an object `)
+
                 // ... then set all of its child vertices;
                 if ( ! this.vertexSprout ( keyToSet, valueToSet ) ) 
                 { return false }
-
-                //console.log ( datumToSet.value )
             } 
 
+            //console.log (`graph.vertexSet/[n>1] : value is NOT an object `,
+            //datumToSet)
+            
             this.value [ datumToSet.key ] 
-                    = new Proxy ( datumToSet, this.datumHandler )   
+                    = new Proxy ( datumToSet.proxyTarget, this.datumHandler )   
 
-                  //console.log( `graph.vertexSet/[n>1], END, key:`, keyToSet, 'value:',
-                  //this.value [ keyToSet ](), 'success check components :', this.value [ keyToSet
-                  //](),'==', args[1] )
+              //console.log(  `graph.vertexSet/[n>1], END, key:`, keyToSet, 
+              //              'value:', this.value [ keyToSet ], 
+              //              'success check components :', this.value [ keyToSet ],'==', args[1] ) 
 
             let result = this.value [ keyToSet ]() == args[1]  
             if ( result ) {
@@ -667,12 +721,30 @@ class Graph extends Datum {
 
     handlers () { return {
     'datumHandlerDeleteProperty': ( targ, prop ) => {
+        //  (targ) is a (datum instance).proxytarget.
+        //
+        //  because (datum instance).proxytarget.datum refers to the
+        //  instance's (this), therefore, (targ.datum) refers to the underlying
+        //  instance.
+        //
+        //  because this is an aef in a method on graph, (this) here refers to
+        //  the instance of graph.
+      
         return this.vertexDelete ( prop )    
     },
     'datumHandlerGet':  ( targ, prop, rcvr ) => {
+        //  (targ) is a (datum instance).proxytarget.
+        //
+        //  because (datum instance).proxytarget.datum refers to the
+        //  instance's (this), therefore, (targ.datum) refers to the underlying
+        //  instance.
+        //
+        //  because this is an aef in a method on graph, (this) here refers to
+        //  the instance of graph.
+      
 
         //console.log (`graphHandler.get : graph.value['${prop}'].`)
-        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+        let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
             // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
 
@@ -681,10 +753,18 @@ class Graph extends Datum {
         return this.vertexGet ( compoundKey )
     },
     'datumHandlerSet' : ( targ, prop, val, rcvr) => {
+        //  (targ) is a (datum instance).proxytarget.
+        //
+        //  because (datum instance).proxytarget.datum refers to the
+        //  instance's (this), therefore, (targ.datum) refers to the underlying
+        //  instance.
+        //
+        //  because this is an aef in a method on graph, (this) here refers to
+        //  the instance of graph.
+      
+        //console.log ( `graphHandler.set : Try to set graph.value['${prop}'] to (${val}).` ) 
 
-        //console.log ( `graphHandler.set : Try to set
-        //graph.value['${prop}'] to (${val}).` ) 
-        let compoundKey = ( targ.key ? targ.key + '.' : '' ) + prop
+        let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
             // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
 
@@ -692,8 +772,16 @@ class Graph extends Datum {
         return  this.vertexSet ( compoundKey, val )
     },
     'datumHandlerApply' : ( targ, thisArg, args ) => { 
+        //  (targ) is a (datum instance).proxytarget.
+        //
+        //  because (datum instance).proxytarget.datum refers to the
+        //  instance's (this), therefore, (targ.datum) refers to the underlying
+        //  instance.
+        //
+        //  because this is an aef in a method on graph, (this) here refers to
+        //  the instance of graph.
       
-     //console.log(`datumHandlerApply`, args, targ.key, targ)           
+        //console.log(`datumHandlerApply`, args, targ.key, targ)           
                  
         switch ( args.length ) {
 
@@ -702,8 +790,6 @@ class Graph extends Datum {
                 //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
                 //    thisArg, args) `, targ().key,
                 //    targ().value, thisArg, args )
-
-                let datum = targ
 
                     //console.log (datum instanceof Graph)
                     //console.log(  datum.value )
@@ -714,9 +800,9 @@ class Graph extends Datum {
                 //  this.recoverEnumerableProperties recursively calls
                 //  datum() (this block of code)
 
-                return typeof datum.value == 'object'
-                    ? this.recoverEnumerableProperties ( datum )
-                    : this.vertexGetTyped ( datum ) 
+                return typeof targ.datum.value == 'object'
+                    ? this.recoverEnumerableProperties ( targ.datum )
+                    : this.vertexGetTyped ( targ.datum ) 
 
             case 1:
 
@@ -725,14 +811,13 @@ class Graph extends Datum {
                 switch (args[0]) {
 
                     case 'unproxy':
-                        return targ // unambiguous; 'this' would be  ambiguous 
+                        return targ 
 
                     case 'gopds' :
-                        return Object.getOwnPropertyDescriptors ( this )
+                        return Object.getOwnPropertyDescriptors ( targ.datum )
                     
-                    // DIFFERENT FROM Graph
                     case 'datum':
-                        return targ // unambiguous; 'this' would be  ambiguous 
+                        return targ.datum 
 
                     default:
                         throw Error (`graph.datumHandleApply/1 : the argument was
@@ -744,6 +829,17 @@ class Graph extends Datum {
         }
     },
     'graphHandlerApply': ( targ, thisArg, args ) => { 
+        //  (targ) is a (Graph instance).proxyTarget, which means it is also a
+        //  (Datum instance).proxyTarget.
+        //
+        //  Because (Datum/Graph instance).proxyTarget.datum refers to the
+        //  instance's (this), therefore, (targ.datum) refers to the underlying
+        //  instance.
+        //
+        //  Because this is an AEF in a method on Graph, (this) here refers to
+        //  the instance of Graph.
+
+
 
         //console.log(`graphHandlerApply`,args, targ.key, targ)           
 
@@ -751,12 +847,10 @@ class Graph extends Datum {
 
             case 0:
 
-                let datum = targ
-
                     //console.log (datum instanceof Graph)
                     //console.log( datum.value )
 
-                return typeof datum.value == 'object'
+                return typeof targ.datum.value == 'object'
                     ? this.recoverEnumerableProperties ( {} )
                     : this.vertexGetTyped ( datum ) 
 
@@ -771,22 +865,25 @@ class Graph extends Datum {
                     */
 
                     case 'unproxy':
-                        return targ // unambiguous; 'this' would be  ambiguous 
+                        return targ 
 
                     case 'gopds' :
-                        return Object.getOwnPropertyDescriptors ( this )
+                        return Object.getOwnPropertyDescriptors ( targ.graph )
                     
-                    // DIFFERENT FROM Datum 
+                    case 'datum':
+                        return targ.datum 
+
+                    // just an ALIAS 
                     case 'graph' :
-                        return targ // unambiguous; 'this' would be  ambiguous 
+                        return targ.graph 
                     
                     // DIFFERENT FROM Datum 
                     case 'vertices' :
-                        return targ.value // unambiguous; 'this' would be  ambiguous 
+                        return targ.graph.value 
                     
                     // DIFFERENT FROM Datum 
                     case 'server' :
-                        return this.proxy 
+                        return targ.graph.proxy 
                     
                     default:
                         throw Error (`graph.graphHandlerApply/1 called;
@@ -849,7 +946,7 @@ class Graph extends Datum {
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
             if ( ! ( 'causal' in algoToSet.arrows.out ) ) {
