@@ -473,6 +473,9 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Algo.trait: getHandler`,
     code : function () {
+        let SERVER = new Graph ('server')
+        SERVER.a = 1
+        SERVER.b = new Algo ( () => ( a.c + 1 ) )
     },
     //want : 'legible'
     //vfun :

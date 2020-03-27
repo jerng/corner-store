@@ -319,6 +319,9 @@ class Datum {
 //      reactive        : TRUE,    
 //  }     
 //        
+
+// args[0] must be function
+// args[0] must be an object of traits
 class Algo extends Datum {
 
     toString () {
@@ -331,36 +334,20 @@ class Algo extends Datum {
         
         super()
 
-        Object.defineProperty ( this, 'traits', {
-            configurable: false,
-            enumerable  : false,
-            value       : {
-
-              // UNIMPLEMENTED FEATURES:
-
-              hasSources      : true, 
-              //exclusiveGets   : false,
-              //firmSources     : false,
-
-              hasSinks        : true, 
-              //exclusiveSets   : false,
-              //firmSinks       : false,
-                  
-              cached          : true, 
-              //reactive        : false,
-
-              //setHandler      : false,
-              
-              getHandler      : true, 
-            },
-            writable    : false 
-        } )
-
-        if ( args.length !== 1 ) {
-            throw Error (`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`) 
+        switch ( args.length ) {
+            case 0:
+                throw Error (`Algo.constructor/0 : we require more arguments`) 
+            case 1:
+                // allowed!
+            case 2:
+                // allowed!
+                break
+            default:
+                throw Error (`Algo.constructor/${args.length} called, branch for this arity is undefined.`)
         }
+
         if ( typeof args[0] !== 'function' ) {
-            throw Error (`Algo.constructor : typeof (argument provided) was not 'function'`)
+            throw Error (`Algo.constructor : first argument must be a 'function'`)
         }
 
         Object.defineProperty ( this, 'lambda', {
@@ -368,6 +355,35 @@ class Algo extends Datum {
             enumerable  : false,
             value       : args[0],
             writable    : true
+        } )
+
+        Object.defineProperty ( this, 'traits', {
+            configurable: false,
+            enumerable  : false,
+            value       : {
+
+                // UNIMPLEMENTED FEATURES:
+
+                hasSources      : true, 
+                //exclusiveGets   : false,
+                //firmSources     : false,
+
+                hasSinks        : true, 
+                //exclusiveSets   : false,
+                //firmSinks       : false,
+                    
+                cached          : true, 
+                //reactive        : false,
+
+                //setHandler      : false,
+                 
+                getHandler      : true, 
+             
+                // DEFAULT VALUES are overwritten by ...
+                ... args[1] // the second argument
+
+            },
+            writable    : false 
         } )
 
         return this
