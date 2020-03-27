@@ -84,7 +84,7 @@ class MillisecondLog {
  *      Array ?     ... to be implemented as lists of the above...       
  */
 
-class Datum /*extends Function*/ {
+class Datum {
 
     toString () { return  {   
         'Datum.toString/0 returned:' : {
@@ -331,6 +331,31 @@ class Algo extends Datum {
         
         super()
 
+        Object.defineProperty ( this, 'traits', {
+            configurable: false,
+            enumerable  : false,
+            value       : {
+
+              // UNIMPLEMENTED FEATURES:
+
+              hasSources      : true, 
+              //exclusiveGets   : false,
+              //firmSources     : false,
+
+              hasSinks        : true, 
+              //exclusiveSets   : false,
+              //firmSinks       : false,
+                  
+              cached          : true, 
+              //reactive        : false,
+
+              //setHandler      : false,
+              
+              getHandler      : true, 
+            },
+            writable    : false 
+        } )
+
         if ( args.length !== 1 ) {
             throw Error (`Algo.constructor : expected one and only one argument, received (${args.length}) arguments`) 
         }
@@ -487,24 +512,31 @@ class Graph extends Datum {
 
         let result 
 
-        if ( datum instanceof Algo ) { 
+        if ( datum instanceof Algo && datum.traits.getHandler ) { 
 
             //console.log (`graph.vertexGet/1 will now return datum.stale : `,
             //datum.stale, 'datum.value', datum.value, 'key', key )
-            
-            if ( datum.stale ) {
-                
+          
+            if ( datum.stale || ! datum.traits.cached ) {
+                // !stale && !cached
+                // stale && !cached 
+                // stale && cached  
+                 
                 result      = datum.value = datum.lambda ( this.proxy )
                 datum.stale = false
 
-                // LOGGING - 1 cache miss scenario
+                // LOGGING - cache miss, 3 scenarios
                 datum.log.gets.misses.note ( result )
                 
                 return result
             }
 
-            else {  result = datum.value        // cache hit, scenario 1
-            }                                       // Algo
+            else {
+                // !stale && cached
+            
+                result = datum.value        
+                // cache hit, scenario 1 of 3; an Algo
+            }                                   
         }
 
         else
@@ -518,11 +550,13 @@ class Graph extends Datum {
             //an object, so will return graph.value ['${key}'] `)
 
             
-                    result = this.value[ datum.key ]  // cache hit, scenario 2
-        }                                           //  not an Algo, no cache 
+                    result = this.value[ datum.key ]  
+                    // cache hit, scenario 2 of 3; not an Algo, no cache 
+        }                                           
 
-        else {      result  =  datum.value      // cache hit, scenario 3
-        }                                           //  not an Algo, no cache  
+        else {      result  =  datum.value      
+                    // cache hit, scenario 3; not an Algo, no cache  
+        }                                           
 
         // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
         //              graphHandlerApply, datumHandlerApply
@@ -629,8 +663,16 @@ class Graph extends Datum {
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
     
             let keySniffer = new Proxy ( {}, {
-                get : this.handlers.scopedAlgoKeySnifferHandlerGet ( algoToSet ),
-                set : this.handlers.scopedAlgoKeySnifferHandlerSet ( algoToSet )
+
+                get :   algoToSet.traits.hasSources
+                        ? this.handlers
+                            .scopedAlgoKeySnifferHandlerGet ( algoToSet )
+                        : undefined,
+
+                set : algoToSet.traits.hasSinks
+                        ? this.handlers
+                            .scopedAlgoKeySnifferHandlerSet ( algoToSet )
+                        : undefined
             } )
 
                     //console.log (`graph.vertexSet/>1 : Algo : BEFORE
@@ -644,6 +686,10 @@ class Graph extends Datum {
 
             algoToSet.stale = true
                 // Algo will not run until the next get (no gets here)
+                //
+                // Whether Algo.traits.cached is true or not, the Algo.stale
+                // property will be defined. Because it is defined for all
+                // Datum, and Algo extends Datum.
 
             this.value [ keyToSet ]
                 = new Proxy ( algoToSet.proxyTarget, this.datumHandler )   

@@ -471,7 +471,34 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 
     } )
 },
-{   test : `When an Algo's sources change, the Algo's cache must be invalidated.`,
+{   test : `Algo.trait: getHandler`,
+    code : function () {
+    },
+    //want : 'legible'
+    //vfun :
+},
+{   test : `Algo.trait: cached`,
+    code : function () {
+    },
+    //want : 'legible'
+    //vfun :
+},
+
+{   test : `Algo.trait: hasSinks`,
+    code : function () {
+    },
+    //want : 'legible'
+    //vfun :
+},
+
+{   test : `Algo.trait: hasSources`,
+    code : function () {
+    },
+    //want : 'legible'
+    //vfun :
+},
+
+{   test : `Algo.trait: reactive`,
     code : function () {
 
 // Approach: on set 
