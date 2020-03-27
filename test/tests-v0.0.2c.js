@@ -438,10 +438,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
         G.m = new Algo ( e => e.a + e.b )
         G.n = { o: new Algo ( e => e.a + e.b ) }
 
-      //G.y = G.m
-      //G.z = G.n
-
-//console.log ( G.n.o ) 
+        //console.log ( G.n.o ) 
 
         return JSON.stringify( G() ) 
     },
@@ -459,7 +456,19 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 
     } )
 },
+{   test : `When an Algo's sources change, the Algo's cache must be invalidated.`,
+    code : function () {
+
+// Approach: on set 
+
+
+    },
+    want : undefined
+},
 //*
+{   warning : `Safe Algo will lock sinks from being updated by other sources;
+will lock sources from being deleted;.`,
+},
 {   warning : `Arrow creation generally doesn't check for old arrows.`,
 },
 {   warning : `When a Datum is replaced by an Algo, what happens to arrows
@@ -486,6 +495,10 @@ also? can this be optional?`,
 },
 {   warning: `Algo is safe by default; Safe extends Algo just for synonymy;
 Danger extends Safe; EventListener extends Danger.`
+},
+{   warning: `MAYBE in the future: Graph is not a class.. rather graph behaviour
+is an Algo that you can load into a Datum... this sounds a bit lispy, and I am
+not sure if it is feasible.`
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },

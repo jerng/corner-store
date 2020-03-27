@@ -196,6 +196,106 @@ class Datum extends Function {
 // data type for use in Datum
 //
 // This should be made safe by default. No pushing allowed.
+// Toying with nomenclature
+//
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Sourced {}  - can source, cannot set
+//  Sinked {}   - can sink, cannot source
+
+//  Origins {}  - alias for Sourced {}
+//  Targets {}  - alias for Sinked {}
+
+//  SafeSource  SafeOrigin  -   sources can't be deleted
+//  SourceSafe  OriginSafe
+//  
+//  SafeSink    SafeTarget  -   exclusive write-access to sinks
+//  SinkSafe    TargetSafe
+
+
+
+//  Generally, when defining an Algo:
+//  
+//  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
+//
+//  {   hasSources      : TRUE,     // T: can read from graph
+//      exclusiveGets   : FALSE,    // T: monopolises source reads
+//      firmSources     : FALSE,    // T: blocks source deletion
+//      
+//      hasSinks        : TRUE,     // T: can write to graph
+//      exclusiveSets   : FALSE,    // T: monopolises sink writes
+//      firmSinks       : FALSE,    // T: blocks sink deletion
+//        
+//      cached          : TRUE,     // T: lazy updates
+//      reactive        : FALSE,    // T: active updates, on source changes
+//
+//      setHandler      : FALSE,    // T: code run by proxyHandler.set
+//      getHandler      : TRUE,     // T: code run by proxyHandler.get
+//
+//  }     
+//        
+//  SAFE_COMPUTED_SOURCE pattern, differences from default:
+//      
+//  {   hasSinks        : FALSE   
+//      firmSources     : TRUE      } 
+//      
+//  UNSAFE_COMPUTED_SINK pattern, difference from defaults:    
+//      
+//  {   setHandler      : TRUE
+//      getHandler      : FALSE     }
+//      
+//  PRIVILEGED_READER pattern, differences from default:
+//      
+//  {   exclusiveGets   : TRUE   
+//      firmSources     : TRUE      } 
+//      
+//  PRIVILEGED_WRITER pattern, differences from default:
+//      
+//  {   exclusiveSets   : TRUE   
+//      firmSinks       : TRUE      } 
+//      
+//  CHANGE_HANDLER pattern, differences from default:
+//
+//  {   reactive        : TRUE   
+//      firmSources     : TRUE      } 
+//      
+//  REPORTER pattern, differences from default:
+//
+//  {   reactive        : TRUE   
+//      firmSinks       : TRUE      } 
+//      
+//  ACTIVE_WORKER pattern, differences from default:
+//      
+//  {   firmSources     : TRUE  
+//      firmSinks       : TRUE
+//      cached          : FALSE 
+//      reactive        : TRUE      }
+//
+//  PRIVILEGED_WORKER pattern, differences from default:
+//      
+//  {   firmSources     : TRUE  
+//      firmSinks       : TRUE
+//      exclusiveGets   : TRUE
+//      exclusiveSets   : TRUE
+//      cached          : FALSE 
+//      reactive        : TRUE      }
+//      
+//      
+//      reactive        : TRUE,    
+//  }     
+//        
+//  {   hasSources         : true,    
+//      exclusiveGets   : false,   
+//      firmSources     : false,   
+//      
+//      hasSinks           : true,    
+//      exclusiveSets   : false,   
+//      firmSinks       : false,    
+//         
+//      cached          : true,     
+//      reactive        : TRUE,    
+//  }     
+//        
 class Algo extends Datum {
 
     toString () {
@@ -225,25 +325,6 @@ class Algo extends Datum {
         return this
 
     }
-
-}
-
-// Synonym for Algo.
-// Also maybe a perceptron.
-class Safe extends Algo {
-}
-
-// Pushing should be enabled here.
-// Also maybe a neuron.
-class Danger extends Safe {
-}
-
-// Listeners usually need to have side effects; a listener with handlers that
-// could only read memory (but not write it) would be a ... passive listern,
-// being practically useless.
-//
-// Here, how do we expect to trigger events?
-class EventListener extends Danger {
 
 }
 
@@ -365,7 +446,10 @@ class Graph extends Datum {
         return this.vertexGetTyped ( datum ) 
     }
 
-    // Lower-level call, used by vertexGet and datumHandlerApply
+    // Lower-level call, used by 
+    //      vertexGet 
+    //      datumHandlerApply
+    //      graphHandlerApply
     vertexGetTyped ( datum ) {
 
         let result 
