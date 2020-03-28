@@ -3,6 +3,33 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
+
+//  Time wasting function.
+//  https://www.w3resource.com/javascript-exercises/javascript-math-exercise-43.php
+//  
+//        primeFactorsTo ( Math.pow ( 10, 7 ) )
+//
+//  ... takes about a second on my laptop.
+//
+function primeFactorsTo(max)
+{
+    var store  = [], i, j, primes = [];
+    for (i = 2; i <= max; ++i) 
+    {
+        if (!store [i]) 
+          {
+            primes.push(i);
+            for (j = i << 1; j <= max; j += i) 
+            {
+                store[j] = true;
+            }
+        }
+    }
+    return primes;
+}
+
+
+
 new Exam.Exam ( { 
     config : {
         expand : {

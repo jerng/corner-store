@@ -57,19 +57,19 @@ class EventLog {
         return this 
     }
 
-    emit () {}
-
     note ( value ) {
         
-        this.emit()
+        this.emit() 
         
-        this.book.push( [
-            performance.now(),
+        this.book.push( [ performance.now(), value ] )
 
-            value
-        ] )
-        //console.log ( this.book[ this.book.length -1 ] )
+            //console.log ( this.book[ this.book.length -1 ] )
     }
+
+    async emit () {}
+        // Interpreter should inline this out of existence unless
+        // emit actually does something in a subclass
+
 }
 
 // DOM already has an EventTarget class.
@@ -83,35 +83,37 @@ class AsyncDispatcher extends EventLog {
             // .push() to add on the right
             // .shift() to remove on the left
 
-console.error (`WIP here - get reactive Algos running.`)
+//console.error (`WIP here - get reactive Algos running.`)
 
         this.tasks = {
+            '1TEST' : async () => new Promise ( ( fulfill, reject ) => {
             
-            'test1' : () => setTimeout ( () => console.log ('test1'), 1000 )  ,
-            'test2' : () => setTimeout ( () => console.log ('test2'), 2000 )  ,
-            'test3' : () => setTimeout ( (...args) => console.log (args), 3000 )  
-            
-        }
-            // 
+function primeFactorsTo(max) { var store  = [], i, j, primes = []; for (i = 2; i <= max; ++i) { if (!store [i]) { primes.push(i); for (j = i << 1; j <= max; j += i) { store[j] = true; } } } return primes; } 
+
+setTimeout( ()=>{ fulfill ( primeFactorsTo ( Math.pow ( 7, 7 ) ) ) }, 3000) 
+
+
+            } )    
+        } // this.tasks
 
         return this 
     }
 
     // overwrites parent class
-    emit() {
-        this.trigger()
-    }
-
-    trigger ( args ) {
-        
+    // 
+    //  1.  See below.
+    //  2.  In order to be able to use 'await', we need to make (emit) an
+    //      AsyncFunction. The functional difference is, while (emit) will
+    //      asynchronously 'await' task execution, (emit's calling function)
+    //      will proceed synchronously without waiting for (emit).
+    async emit() {
         for ( const key in this.tasks ) {
-
-
-            let result =  new Promise ( ( fulfill, reject ) => {
-                this.tasks[key]()
-            } )
             
-            return result
+            let value = await this.tasks[ key ]()
+                // 1. 'await' must be used here, otherwise any operation below will
+                // immediately run on (value), which may be an unresolved
+                // Promise.
+            console.log ( value ) 
         }
     } 
 
@@ -845,7 +847,7 @@ class Graph extends Datum {
             let result = this.value [ keyToSet ]() == args[1]  
             if ( result ) {
             
-console.error (`WIP here -  trigger update event.`)
+//console.error (`WIP here -  trigger update event.`)
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
                 datumToSet.log.sets.note ( args[1] )
             } 
@@ -1089,7 +1091,7 @@ console.error (`WIP here -  trigger update event.`)
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
 
-console.error (`WIP here -  insert tasks to dependencies.`)
+//console.error (`WIP here -  insert tasks to dependencies.`)
 
                     //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
 
