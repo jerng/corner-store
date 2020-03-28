@@ -57,9 +57,13 @@ class EventLog {
         return this 
     }
 
+    emit () {}
+
     note ( value ) {
+        
+        this.emit()
+        
         this.book.push( [
-            
             performance.now(),
 
             value
@@ -81,17 +85,32 @@ class AsyncDispatcher extends EventLog {
 
 console.error (`WIP here - get reactive Algos running.`)
 
-        this.tasks = {}
+        this.tasks = {
+            
+            'test1' : () => setTimeout ( () => console.log ('test1'), 1000 )  ,
+            'test2' : () => setTimeout ( () => console.log ('test2'), 2000 )  ,
+            'test3' : () => setTimeout ( (...args) => console.log (args), 3000 )  
+            
+        }
             // 
 
         return this 
     }
 
-    async trigger ( args ) {
+    // overwrites parent class
+    emit() {
+        this.trigger()
+    }
+
+    trigger ( args ) {
         
         for ( const key in this.tasks ) {
 
-            let result = await this.tasks[ key ] ( ... args )
+
+            let result =  new Promise ( ( fulfill, reject ) => {
+                this.tasks[key]()
+            } )
+            
             return result
         }
     } 
@@ -826,6 +845,7 @@ class Graph extends Datum {
             let result = this.value [ keyToSet ]() == args[1]  
             if ( result ) {
             
+console.error (`WIP here -  trigger update event.`)
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
                 datumToSet.log.sets.note ( args[1] )
             } 
@@ -1056,8 +1076,8 @@ class Graph extends Datum {
                         set: (${ ksProp })`)
             }
 
-console.error (`WIP here - get reactive Algos running.`)
 
+            // Configure dependencies to track (this) dependent:
             let dependencyDatum = this.value[ ksProp ]('datum')
 
                 if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
@@ -1068,6 +1088,8 @@ console.error (`WIP here - get reactive Algos running.`)
 
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
+
+console.error (`WIP here -  insert tasks to dependencies.`)
 
                     //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
 
