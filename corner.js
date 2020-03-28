@@ -49,7 +49,8 @@ class ArrowIn {
 }
 
 // data type for use in Datum
-class MillisecondLog {
+// performance.now() logs in milliseconds
+class EventLog {
     
     constructor () {
         this.book = []
@@ -67,7 +68,35 @@ class MillisecondLog {
     }
 }
 
+// DOM already has an EventTarget class.
+class AsyncDispatcher extends EventLog {
+    
+    constructor () {
 
+        super()
+
+        //this.queue = []
+            // .push() to add on the right
+            // .shift() to remove on the left
+
+console.error (`WIP here - get reactive Algos running.`)
+
+        this.tasks = {}
+            // 
+
+        return this 
+    }
+
+    async trigger ( args ) {
+        
+        for ( const key in this.tasks ) {
+
+            let result = await this.tasks[ key ] ( ... args )
+            return result
+        }
+    } 
+
+}
 
 /**
  *  Arities:
@@ -160,10 +189,10 @@ class Datum {
                 enumerable  : false,
                 value       : {         
                     gets    : {
-                        hits    : new MillisecondLog,   
-                        misses  : new MillisecondLog    
+                        hits    : new EventLog,   
+                        misses  : new EventLog    
                     },   
-                    sets    : new MillisecondLog, 
+                    sets    : new AsyncDispatcher, 
 
                   //deletes : []        // [ microtime, value ]
                     // This doesn't quite work that way for now. When we delete
@@ -446,6 +475,25 @@ class Graph extends Datum {
             value       : new Proxy ( this.proxyTarget, this.graphHandler )        
         } )
 
+        Object.defineProperty ( this, 'proxyGetOnly', {
+            enumerable  : false, 
+            value       : new Proxy (   this.proxyTarget, 
+                                        { get : this.handlers.datumHandlerGet } )        
+        } )
+
+        Object.defineProperty ( this, 'proxySetOnly', {
+            enumerable  : false, 
+            value       : new Proxy (   this.proxyTarget, 
+                                        { set : this.handlers.datumHandlerSet } )        
+        } )
+
+        Object.defineProperty ( this, 'proxySetGetOnly', {
+            enumerable  : false, 
+            value       : new Proxy (   this.proxyTarget, 
+                                        { set : this.handlers.datumHandlerSet, 
+                                          get : this.handlers.datumHandlerGet } )        
+        } )
+
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
             
@@ -509,13 +557,13 @@ class Graph extends Datum {
             return undefined 
         }
 
-            //console.log ( `vertexGet/1, 1`,key )
+            //console.log ( `vertexGet/1, BEFORE getting Datum`,key )
 
         let datum = this.value[ key ]('datum')
 
-            //console.log ( `vertexGet/1, 2`, key )
+            //console.log ( `vertexGet/1, AFTER getting Datum`, key )
             //console.log ( `graph.vertexGet/1 will get graph.value[ '${key
-            //}' ]() : `, this.value [ key ]() )
+            //}' ]() : `, this.value [ key ](), datum.traits )
 
         return this.vertexGetTyped ( datum ) 
     }
@@ -526,19 +574,33 @@ class Graph extends Datum {
     //      graphHandlerApply
     vertexGetTyped ( datum ) {
 
+            //console.log ( datum.traits )
+
         let result 
 
         if ( datum instanceof Algo && datum.traits.getHandler ) { 
 
-            //console.log (`graph.vertexGet/1 will now return datum.stale : `,
-            //datum.stale, 'datum.value', datum.value, 'key', key )
+                //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
+                //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
           
             if ( datum.stale || ! datum.traits.cached ) {
                 // !stale && !cached
                 // stale && !cached 
                 // stale && cached  
-                 
-                result      = datum.value = datum.lambda ( this.proxy )
+               
+                // Is there a more efficient way to do this?
+                let proxy 
+                    = datum.traits.hasSources
+                    ? ( datum.traits.hasSinks
+                        ? this.proxySetGetOnly
+                        : this.proxyGetOnly 
+                      )
+                    : ( datum.traits.hasSinks
+                        ? this.proxySetOnly
+                        : this
+                      )
+                result      = datum.value = datum.lambda ( proxy )
+
                 datum.stale = false
 
                 // LOGGING - cache miss, 3 scenarios
@@ -552,6 +614,8 @@ class Graph extends Datum {
             
                 result = datum.value        
                 // cache hit, scenario 1 of 3; an Algo
+
+                datum.stale = false // for general coherence
             }                                   
         }
 
@@ -601,7 +665,6 @@ class Graph extends Datum {
 
         //console.log(`graph.vertexSet/n START`)
 
-        let proxiedOldDatum
         let datumToSet
 
         switch ( args.length ) 
@@ -635,6 +698,8 @@ class Graph extends Datum {
             //console.log ( `graph.vertexSet/[n>1], initial value : `,
             //this.value[keyToSet], `update value:`, valueToSet )
 
+        let proxiedOldDatum
+        
         // If the node/vertex does not yet exist ...
         if ( ! ( proxiedOldDatum = this.value[ keyToSet ] ) ) {
 
@@ -666,7 +731,7 @@ class Graph extends Datum {
         // If datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
         if ( datumToSet.value instanceof Algo )
         {
-            //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
+                //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
 
             // Assign all old Datum's own properties except (those listed below) to Algo.
             delete datumToSet.lambda
@@ -691,14 +756,16 @@ class Graph extends Datum {
                         : undefined
             } )
 
-                    //console.log (`graph.vertexSet/>1 : Algo : BEFORE
-                    //algoToSet.lambda(keySniffer), algoToSet.lambda: `, algoToSet.lambda)
+                  //console.log (`graph.vertexSet/>1 : Algo : BEFORE
+                  //algoToSet.lambda(keySniffer), algoToSet.lambda: `,
+                  //algoToSet.lambda,'traits:', algoToSet.traits)
             
             // Detect dependencies and plant arrows.
             algoToSet.lambda ( keySniffer )
 
-                    //console.log (`graph.vertexSet/>1 : Algo : AFTER value.lambda(keySniffer)`)
-                    // console.log ( algoToSet.toString() )
+                  //console.log (`graph.vertexSet/>1 : Algo : AFTER
+                  //value.lambda(keySniffer)`, algoToSet.traits )
+                    //console.log ( algoToSet.toString() )
 
             algoToSet.stale = true
                 // Algo will not run until the next get (no gets here)
@@ -719,6 +786,7 @@ class Graph extends Datum {
             let result = this.value [ keyToSet ]('datum') == args[1] 
             
             //console.log (`graph.vertexSet/[n>1], Algo, result obtained: result`)
+            //console.log (this.value [ keyToSet ]('datum').traits)
 
             if ( result ) {
             
@@ -958,9 +1026,12 @@ class Graph extends Datum {
         }
     
     },
-    'scopedAlgoKeySnifferHandlerGet': _algoToSet => {
+
+    // vertexSet is using a keysniffer to get the keys of functions called in
+    // Algos, when the Algo is set to the graph.
+    'scopedAlgoKeySnifferHandlerGet': algoToSet => {
         
-        let algoToSet = _algoToSet
+            //console.log(`scopedAlgoKeySnifferHandlerGet/1`)
 
                 // If you're pulling data into your Algo, you'll trigger getters
                 // on the other Datums-
@@ -985,6 +1056,8 @@ class Graph extends Datum {
                         set: (${ ksProp })`)
             }
 
+console.error (`WIP here - get reactive Algos running.`)
+
             let dependencyDatum = this.value[ ksProp ]('datum')
 
                 if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
@@ -996,19 +1069,22 @@ class Graph extends Datum {
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
 
-            //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
+                    //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
 
         }
     },
-    'scopedAlgoKeySnifferHandlerSet': _algoToSet => {
+
+    // vertexSet is using a keysniffer to get the keys of functions called in
+    // Algos, when the Algo is set to the graph.
+    'scopedAlgoKeySnifferHandlerSet': algoToSet => {
         
-        let algoToSet = _algoToSet
+            //console.log(`scopedAlgoKeySnifferHandlerSet/1`)
 
                 // If you're pushing data from your Algo, you'll trigger setters
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
             if ( ! ( 'causal' in algoToSet.arrows.out ) ) {

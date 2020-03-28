@@ -439,8 +439,6 @@ new Exam.Exam ( {
     },
     expectError : true
 },
-//*/
-//*/
 {   test : `Tree insertion should handle Algos smoothly; Algos should be handled
 smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
@@ -475,32 +473,119 @@ smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
         let SERVER = new Graph ('server')
         SERVER.a = 1
-        SERVER.b = new Algo ( () => ( a.c + 1 ) )
+
+        SERVER.b = new Algo ( s => ( s.a + 1 ) )
+        //console.warn (SERVER.b)
+
+        SERVER.c = new Algo ( s => ( s.a + 1 ), { getHandler: false } )
+        //console.warn (SERVER.c)
+
+        return JSON.stringify ( [ SERVER.b, SERVER.c ] )
     },
-    //want : 'legible'
-    //vfun :
+    want : JSON.stringify ( [ 2, undefined ] ) 
 },
 {   test : `Algo.trait: cached`,
     code : function () {
-    },
-    //want : 'legible'
-    //vfun :
-},
+        let SERVER = new Graph ('server')
+        SERVER.a = 1
 
+        SERVER.b = new Algo ( s => ( s.a + 1 ) )
+        SERVER('vertices').b('datum').stale = false
+
+      //console.warn (SERVER('vertices').b('datum').stale)
+      //console.warn (SERVER('vertices').b('datum').value)
+      //console.warn (SERVER('vertices').b('datum').lambda)
+      //console.warn (SERVER('vertices').b('datum').traits.cached)
+      //console.warn (SERVER.b)
+      //console.warn (SERVER('vertices').b('datum').stale)
+      //console.warn (SERVER('vertices').b('datum').value)
+
+        SERVER.c = new Algo ( s => ( s.a + 1 ), { cached : false } )
+        SERVER('vertices').c('datum').stale = false
+      
+      //console.warn (SERVER('vertices').c('datum').stale)
+      //console.warn (SERVER('vertices').c('datum').value)
+      //console.warn (SERVER('vertices').c('datum').lambda)
+      //console.warn (SERVER('vertices').c('datum').traits.cached)
+      //console.warn (SERVER.c)
+      //console.warn (SERVER('vertices').b('datum').stale)
+      //console.warn (SERVER('vertices').c('datum').value)
+
+        let datumB = SERVER('vertices').b('datum')
+        let datumC = SERVER('vertices').c('datum')
+
+        return JSON.stringify ( {
+            defaultCachedStaleFlagBefore    : datumB.stale  == false,
+            defaultCachedValueBefore        : datumB.value  == undefined,
+
+                defaultCachedGetResult          : SERVER.b      == undefined,
+                defaultCachedStaleFlagAfter     : datumB.stale  == false,
+                defaultCachedValueAfter         : datumB.value  == undefined,
+
+            notCachedStaleFlagBefore    : datumC.stale  == false,
+            notCachedValueBefore        : datumC.value  == undefined,
+
+                notCachedGetResult          : SERVER.c      == 2,
+                notCachedStaleFlagAfter     : datumC.stale  == false,
+                notCachedValueAfter         : datumC.value  == 2,
+        },null,2 )
+
+    },
+    want : JSON.stringify ( {
+            defaultCachedStaleFlagBefore    : true,
+            defaultCachedValueBefore        : true,
+            defaultCachedGetResult          : true, // stale flag respected
+            defaultCachedStaleFlagAfter     : true, // nothing happened
+            defaultCachedValueAfter         : true,
+
+            notCachedStaleFlagBefore    : true,
+            notCachedValueBefore        : true,
+            notCachedGetResult          : true, // stale flag ignored
+            notCachedStaleFlagAfter     : true, // result recomputed anyway 
+            notCachedValueAfter         : true,
+
+    },null,2 )
+
+},
 {   test : `Algo.trait: hasSinks`,
     code : function () {
+        let SERVER = new Graph ('server')
+        SERVER.a1 = new Algo (  s => { s.a2 = 2; return true } )
+        SERVER.b1 = new Algo (  s => { s.b2 = 2; return true }, 
+                                { hasSinks: false } )
+
+        //console.log ( SERVER.a1, SERVER.a2 )
+        //console.log ( SERVER.b1, SERVER.b2 )
+        //console.log ( SERVER('vertices') )
+    
+        return JSON.stringify ( 
+            [ SERVER.a1, SERVER.a2, SERVER.b1, SERVER.b2 ]
+        )
     },
-    //want : 'legible'
-    //vfun :
+    want : JSON.stringify ( [ true, 2, true, undefined ] )
 },
 
 {   test : `Algo.trait: hasSources`,
     code : function () {
+        let SERVER = new Graph ('server')
+
+        SERVER.a = 1
+        SERVER.b = new Algo (  s => s.a + 2 )
+        SERVER.c = new Algo (  s => s.a + 2, 
+                                { hasSources: false } )
+
+      //console.warn ( SERVER.b )
+      //console.warn ( SERVER.c )
+      //console.log ( SERVER('vertices') )
+    
+        return JSON.stringify ( 
+            [ SERVER.b, SERVER.c ]
+        )
     },
-    //want : 'legible'
-    //vfun :
+    want : JSON.stringify ( [ 3, NaN ] )
 },
 
+//*/
 {   test : `Algo.trait: reactive`,
     code : function () {
 
@@ -510,7 +595,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
     },
     want : undefined
 },
-//*
+//*/
 {   warning : `Safe Algo will lock sinks from being updated by other sources;
 will lock sources from being deleted;.`,
 },
