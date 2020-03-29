@@ -1,5 +1,5 @@
 // data type for use in Datum
-class ArrowOut {
+class PointerOut {
 
     constructor ( _okey ) {
         
@@ -24,7 +24,7 @@ class ArrowOut {
 }
 
 // data type for use in Datum
-class ArrowIn {
+class PointerIn {
 
     constructor ( _ikey ) {
         
@@ -194,13 +194,13 @@ class Datum {
             },
 
             // These are used to store edges or pointers between data.
-            arrows  : {
+            pointers  : {
                 configurable: true,
                 enumerable  : false,
                 value       : {
-                    in      : { // variousTypeKeys: [ ArrowIn ]
+                    in      : { // variousTypeKeys: [ PointerIn ]
                     },
-                    out     : { // variousTypeKeys: [ ArrowOut ]
+                    out     : { // variousTypeKeys: [ PointerOut ]
                     }
                 },
                 writable    : true
@@ -733,7 +733,7 @@ class Graph extends Datum {
             }
 
             // ... and finally update datum.value, but not datum's other
-            // properties (arrows, logs, cache);
+            // properties (pointers, logs, cache);
             datumToSet          = oldDatum
             datumToSet.value    = valueToSet
         }
@@ -742,7 +742,7 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value IS an Algo, call it on a keySniffer to plant Arrows.
+        // If datumToSet.value IS an Algo, call it on a keySniffer to plant pointers.
         if ( datumToSet.value instanceof Algo )
         {
                 //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
@@ -774,7 +774,7 @@ class Graph extends Datum {
                   //algoToSet.lambda(keySniffer), algoToSet.lambda: `,
                   //algoToSet.lambda,'traits:', algoToSet.traits)
             
-            // Detect dependencies and plant arrows.
+            // Detect dependencies and plant pointers.
             algoToSet.lambda ( keySniffer )
 
                   //console.log (`graph.vertexSet/>1 : Algo : AFTER
@@ -1054,10 +1054,10 @@ class Graph extends Datum {
             //console.log (`graph.scopedAlgoKeySnifferHandlerGet/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
 
             //  Configure (this) dependent to track dependencies:
-            if ( ! ( 'causal' in algoToSet.arrows.in ) ) {
-                algoToSet.arrows.in.causal = []
+            if ( ! ( 'causal' in algoToSet.pointers.in ) ) {
+                algoToSet.pointers.in.causal = []
             }
-            algoToSet.arrows.in.causal.push ( new ArrowIn ( ksProp) )
+            algoToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
 
             // WARNING: does not require dependency keys to be in the graph
             // before dependents are set FIXME
@@ -1074,14 +1074,14 @@ class Graph extends Datum {
             // Configure dependencies to track (this) dependent:
             let dependencyDatum = this.value[ ksProp ]('datum')
 
-                if ( ! ( 'causal' in dependencyDatum.arrows.out ) ) {
-                    dependencyDatum.arrows.out.causal = []
+                if ( ! ( 'causal' in dependencyDatum.pointers.out ) ) {
+                    dependencyDatum.pointers.out.causal = []
                 }
 
                 //console.log (  algoToSet.key )
 
                 dependencyDatum
-                    .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
+                    .pointers.out.causal.push ( new PointerOut ( algoToSet.key ) )
 
 
                 //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
@@ -1091,7 +1091,7 @@ class Graph extends Datum {
                 // cache of the (this) dependent.
                 
 
-                // .cached and .reactive: FIXME - should use arrows instead?
+                // .cached and .reactive: FIXME - should use pointers instead?
                 if ( algoToSet.traits.cached ) {
 
                     let cachedDependentHandlerKey 
@@ -1110,7 +1110,9 @@ class Graph extends Datum {
 
                     dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
-                        console.log( `scopedAlgoKeySnifferHandlerGet` )
+                            
+                            //console.log( `scopedAlgoKeySnifferHandlerGet` )
+                            
                             this.runAlgoAndLog ( algoToSet )
                             fulfill( reactiveDependentHandlerKey )
                         } )
@@ -1137,12 +1139,12 @@ class Graph extends Datum {
             //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
-            if ( ! ( 'causal' in algoToSet.arrows.out ) ) {
-                algoToSet.arrows.out.causal = []
+            if ( ! ( 'causal' in algoToSet.pointers.out ) ) {
+                algoToSet.pointers.out.causal = []
             }
-            algoToSet.arrows.out.causal.push ( new ArrowOut ( ksProp ) )
+            algoToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
 
-                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: ArrowOut-s inserted at:`, key )
+                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: PointerOut-s inserted at:`, key )
 
             //  Configure dependents to track (this) dependency:
             if ( ! ( ksProp in this.value ) ) {
@@ -1150,15 +1152,15 @@ class Graph extends Datum {
             }
             let dependentDatum = this.value[ ksProp ]('datum')
 
-                if ( ! ( 'causal' in dependentDatum.arrows.in ) ) {
-                    dependentDatum.arrows.in.causal = []
+                if ( ! ( 'causal' in dependentDatum.pointers.in ) ) {
+                    dependentDatum.pointers.in.causal = []
                 }
                 dependentDatum
-                    .arrows.in.causal.push ( new ArrowIn ( algoToSet.key ) )
+                    .pointers.in.causal.push ( new PointerIn ( algoToSet.key ) )
 
-                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: ArrowIn-s inserted at:`, ksProp )
+                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
             
-            return true // FIXME: arrows unchecked?
+            return true // FIXME: pointers unchecked?
         }
     }
 

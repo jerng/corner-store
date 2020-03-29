@@ -274,7 +274,7 @@ new Exam.Exam ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;'
     } )
 },
-{   test : `Computed properties; dependency getter / puller - also check arrows on dependents and dependencies.`,
+{   test : `Computed properties; dependency getter / puller - also check pointers on dependents and dependencies.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
@@ -282,38 +282,38 @@ new Exam.Exam ( {
 
         SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
 
-        //console.log(`Before getting arrows.`)
+        //console.log(`Before getting pointers.`)
 
-        //console.log(SERVER('datum').value.computed2a('datum').arrows.in.causal[0].ikey
+        //console.log(SERVER('datum').value.computed2a('datum').pointers.in.causal[0].ikey
         //)
 
-        let computed2aArrows    = [
-            SERVER('datum').value.computed2a('datum').arrows.in.causal[0].ikey,
-            SERVER('datum').value.computed2a('datum').arrows.in.causal[1].ikey 
+        let computed2apointers    = [
+            SERVER('datum').value.computed2a('datum').pointers.in.causal[0].ikey,
+            SERVER('datum').value.computed2a('datum').pointers.in.causal[1].ikey 
         ]
-          //console.log(`After getting arrows.`)
+          //console.log(`After getting pointers.`)
 
           //console.log (SERVER('datum').value
           //                            .source1('datum')
-          //                            .arrows.out.causal[0].okey
+          //                            .pointers.out.causal[0].okey
           //)
 
         return JSON.stringify ( {
             computedValue   :   SERVER.computed2a,
-            computed2aArrows:   computed2aArrows,
-            source1Arrow    :   SERVER('datum').value
+            computed2apointers:   computed2apointers,
+            source1Pointer    :   SERVER('datum').value
                                     .source1('datum')
-                                    .arrows.out.causal[0].okey,
-            source2Arrow    :   SERVER('vertices')
+                                    .pointers.out.causal[0].okey,
+            source2Pointer    :   SERVER('vertices')
                                     .source2('datum')
-                                    .arrows.out.causal[0].okey,
+                                    .pointers.out.causal[0].okey,
         } )
     },
     want : JSON.stringify ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;',
-        computed2aArrows:   [ 'source1', 'source2' ],
-        source1Arrow    :   'computed2a',
-        source2Arrow    :   'computed2a'
+        computed2apointers:   [ 'source1', 'source2' ],
+        source1Pointer    :   'computed2a',
+        source2Pointer    :   'computed2a'
     } )
 },
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
@@ -349,7 +349,7 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER('vertices').sink4('unproxy').arrows.in )
+        //console.log( SERVER('vertices').sink4('unproxy').pointers.in )
 
         return JSON.stringify ( {
             sink4Before     : SERVER.sink4,
@@ -366,7 +366,7 @@ new Exam.Exam ( {
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Algo is run; 
 - the Algo is run when the Algo's Datum is read (gotten/get); 
-- also check arrows on dependents and dependencies`, 
+- also check pointers on dependents and dependencies`, 
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
@@ -387,36 +387,36 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER('vertices').sink4('unproxy').arrows.in )
+        //console.log( SERVER('vertices').sink4('unproxy').pointers.in )
 
         return JSON.stringify ( {
             sink4Before     : SERVER.sink4,
             computed3       : SERVER.computed3,
             sink4After      : SERVER.sink4,
-            computed3Arrows :   [   SERVER('datum').value
-                                        .computed3('datum').arrows.in.causal[0].ikey,
+            computed3pointers :   [   SERVER('datum').value
+                                        .computed3('datum').pointers.in.causal[0].ikey,
                                     SERVER('datum').value
-                                        .computed3('datum').arrows.in.causal[1].ikey 
+                                        .computed3('datum').pointers.in.causal[1].ikey 
             ],
-            source1Arrow    :   SERVER('datum').value
+            source1Pointer    :   SERVER('datum').value
                                     .source1('datum')
-                                    .arrows.out.causal[0].okey,
-            source2Arrow    :   SERVER('vertices')
+                                    .pointers.out.causal[0].okey,
+            source2Pointer    :   SERVER('vertices')
                                     .source2('datum')
-                                    .arrows.out.causal[0].okey,
-            sink4Arrow      :   SERVER('vertices')
+                                    .pointers.out.causal[0].okey,
+            sink4Pointer      :   SERVER('vertices')
                                     .sink4('datum')
-                                    .arrows.in.causal[0].ikey
+                                    .pointers.in.causal[0].ikey
         } )
     },
     want : JSON.stringify ( {
         sink4Before         : undefined,
         computed3           : `theFIRSTpart;theSECONDpart;`,
         sink4After          : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`,
-        computed3Arrows     : [ 'source1', 'source2' ],
-        source1Arrow        : 'computed3',
-        source2Arrow        : 'computed3',
-        sink4Arrow          : 'computed3'
+        computed3pointers     : [ 'source1', 'source2' ],
+        source1Pointer        : 'computed3',
+        source2Pointer        : 'computed3',
+        sink4Pointer          : 'computed3'
 
     } )
 },
@@ -583,9 +583,9 @@ stale flag?`,
         let b = vertices.b('datum')
 
 
-      //console.warn ( b.stale, b.value, b.arrows, b.lambda )
+      //console.warn ( b.stale, b.value, b.pointers, b.lambda )
       //console.warn ( SERVER.b )
-      //console.warn ( b.stale, b.value, b.arrows, b.lambda )
+      //console.warn ( b.stale, b.value, b.pointers, b.lambda )
     
         return JSON.stringify ( 
             [ b.stale, b.value, SERVER.b, b.stale, b.value ]
@@ -664,14 +664,14 @@ stale flag?`,
     ALGO.TRAITS
         are meta-data, which in combination with 
         
-    DATUM.ARROWS, 
+    DATUM.pointers, 
         should be sufficient for describing all relations between vertices;
 
     however, at this time, the code which implements graph functionality does
     not fully depend on this meta-data at runtime; 
 
     instead, the meta-data is initially used by graphHandler/SERVER to write the
-    meta-data, after which DATUM.ARROWS are not used by any code - as the graph
+    meta-data, after which DATUM.pointers are not used by any code - as the graph
     already has this information stored in the logic of its various handlers;
     whereas ALGO.TRAITS continues to be used by runtime code.
 
@@ -685,29 +685,10 @@ stale flag?`,
     code that runs independently from the 'temporary ladder to be discarded upon
     reach its top' which is the graph.`,
 },
-{   warning : `Consider renaming (arrows) to (pointers) to reduce confusion with
-(arrow function expressions).`,
+{   warning : `Pointer creation generally doesn't check for old pointers.`,
 },
-{   warning : `Safe Algo will lock sinks from being updated by other sources;
-will lock sources from being deleted;.`,
-},
-{   warning : `Arrow creation generally doesn't check for old arrows.`,
-},
-{   warning : `When a Datum is replaced by an Algo, what happens to arrows
+{   warning : `When a Datum is replaced by an Algo, what happens to pointers
 initially known to the Datum?.`,
-},
-{   warning : `When a vertex's value is updated, the vertex's arrows, cache, and
-log, are untouched.`,
-},
-
-{   warning : `when a pusher is created, should its dependents be made pullers
-also? can this be optional?`,
-},
-
-{   warning : `when a puller is created, should its dependencies be made pushers
-also? can this be optional?`,
-},
-{   warning : `Caching with arrows (push / pull)`,
 },
 {   warning : `Review Graph() and Datum() application API`
 },
