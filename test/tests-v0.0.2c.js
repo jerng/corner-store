@@ -659,6 +659,35 @@ stale flag?`,
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
 },
 //*/
+{   warning : `A chimerical issue: 
+
+    ALGO.TRAITS
+        are meta-data, which in combination with 
+        
+    DATUM.ARROWS, 
+        should be sufficient for describing all relations between vertices;
+
+    however, at this time, the code which implements graph functionality does
+    not fully depend on this meta-data at runtime; 
+
+    instead, the meta-data is initially used by graphHandler/SERVER to write the
+    meta-data, after which DATUM.ARROWS are not used by any code - as the graph
+    already has this information stored in the logic of its various handlers;
+    whereas ALGO.TRAITS continues to be used by runtime code.
+
+    We should see if it is possible to completely separate these approaches, or
+    if we should simply port all implements to one approach, and throw the other
+    away.
+
+    In theory, the first approach to fully implement would be the writing of the
+    meta-data. And then, the meta-data could be used in run-time code. And then,
+    when appropriate, the meta-data could be used to recompile / optimise new
+    code that runs independently from the 'temporary ladder to be discarded upon
+    reach its top' which is the graph.`,
+},
+{   warning : `Consider renaming (arrows) to (pointers) to reduce confusion with
+(arrow function expressions).`,
+},
 {   warning : `Safe Algo will lock sinks from being updated by other sources;
 will lock sources from being deleted;.`,
 },
