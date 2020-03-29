@@ -58,18 +58,18 @@ class EventLog {
     }
 
     note ( value ) {
-        
-        this.emit() 
-        
-        this.book.push( [ performance.now(), value ] )
-
+        this.dispatch () 
+        this.actuallyNote ( value ) 
             //console.log ( this.book[ this.book.length -1 ] )
     }
 
-    async emit () {}
+    actuallyNote ( value ) {
+        this.book.push( [ performance.now(), value ] )
+    }
+
+    async dispatch () {}
         // Interpreter should inline this out of existence unless
         // emit actually does something in a subclass
-
 }
 
 // DOM already has an EventTarget class.
@@ -78,24 +78,37 @@ class AsyncDispatcher extends EventLog {
     constructor () {
 
         super()
-
-        //this.queue = []
+            //this.queue = []
             // .push() to add on the right
             // .shift() to remove on the left
 
 //console.error (`WIP here - get reactive Algos running.`)
 
+            // Task class?
         this.tasks = {
-            '1TEST' : async () => new Promise ( ( fulfill, reject ) => {
-            
-function primeFactorsTo(max) { var store  = [], i, j, primes = []; for (i = 2; i <= max; ++i) { if (!store [i]) { primes.push(i); for (j = i << 1; j <= max; j += i) { store[j] = true; } } } return primes; } 
 
-setTimeout( ()=>{ fulfill ( primeFactorsTo ( Math.pow ( 7, 7 ) ) ) }, 3000) 
+            // Don't put (new Promise)s here, as their executors will start
+            // running immediately. Only put functions which return (new
+            // Promise)s in order that Promise executors are run only when the
+            // function is applied.
 
 
-            } )    
+
+
+// EXAMPLE TASK:
+// (key) is not yet used.
+//'1TEST' : args => new Promise ( ( fulfill, reject ) => {
+
+//function primeFactorsTo(max) { var store  = [], i, j, primes = []; for (i = 2; i <= max; ++i) { if (!store [i]) { primes.push(i); for (j = i << 1; j <= max; j += i) { store[j] = true; } } } return primes; } 
+
+//setTimeout( ()=>{ fulfill ( [ args, primeFactorsTo ( Math.pow ( 8, 7 ) ) ] ) }, 3000 ) 
+//            } )    
+
+
+
+
+
         } // this.tasks
-
         return this 
     }
 
@@ -106,15 +119,11 @@ setTimeout( ()=>{ fulfill ( primeFactorsTo ( Math.pow ( 7, 7 ) ) ) }, 3000)
     //      AsyncFunction. The functional difference is, while (emit) will
     //      asynchronously 'await' task execution, (emit's calling function)
     //      will proceed synchronously without waiting for (emit).
-    async emit() {
-        for ( const key in this.tasks ) {
-            
-            let value = await this.tasks[ key ]()
-                // 1. 'await' must be used here, otherwise any operation below will
-                // immediately run on (value), which may be an unresolved
-                // Promise.
-            console.log ( value ) 
-        }
+    async dispatch() {
+        let resolvedPromises = await Promise.all (
+            Object.values ( this.tasks ) .map ( t => t() )
+        )
+        this.actuallyNote ( resolvedPromises ) // logs own events to self!
     } 
 
 }
@@ -847,7 +856,6 @@ class Graph extends Datum {
             let result = this.value [ keyToSet ]() == args[1]  
             if ( result ) {
             
-//console.error (`WIP here -  trigger update event.`)
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
                 datumToSet.log.sets.note ( args[1] )
             } 
@@ -1090,6 +1098,22 @@ class Graph extends Datum {
 
                 dependencyDatum
                     .arrows.out.causal.push ( new ArrowOut ( algoToSet.key ) )
+
+
+                //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
+
+                // When the dependency's value is set, the
+                // dependency's EventLog->AsyncDispatcher should invalidate the
+                // cache of the (this) dependent.
+                
+                let cachedDependentHandlerKey 
+                    = 'cachedDependentHandler:' + algoToSet.key
+
+                dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
+                =   args => new Promise ( ( fulfill, reject ) => {
+                        algoToSet.stale = true
+                        fulfill( cachedDependentHandlerKey )
+                    } )
 
 //console.error (`WIP here -  insert tasks to dependencies.`)
 

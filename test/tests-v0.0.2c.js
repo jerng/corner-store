@@ -511,7 +511,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
     },
     want : JSON.stringify ( [ 2, undefined ] ) 
 },
-{   test : `Algo.trait: cached`,
+{   test : `Algo.trait: cached - do getters check staleness?`,
     code : function () {
         let SERVER = new Graph ('server')
         SERVER.a = 1
@@ -556,7 +556,6 @@ smoothly by tree extraction; caching works? Lazy reads?`,
                 notCachedStaleFlagAfter     : datumC.stale  == false,
                 notCachedValueAfter         : datumC.value  == 2,
         },null,2 )
-
     },
     want : JSON.stringify ( {
             defaultCachedStaleFlagBefore    : true,
@@ -570,9 +569,29 @@ smoothly by tree extraction; caching works? Lazy reads?`,
             notCachedGetResult          : true, // stale flag ignored
             notCachedStaleFlagAfter     : true, // result recomputed anyway 
             notCachedValueAfter         : true,
-
     },null,2 )
+},
+{   test : `Algo.trait: cached - do sources invalidate dependent caches via
+stale flag?`,
+    code : function () {
+        let SERVER = new Graph ('server')
 
+        SERVER.a = 1
+        SERVER.b = new Algo (  s => s.a + 2 )
+
+        let vertices = SERVER('vertices')
+        let b = vertices.b('datum')
+
+
+      //console.warn ( b.stale, b.value, b.arrows, b.lambda )
+      //console.warn ( SERVER.b )
+      //console.warn ( b.stale, b.value, b.arrows, b.lambda )
+    
+        return JSON.stringify ( 
+            [ b.stale, b.value, SERVER.b, b.stale, b.value ]
+        )
+    },
+    want : JSON.stringify ( [ true, undefined, 3, false, 3 ] )
 },
 {   test : `Algo.trait: hasSinks`,
     code : function () {
@@ -598,8 +617,6 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 
         SERVER.a = 1
         SERVER.b = new Algo (  s => s.a + 2 )
-        SERVER.c = new Algo (  s => s.a + 2, 
-                                { hasSources: false } )
 
       //console.warn ( SERVER.b )
       //console.warn ( SERVER.c )
