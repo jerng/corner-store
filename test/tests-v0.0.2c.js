@@ -632,12 +632,26 @@ stale flag?`,
 //*/
 {   test : `Algo.trait: reactive`,
     code : function () {
+        let SERVER = new Graph ('server')
+        let sideEffected
 
-// Approach: on set 
+        SERVER.a = 1
+        SERVER.b = new Algo ( s => sideEffected = s.a + 2, { reactive: true } )
 
-
+      //console.log (   sideEffected,
+      //                
+      //                SERVER.a = 1, 
+      //                sideEffected,
+      //                SERVER.a = 2, 
+      //                sideEffected,
+      //            ) 
+        return JSON.stringify ( [  
+            sideEffected,
+            SERVER.a = 1, sideEffected,
+            SERVER.a = 2, sideEffected,
+        ] )
     },
-    want : undefined
+    want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
 },
 //*/
 {   warning : `Safe Algo will lock sinks from being updated by other sources;

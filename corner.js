@@ -563,6 +563,52 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
+    runAlgoAndLog ( datum ) {
+                //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
+                //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
+          
+        let result
+
+        if ( datum.stale || ! datum.traits.cached ) {
+            // !stale && !cached
+            // stale && !cached 
+            // stale && cached  
+           
+            // Is there a more efficient way to do this?
+            let proxy 
+                = datum.traits.hasSources
+                ? ( datum.traits.hasSinks
+                    ? this.proxySetGetOnly
+                    : this.proxyGetOnly 
+                  )
+                : ( datum.traits.hasSinks
+                    ? this.proxySetOnly
+                    : this
+                  )
+            result      = datum.value = datum.lambda ( proxy )
+
+            datum.stale = false
+
+            // LOGGING - CACHE MISS 
+            datum.log.gets.misses.note ( result )
+        }
+
+        else {
+            // !stale && cached
+        
+            result = datum.value        
+            // cache hit, scenario 1 of 3; an Algo
+
+            datum.stale = false // for general coherence
+
+            //  LOGGING - CACHE HIT - more scenarios in vertexGetTyped; more
+                    // scenarios in graphHandlerApply, datumHandlerApply
+            datum.log.gets.hits.note ( result )
+        }                                   
+
+        return result
+    }
+
     vertexDelete ( key ) {
 
         if ( ! ( key in this.value ) ) { return true }
@@ -609,44 +655,7 @@ class Graph extends Datum {
         let result 
 
         if ( datum instanceof Algo && datum.traits.getHandler ) { 
-
-                //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
-                //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
-          
-            if ( datum.stale || ! datum.traits.cached ) {
-                // !stale && !cached
-                // stale && !cached 
-                // stale && cached  
-               
-                // Is there a more efficient way to do this?
-                let proxy 
-                    = datum.traits.hasSources
-                    ? ( datum.traits.hasSinks
-                        ? this.proxySetGetOnly
-                        : this.proxyGetOnly 
-                      )
-                    : ( datum.traits.hasSinks
-                        ? this.proxySetOnly
-                        : this
-                      )
-                result      = datum.value = datum.lambda ( proxy )
-
-                datum.stale = false
-
-                // LOGGING - cache miss, 3 scenarios
-                datum.log.gets.misses.note ( result )
-                
-                return result
-            }
-
-            else {
-                // !stale && cached
-            
-                result = datum.value        
-                // cache hit, scenario 1 of 3; an Algo
-
-                datum.stale = false // for general coherence
-            }                                   
+            return this.runAlgoAndLog ( datum ) 
         }
 
         else
@@ -661,15 +670,15 @@ class Graph extends Datum {
 
             
                     result = this.value[ datum.key ]  
-                    // cache hit, scenario 2 of 3; not an Algo, no cache 
+                    // cache hit, scenario 1 of 2; not an Algo, no cache 
         }                                           
 
         else {      result  =  datum.value      
-                    // cache hit, scenario 3; not an Algo, no cache  
+                    // cache hit, scenario 2 of 2; not an Algo, no cache  
         }                                           
 
         // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
-        //              graphHandlerApply, datumHandlerApply
+        //              graphHandlerApply, datumHandlerApply, runAlgo
 
         //console.log(datum, this.value[key])
         datum.log.gets.hits.note ( result )
@@ -1106,14 +1115,32 @@ class Graph extends Datum {
                 // dependency's EventLog->AsyncDispatcher should invalidate the
                 // cache of the (this) dependent.
                 
-                let cachedDependentHandlerKey 
-                    = 'cachedDependentHandler:' + algoToSet.key
 
-                dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
-                =   args => new Promise ( ( fulfill, reject ) => {
-                        algoToSet.stale = true
-                        fulfill( cachedDependentHandlerKey )
-                    } )
+                // .cached and .reactive: FIXME - should use arrows instead?
+                if ( algoToSet.traits.cached ) {
+
+                    let cachedDependentHandlerKey 
+                        = 'cachedDependentHandler:' + algoToSet.key
+
+                    dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
+                    =   args => new Promise ( ( fulfill, reject ) => {
+                            algoToSet.stale = true
+                            fulfill( cachedDependentHandlerKey )
+                        } )
+                }
+                if ( algoToSet.traits.reactive ) {
+                    
+                    let reactiveDependentHandlerKey 
+                        = 'reactiveDependentHandler:' + algoToSet.key
+
+                    dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
+                    =   args => new Promise ( ( fulfill, reject ) => {
+                        console.log( `scopedAlgoKeySnifferHandlerGet` )
+                            this.runAlgoAndLog ( algoToSet )
+                            fulfill( reactiveDependentHandlerKey )
+                        } )
+
+                }
 
 //console.error (`WIP here -  insert tasks to dependencies.`)
 
