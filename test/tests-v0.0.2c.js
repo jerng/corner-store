@@ -636,7 +636,12 @@ stale flag?`,
         let sideEffected
 
         SERVER.a = 1
-        SERVER.b = new Algo ( s => sideEffected = s.a + 2, { reactive: true } )
+        SERVER.b = new Algo ( 
+            s => sideEffected = s.a + 2, 
+            {   reactive    : true,
+                getHandler  : false
+            } 
+        )
 
       //console.log (   sideEffected,
       //                

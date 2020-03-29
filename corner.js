@@ -264,31 +264,6 @@ class Datum {
     }
 }
 
-// data type for use in Datum
-//
-// This should be made safe by default. No pushing allowed.
-// Toying with nomenclature
-//
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Sourced {}  - can source, cannot set
-//  Sinked {}   - can sink, cannot source
-
-//  Origins {}  - alias for Sourced {}
-//  Targets {}  - alias for Sinked {}
-
-//  SafeSource  SafeOrigin  -   sources can't be deleted
-//  SourceSafe  OriginSafe
-//  
-//  SafeSink    SafeTarget  -   exclusive write-access to sinks
-//  SinkSafe    TargetSafe
-
-
-
-
-
-
-
 //  Generally, when defining an Algo:
 //  
 //  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
