@@ -1,3 +1,8 @@
+#  WARNING 
+
+Latest commit has the class `Algo` renamed to `Code`. Documentation has not
+otherwise been updated.
+
 #  corner(store).js
 
 An introduction via pretty slides is found
