@@ -82,7 +82,7 @@ class AsyncDispatcher extends EventLog {
             // .push() to add on the right
             // .shift() to remove on the left
 
-//console.error (`WIP here - get reactive Algos running.`)
+//console.error (`WIP here - get reactive Codes running.`)
 
             // Task class?
         this.tasks = {
@@ -184,8 +184,8 @@ class Datum {
                 writable    : true
             },
 
-            // This is used both by Datum and its subclass Algo. 
-            // In Algo, it is used to store the return value of Algos.
+            // This is used both by Datum and its subclass Code. 
+            // In Code, it is used to store the return value of Codes.
             value   : {
                 configurable: true,
                 enumerable  : false,
@@ -264,7 +264,7 @@ class Datum {
     }
 }
 
-//  Generally, when defining an Algo:
+//  Generally, when defining an Code:
 //  
 //  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
 //
@@ -356,10 +356,10 @@ class Datum {
 
 // args[0] must be function
 // args[0] must be an object of traits
-class Algo extends Datum {
+class Code extends Datum {
 
     toString () {
-        return  {   'Algo.toString/0 returned:' : 
+        return  {   'Code.toString/0 returned:' : 
                     super.toString()
                 }
     }
@@ -370,18 +370,18 @@ class Algo extends Datum {
 
         switch ( args.length ) {
             case 0:
-                throw Error (`Algo.constructor/0 : we require more arguments`) 
+                throw Error (`Code.constructor/0 : we require more arguments`) 
             case 1:
                 // allowed!
             case 2:
                 // allowed!
                 break
             default:
-                throw Error (`Algo.constructor/${args.length} called, branch for this arity is undefined.`)
+                throw Error (`Code.constructor/${args.length} called, branch for this arity is undefined.`)
         }
 
         if ( typeof args[0] !== 'function' ) {
-            throw Error (`Algo.constructor : first argument must be a 'function'`)
+            throw Error (`Code.constructor : first argument must be a 'function'`)
         }
 
         Object.defineProperty ( this, 'lambda', {
@@ -538,7 +538,7 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
-    runAlgoAndLog ( datum ) {
+    runCodeAndLog ( datum ) {
                 //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
                 //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
           
@@ -572,7 +572,7 @@ class Graph extends Datum {
             // !stale && cached
         
             result = datum.value        
-            // cache hit, scenario 1 of 3; an Algo
+            // cache hit, scenario 1 of 3; an Code
 
             datum.stale = false // for general coherence
 
@@ -629,8 +629,8 @@ class Graph extends Datum {
 
         let result 
 
-        if ( datum instanceof Algo && datum.traits.getHandler ) { 
-            return this.runAlgoAndLog ( datum ) 
+        if ( datum instanceof Code && datum.traits.getHandler ) { 
+            return this.runCodeAndLog ( datum ) 
         }
 
         else
@@ -645,15 +645,15 @@ class Graph extends Datum {
 
             
                     result = this.value[ datum.key ]  
-                    // cache hit, scenario 1 of 2; not an Algo, no cache 
+                    // cache hit, scenario 1 of 2; not an Code, no cache 
         }                                           
 
         else {      result  =  datum.value      
-                    // cache hit, scenario 2 of 2; not an Algo, no cache  
+                    // cache hit, scenario 2 of 2; not an Code, no cache  
         }                                           
 
         // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
-        //              graphHandlerApply, datumHandlerApply, runAlgo
+        //              graphHandlerApply, datumHandlerApply, runCode
 
         //console.log(datum, this.value[key])
         datum.log.gets.hits.note ( result )
@@ -742,56 +742,56 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value IS an Algo, call it on a keySniffer to plant pointers.
-        if ( datumToSet.value instanceof Algo )
+        // If datumToSet.value IS an Code, call it on a keySniffer to plant pointers.
+        if ( datumToSet.value instanceof Code )
         {
-                //console.log (`graph.vertexSet/[n>1] : value instanceof Algo `)
+                //console.log (`graph.vertexSet/[n>1] : value instanceof Code `)
 
-            // Assign all old Datum's own properties except (those listed below) to Algo.
+            // Assign all old Datum's own properties except (those listed below) to Code.
             delete datumToSet.lambda
             delete datumToSet.value
             delete datumToSet.proxyTarget
 
-            let algoToSet 
+            let codeToSet 
                     =   Object.defineProperties ( 
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
     
             let keySniffer = new Proxy ( {}, {
 
-                get :   algoToSet.traits.hasSources
+                get :   codeToSet.traits.hasSources
                         ? this.handlers
-                            .scopedAlgoKeySnifferHandlerGet ( algoToSet )
+                            .scopedCodeKeySnifferHandlerGet ( codeToSet )
                         : undefined,
 
-                set : algoToSet.traits.hasSinks
+                set : codeToSet.traits.hasSinks
                         ? this.handlers
-                            .scopedAlgoKeySnifferHandlerSet ( algoToSet )
+                            .scopedCodeKeySnifferHandlerSet ( codeToSet )
                         : undefined
             } )
 
-                  //console.log (`graph.vertexSet/>1 : Algo : BEFORE
-                  //algoToSet.lambda(keySniffer), algoToSet.lambda: `,
-                  //algoToSet.lambda,'traits:', algoToSet.traits)
+                  //console.log (`graph.vertexSet/>1 : Code : BEFORE
+                  //codeToSet.lambda(keySniffer), codeToSet.lambda: `,
+                  //codeToSet.lambda,'traits:', codeToSet.traits)
             
             // Detect dependencies and plant pointers.
-            algoToSet.lambda ( keySniffer )
+            codeToSet.lambda ( keySniffer )
 
-                  //console.log (`graph.vertexSet/>1 : Algo : AFTER
-                  //value.lambda(keySniffer)`, algoToSet.traits )
-                    //console.log ( algoToSet.toString() )
+                  //console.log (`graph.vertexSet/>1 : Code : AFTER
+                  //value.lambda(keySniffer)`, codeToSet.traits )
+                    //console.log ( codeToSet.toString() )
 
-            algoToSet.stale = true
-                // Algo will not run until the next get (no gets here)
+            codeToSet.stale = true
+                // Code will not run until the next get (no gets here)
                 //
-                // Whether Algo.traits.cached is true or not, the Algo.stale
+                // Whether Code.traits.cached is true or not, the Code.stale
                 // property will be defined. Because it is defined for all
-                // Datum, and Algo extends Datum.
+                // Datum, and Code extends Datum.
 
             this.value [ keyToSet ]
-                = new Proxy ( algoToSet.proxyTarget, this.datumHandler )   
+                = new Proxy ( codeToSet.proxyTarget, this.datumHandler )   
 
-                //console.log(  `graph.vertexSet/[n>1], Algo, AFTER SET,
+                //console.log(  `graph.vertexSet/[n>1], Code, AFTER SET,
                 //keyToSet:`, keyToSet, 
                 //  'value which was set:', this.value [ keyToSet ]('datum'), 
                 //  'success check components :', this.value [ keyToSet ]('datum'),'==', args[1] ,
@@ -799,7 +799,7 @@ class Graph extends Datum {
 
             let result = this.value [ keyToSet ]('datum') == args[1] 
             
-            //console.log (`graph.vertexSet/[n>1], Algo, result obtained: result`)
+            //console.log (`graph.vertexSet/[n>1], Code, result obtained: result`)
             //console.log (this.value [ keyToSet ]('datum').traits)
 
             if ( result ) {
@@ -811,9 +811,9 @@ class Graph extends Datum {
         } 
 
         else 
-        {  // If datumToSet.value is NOT an Algo, then complete the assignment.
+        {  // If datumToSet.value is NOT an Code, then complete the assignment.
 
-            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Algo `)
+            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Code `)
 
 
             // If valuetoset is an object ...
@@ -845,7 +845,7 @@ class Graph extends Datum {
             } 
             return result
 
-        } // End of block where: (value instanceof Algo) 
+        } // End of block where: (value instanceof Code) 
 
     }
   
@@ -1042,22 +1042,22 @@ class Graph extends Datum {
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Algos, when the Algo is set to the graph.
-    'scopedAlgoKeySnifferHandlerGet': algoToSet => {
+    // Codes, when the Code is set to the graph.
+    'scopedCodeKeySnifferHandlerGet': codeToSet => {
         
-            //console.log(`scopedAlgoKeySnifferHandlerGet/1`)
+            //console.log(`scopedCodeKeySnifferHandlerGet/1`)
 
-                // If you're pulling data into your Algo, you'll trigger getters
+                // If you're pulling data into your Code, you'll trigger getters
                 // on the other Datums-
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-            //console.log (`graph.scopedAlgoKeySnifferHandlerGet/[n>1] : Algo : keySnifferHandler.get: `, ksProp)
+            //console.log (`graph.scopedCodeKeySnifferHandlerGet/[n>1] : Code : keySnifferHandler.get: `, ksProp)
 
             //  Configure (this) dependent to track dependencies:
-            if ( ! ( 'causal' in algoToSet.pointers.in ) ) {
-                algoToSet.pointers.in.causal = []
+            if ( ! ( 'causal' in codeToSet.pointers.in ) ) {
+                codeToSet.pointers.in.causal = []
             }
-            algoToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
+            codeToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
 
             // WARNING: does not require dependency keys to be in the graph
             // before dependents are set FIXME
@@ -1065,8 +1065,8 @@ class Graph extends Datum {
             //  Configure dependencies to track (this) dependent:
                    
             if ( ! ( ksProp in this.value ) ) {
-                throw Error (`graph.vertexSet/n tried to set an Algo, but the
-                        Algo referred to a source address which has not been
+                throw Error (`graph.vertexSet/n tried to set an Code, but the
+                        Code referred to a source address which has not been
                         set: (${ ksProp })`)
             }
 
@@ -1078,10 +1078,10 @@ class Graph extends Datum {
                     dependencyDatum.pointers.out.causal = []
                 }
 
-                //console.log (  algoToSet.key )
+                //console.log (  codeToSet.key )
 
                 dependencyDatum
-                    .pointers.out.causal.push ( new PointerOut ( algoToSet.key ) )
+                    .pointers.out.causal.push ( new PointerOut ( codeToSet.key ) )
 
 
                 //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
@@ -1092,28 +1092,28 @@ class Graph extends Datum {
                 
 
                 // .cached and .reactive: FIXME - should use pointers instead?
-                if ( algoToSet.traits.cached ) {
+                if ( codeToSet.traits.cached ) {
 
                     let cachedDependentHandlerKey 
-                        = 'cachedDependentHandler:' + algoToSet.key
+                        = 'cachedDependentHandler:' + codeToSet.key
 
                     dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
-                            algoToSet.stale = true
+                            codeToSet.stale = true
                             fulfill( cachedDependentHandlerKey )
                         } )
                 }
-                if ( algoToSet.traits.reactive ) {
+                if ( codeToSet.traits.reactive ) {
                     
                     let reactiveDependentHandlerKey 
-                        = 'reactiveDependentHandler:' + algoToSet.key
+                        = 'reactiveDependentHandler:' + codeToSet.key
 
                     dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
                             
-                            //console.log( `scopedAlgoKeySnifferHandlerGet` )
+                            //console.log( `scopedCodeKeySnifferHandlerGet` )
                             
-                            this.runAlgoAndLog ( algoToSet )
+                            this.runCodeAndLog ( codeToSet )
                             fulfill( reactiveDependentHandlerKey )
                         } )
 
@@ -1121,30 +1121,30 @@ class Graph extends Datum {
 
 //console.error (`WIP here -  insert tasks to dependencies.`)
 
-                    //console.log (`graph.scopedAlgoKeySnifferHandlerGet/>1 : Algo : keySnifferHandler.get: ended`)
+                    //console.log (`graph.scopedCodeKeySnifferHandlerGet/>1 : Code : keySnifferHandler.get: ended`)
 
         }
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Algos, when the Algo is set to the graph.
-    'scopedAlgoKeySnifferHandlerSet': algoToSet => {
+    // Codes, when the Code is set to the graph.
+    'scopedCodeKeySnifferHandlerSet': codeToSet => {
         
-            //console.log(`scopedAlgoKeySnifferHandlerSet/1`)
+            //console.log(`scopedCodeKeySnifferHandlerSet/1`)
 
-                // If you're pushing data from your Algo, you'll trigger setters
+                // If you're pushing data from your Code, you'll trigger setters
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
-            if ( ! ( 'causal' in algoToSet.pointers.out ) ) {
-                algoToSet.pointers.out.causal = []
+            if ( ! ( 'causal' in codeToSet.pointers.out ) ) {
+                codeToSet.pointers.out.causal = []
             }
-            algoToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
+            codeToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
 
-                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: PointerOut-s inserted at:`, key )
+                //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set: PointerOut-s inserted at:`, key )
 
             //  Configure dependents to track (this) dependency:
             if ( ! ( ksProp in this.value ) ) {
@@ -1156,9 +1156,9 @@ class Graph extends Datum {
                     dependentDatum.pointers.in.causal = []
                 }
                 dependentDatum
-                    .pointers.in.causal.push ( new PointerIn ( algoToSet.key ) )
+                    .pointers.in.causal.push ( new PointerIn ( codeToSet.key ) )
 
-                //console.log (`graph.scopedAlgoKeySnifferHandlerSet/[n>1] : Algo : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
+                //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
             
             return true // FIXME: pointers unchecked?
         }
@@ -1227,6 +1227,6 @@ class Graph extends Datum {
     }
 }
 
-globalThis.Algo     = Algo
+globalThis.Code     = Code
 globalThis.Datum    = Datum
 globalThis.Graph    = Graph 

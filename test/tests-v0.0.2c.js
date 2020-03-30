@@ -3,33 +3,6 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
-
-//  Time wasting function.
-//  https://www.w3resource.com/javascript-exercises/javascript-math-exercise-43.php
-//  
-//        primeFactorsTo ( Math.pow ( 10, 7 ) )
-//
-//  ... takes about a second on my laptop.
-//
-function primeFactorsTo(max)
-{
-    var store  = [], i, j, primes = [];
-    for (i = 2; i <= max; ++i) 
-    {
-        if (!store [i]) 
-          {
-            primes.push(i);
-            for (j = i << 1; j <= max; j += i) 
-            {
-                store[j] = true;
-            }
-        }
-    }
-    return primes;
-}
-
-
-
 new Exam.Exam ( { 
     config : {
         expand : {
@@ -42,7 +15,6 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -260,7 +232,7 @@ new Exam.Exam ( {
 
         //console.log (`Before setting SERVER.computed2a`)
 
-        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Code ( s => s.source1 + s.source2 )
         
         //console.log (`After setting SERVER.computed2a`)
 
@@ -280,7 +252,7 @@ new Exam.Exam ( {
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Code ( s => s.source1 + s.source2 )
 
         //console.log(`Before getting pointers.`)
 
@@ -322,29 +294,29 @@ new Exam.Exam ( {
         //SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Algo ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Code ( s => s.source1 + s.source2 )
     },
     expectError: true
 },
 {   test : `Computed properties; dependent setter / pusher : 
-- pushed computation should not be written until the the Algo is run; 
-- the Algo is run when the Algo's Datum is read (gotten/get);`,
+- pushed computation should not be written until the the Code is run; 
+- the Code is run when the Code's Datum is read (gotten/get);`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Algo ( s => { 
+        SERVER.computed3 = new Code ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
             
-            //console.log (`IN ALGO: BEFORE PUSH`) 
+            //console.log (`IN Code: BEFORE PUSH`) 
 
             // push
             s.sink4 = `Yo mama, I got two parts : ${computed}`
             
-            //console.log (`IN ALGO: AFTER PUSH`) 
+            //console.log (`IN Code: AFTER PUSH`) 
 
             return computed
         } ) 
@@ -364,25 +336,25 @@ new Exam.Exam ( {
     } )
 },
 {   test : `Computed properties; dependent setter / pusher : 
-- pushed computation should not be written until the the Algo is run; 
-- the Algo is run when the Algo's Datum is read (gotten/get); 
+- pushed computation should not be written until the the Code is run; 
+- the Code is run when the Code's Datum is read (gotten/get); 
 - also check pointers on dependents and dependencies`, 
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Algo ( s => { 
+        SERVER.computed3 = new Code ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
             
-            //console.log (`IN ALGO: BEFORE PUSH`) 
+            //console.log (`IN Code: BEFORE PUSH`) 
 
             // push
             s.sink4 = `Yo mama, I got two parts : ${computed}`
             
-            //console.log (`IN ALGO: AFTER PUSH`) 
+            //console.log (`IN Code: AFTER PUSH`) 
 
             return computed
         } ) 
@@ -456,17 +428,17 @@ new Exam.Exam ( {
         },
     } )
 },
-{   test : `Sourcing subkeys in Algos`,
+{   test : `Sourcing subkeys in Codes`,
     code : function () {
 
         let g = new Graph('server')
-        g.h = new Algo ( e => e.h.i + e.h.j )
+        g.h = new Code ( e => e.h.i + e.h.j )
 
         return JSON.stringify( g() ) 
     },
     expectError : true
 },
-{   test : `Tree insertion should handle Algos smoothly; Algos should be handled
+{   test : `Tree insertion should handle Codes smoothly; Codes should be handled
 smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
 
@@ -475,8 +447,8 @@ smoothly by tree extraction; caching works? Lazy reads?`,
         G.a = 1
         G.b = 2
 
-        G.m = new Algo ( e => e.a + e.b )
-        G.n = { o: new Algo ( e => e.a + e.b ) }
+        G.m = new Code ( e => e.a + e.b )
+        G.n = { o: new Code ( e => e.a + e.b ) }
 
         //console.log ( G.n.o ) 
 
@@ -496,27 +468,27 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 
     } )
 },
-{   test : `Algo.trait: getHandler`,
+{   test : `Code.trait: getHandler`,
     code : function () {
         let SERVER = new Graph ('server')
         SERVER.a = 1
 
-        SERVER.b = new Algo ( s => ( s.a + 1 ) )
+        SERVER.b = new Code ( s => ( s.a + 1 ) )
         //console.warn (SERVER.b)
 
-        SERVER.c = new Algo ( s => ( s.a + 1 ), { getHandler: false } )
+        SERVER.c = new Code ( s => ( s.a + 1 ), { getHandler: false } )
         //console.warn (SERVER.c)
 
         return JSON.stringify ( [ SERVER.b, SERVER.c ] )
     },
     want : JSON.stringify ( [ 2, undefined ] ) 
 },
-{   test : `Algo.trait: cached - do getters check staleness?`,
+{   test : `Code.trait: cached - do getters check staleness?`,
     code : function () {
         let SERVER = new Graph ('server')
         SERVER.a = 1
 
-        SERVER.b = new Algo ( s => ( s.a + 1 ) )
+        SERVER.b = new Code ( s => ( s.a + 1 ) )
         SERVER('vertices').b('datum').stale = false
 
       //console.warn (SERVER('vertices').b('datum').stale)
@@ -527,7 +499,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
       //console.warn (SERVER('vertices').b('datum').stale)
       //console.warn (SERVER('vertices').b('datum').value)
 
-        SERVER.c = new Algo ( s => ( s.a + 1 ), { cached : false } )
+        SERVER.c = new Code ( s => ( s.a + 1 ), { cached : false } )
         SERVER('vertices').c('datum').stale = false
       
       //console.warn (SERVER('vertices').c('datum').stale)
@@ -571,13 +543,13 @@ smoothly by tree extraction; caching works? Lazy reads?`,
             notCachedValueAfter         : true,
     },null,2 )
 },
-{   test : `Algo.trait: cached - do sources invalidate dependent caches via
+{   test : `Code.trait: cached - do sources invalidate dependent caches via
 stale flag?`,
     code : function () {
         let SERVER = new Graph ('server')
 
         SERVER.a = 1
-        SERVER.b = new Algo (  s => s.a + 2 )
+        SERVER.b = new Code (  s => s.a + 2 )
 
         let vertices = SERVER('vertices')
         let b = vertices.b('datum')
@@ -593,11 +565,11 @@ stale flag?`,
     },
     want : JSON.stringify ( [ true, undefined, 3, false, 3 ] )
 },
-{   test : `Algo.trait: hasSinks`,
+{   test : `Code.trait: hasSinks`,
     code : function () {
         let SERVER = new Graph ('server')
-        SERVER.a1 = new Algo (  s => { s.a2 = 2; return true } )
-        SERVER.b1 = new Algo (  s => { s.b2 = 2; return true }, 
+        SERVER.a1 = new Code (  s => { s.a2 = 2; return true } )
+        SERVER.b1 = new Code (  s => { s.b2 = 2; return true }, 
                                 { hasSinks: false } )
 
         //console.log ( SERVER.a1, SERVER.a2 )
@@ -611,12 +583,12 @@ stale flag?`,
     want : JSON.stringify ( [ true, 2, true, undefined ] )
 },
 
-{   test : `Algo.trait: hasSources`,
+{   test : `Code.trait: hasSources`,
     code : function () {
         let SERVER = new Graph ('server')
 
         SERVER.a = 1
-        SERVER.b = new Algo (  s => s.a + 2 )
+        SERVER.b = new Code (  s => s.a + 2 )
 
       //console.warn ( SERVER.b )
       //console.warn ( SERVER.c )
@@ -629,14 +601,13 @@ stale flag?`,
     want : JSON.stringify ( [ 3, NaN ] )
 },
 
-//*/
-{   test : `Algo.trait: reactive`,
+{   test : `Code.trait: reactive`,
     code : function () {
         let SERVER = new Graph ('server')
         let sideEffected
 
         SERVER.a = 1
-        SERVER.b = new Algo ( 
+        SERVER.b = new Code ( 
             s => sideEffected = s.a + 2, 
             {   reactive    : true,
                 getHandler  : false
@@ -658,10 +629,9 @@ stale flag?`,
     },
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
 },
-//*/
 {   warning : `A chimerical issue: 
 
-    ALGO.TRAITS
+    Code.TRAITS
         are meta-data, which in combination with 
         
     DATUM.pointers, 
@@ -673,7 +643,7 @@ stale flag?`,
     instead, the meta-data is initially used by graphHandler/SERVER to write the
     meta-data, after which DATUM.pointers are not used by any code - as the graph
     already has this information stored in the logic of its various handlers;
-    whereas ALGO.TRAITS continues to be used by runtime code.
+    whereas Code.TRAITS continues to be used by runtime code.
 
     We should see if it is possible to completely separate these approaches, or
     if we should simply port all implements to one approach, and throw the other
@@ -687,20 +657,13 @@ stale flag?`,
 },
 {   warning : `Pointer creation generally doesn't check for old pointers.`,
 },
-{   warning : `When a Datum is replaced by an Algo, what happens to pointers
+{   warning : `When a Datum is replaced by an Code, what happens to pointers
 initially known to the Datum?.`,
 },
 {   warning : `Review Graph() and Datum() application API`
 },
-{   warning : `Review exam.js depth - it is hiding traces`
-},
-{   warning: `Perhaps a lot of props of values in the graph should be inenumerable. However, until we write a utlity function to recursively list all enumerables up the prototype chain, we can develop using enumerable properties except when fundamentally dysfunctional.`
-},
-{   warning: `Algo is safe by default; Safe extends Algo just for synonymy;
-Danger extends Safe; EventListener extends Danger.`
-},
 {   warning: `MAYBE in the future: Graph is not a class.. rather graph behaviour
-is an Algo that you can load into a Datum... this sounds a bit lispy, and I am
+is an Code that you can load into a Datum... this sounds a bit lispy, and I am
 not sure if it is feasible.`
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
@@ -710,16 +673,16 @@ not sure if it is feasible.`
 
 g = new Graph('server')
 
-//g.d = new Algo ( e => e.a + e.b )
+//g.d = new Code ( e => e.a + e.b )
 
 g.e = 1
 g.f = 2
-g.g = new Algo ( e => e.e + e.f )
+g.g = new Code ( e => e.e + e.f )
 
 g.h = {}
 g.h.i = 4
 g.h.j = 5
-g.h.k = new Algo ( e => e.h.i + e.h.j )
+g.h.k = new Code ( e => e.h.i + e.h.j )
 
 g('vertices')
 
