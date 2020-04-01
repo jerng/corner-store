@@ -1,0 +1,112 @@
+<html>
+  <head>
+  </head>
+  <body>
+
+Cleaned up an example from : https://bl.ocks.org/HarryStevens/bc938c8d45008d99faed47039fbe5d49
+Original example license : https://opensource.org/licenses/GPL-3.0
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://unpkg.com/jeezy@1.11.2/lib/jeezy.min.js"></script>
+    <script type="module" src="../lib/third-party/live.js"> </script>
+    <script>
+
+    'use strict'
+
+    let alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+
+    let width = window.innerWidth
+    let height = window.innerHeight
+
+    let simulation = d3.forceSimulation ( randomizeData ()  )
+        .force("charge", d3.forceManyBody().strength(-150))
+        .force("forceX", d3.forceX().strength(.1))
+        .force("forceY", d3.forceY().strength(.1))
+        .force("center", d3.forceCenter())
+        .alphaTarget(1)
+        .on("tick", ticked)
+
+    let svg =   d3.select("body").append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+
+    let g =     svg.append("g")
+                    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+    
+    let gg =    g.append("g")
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1.5)
+                    .selectAll(".node")
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+    d3.interval(function(){
+      restart ( randomizeData () )
+    }, 2000);
+
+//*/
+
+//*
+    restart ( randomizeData () )
+    setTimeout ( simulation.stop, 1000 ) 
+//*/
+///////////////////////////////////////////////////////////////////////////////
+
+    function restart ( randomData ) {
+
+      // transition
+      let t = d3.transition()
+          .duration(750)
+
+      // Apply the general update pattern to the nodes.
+      gg = gg.data(randomData, function(d) { return d.name})
+
+console.log ( `restart( randomData )`, gg, Object.is ( gg, window.node ) ) 
+
+      gg.exit()
+          .style("fill", "#b26745")
+        .transition(t)
+          .attr("r", 1e-6)
+          .remove()
+
+      gg
+          .transition(t)
+            .style("fill", "#3a403d")
+            .attr("r", function(d){ return d.size })
+
+      gg = gg.enter().append("circle")
+          .style("fill", "#45b29d")
+          .attr("r", function(d){ return d.size })
+          .merge(gg)
+
+      // Update and restart the simulation.
+      simulation.nodes ( randomData )
+            .force("collide", d3.forceCollide().strength(1).radius(function(d){ return d.size + 10 }).iterations(1))
+
+    }
+
+    function ticked() {
+
+console.log ( `ticked()`, gg ) 
+
+      gg.attr("cx", function(d) { return d.x })
+          .attr("cy", function(d) { return d.y })
+
+    }
+
+    function randomizeData(){
+      let d0 = jz.arr.shuffle(alphabet),
+        d1 = [],
+        d2 = []
+      for (let i = 0; i < jz.num.randBetween(1, alphabet.length); i++){
+        d1.push(d0[i])
+      }
+      d1.forEach(function(d){
+        d2.push({name: d, size: jz.num.randBetween(0, 50)})
+      })
+      return d2
+    }
+
+    </script>
+  </body>
+</html>

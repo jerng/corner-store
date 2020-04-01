@@ -707,3 +707,43 @@ g('vertices')
 },
 */
     ] } )
+
+// D3 visualisation experiment:
+// https://bl.ocks.org/d3indepth/181b398d5305cefcd10186617cb9250c
+{
+
+}
+{
+/*
+    var nodes = [{}, {}, {}, {}, {}]
+    var width = 300, height = 300
+    var svg = d3.select ( 'body' ).append ( 'svg' )
+        .attr ( 'width', width )
+        .attr ( 'height', height )
+        .attr ( 'style', 'background-color:#ddddff' )
+    var simulation = d3.forceSimulation(nodes)
+        .force('charge?', d3.forceManyBody().strength(-30))
+        .force('center?', d3.forceCenter(width / 2, height / 2))
+        .force('x?', d3.forceX( width / 2 ).strength ( 0.05 ) )
+        .force('y?', d3.forceY( width / 2 ).strength ( 0.05 ) )
+        .on('tick', ticked)
+
+    function ticked () {
+      var update = svg 
+        .selectAll('circle')
+        .data(nodes)
+        .join(
+            enter   => enter    .append ( 'circle' ).attr ( 'r', 5 ),
+            update  => update   .attr( 'cx', d => d.x )
+                                .attr( 'cy', d => d.y )
+            // implicit update.exit().remove()
+        )
+        //simulation.restart()
+    }
+
+window.nodes        = nodes
+window.ticked       = ticked
+window.simulation   = simulation
+window.svg          = svg
+*/
+}
