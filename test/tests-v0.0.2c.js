@@ -3,6 +3,75 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
+// D3 visualisation experiment:
+{
+
+    let width   = 500,
+        height  = 500,
+        color   = d3.scaleOrdinal(d3.schemeCategory10),
+        svg     = d3.select ( 'body' )
+                    .append ( 'svg' )
+                    .attr ( 'width', width )
+                    .attr ( 'height', height )
+                    .attr ( 'style', 'background-color:#eeeeee' )
+
+    let a = { id: 'a' },
+        b = { id: 'b' },
+        c = { id: 'c' },
+        dataArray = [ a, b, c ]
+
+    let g       = svg.append ( 'g' )
+                    .attr (  'transform', 
+                            'translate( ' + width / 2 + ',' + height / 2 + ' )' ),
+        gg      = g.append ( 'g' )
+                    .attr ( 'stroke', '#fff' )
+                    .attr ( 'stroke-width', 1.5)
+                    .selectAll () // empty selection
+
+    let     tickHandler = function () {
+        //console.log(`tick`)
+                gg  .attr( 'cx', d => d.x )
+                    .attr( 'cy', d => d.y )
+            }
+
+    let simulation = d3.forceSimulation (  dataArray )
+        .force ( 'charge', d3.forceManyBody ().strength ( -1000 ) )
+        .force ( 'x', d3.forceX () )
+        .force ( 'y', d3.forceY () )
+        .alphaTarget ( 1 )
+        .on ( 'tick', tickHandler )
+      
+    let updateSimulation = function ( latestData ) {
+
+        // Ensure that SIMULATION knows (node ontology).
+        simulation.nodes ( latestData )
+
+        // Ensure that (element ontology) has a 1-1 mapping to (node ontology)
+        gg = gg
+            .data ( latestData , d => d.id  )
+            .join (
+                enterer => enterer
+                    .append ( 'circle' )
+                    .attr("fill", d => color(d.id) )
+                    .attr("r", 8)
+            )
+    }
+
+  updateSimulation ( dataArray )
+
+//*
+    setTimeout ( () => {
+        dataArray.pop()
+        updateSimulation ( dataArray )
+    }, 1000 ) 
+
+    setTimeout ( () => {
+        dataArray.push({}, {}, {})
+        updateSimulation ( dataArray )
+    }, 2000 ) 
+//*/      
+
+}
 new Exam.Exam ( { 
     config : {
         expand : {
@@ -19,8 +88,8 @@ new Exam.Exam ( {
     code : function () {
         let SERVER = new Graph ( 'server' )
         //console.log( SERVER )
-        //console.log( SERVER ('graph') )
-        return {    graphInstance   : SERVER ('graph'),
+        //console.log( SERVER ( 'graph' ) )
+        return {    graphInstance   : SERVER ( 'graph' ),
                     literalTree     : SERVER ()             }
     },
     want : 'vfun',
@@ -40,9 +109,9 @@ new Exam.Exam ( {
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.location = 'France'
-        //console.log (SERVER('graph').value.location('datum').value)
+        //console.log (SERVER( 'graph' ).value.location( 'datum' ).value)
         return  JSON.stringify ( [   SERVER.location = 'Malaysia' ,
-                    SERVER('graph').value.location('datum').value
+                    SERVER( 'graph' ).value.location( 'datum' ).value
                 ] )
     },
     want : JSON.stringify ( [ 'Malaysia', 'Malaysia' ] )
@@ -149,7 +218,7 @@ new Exam.Exam ( {
                 }
 
         return JSON.stringify ( { 
-            aDatum  : SERVER.tree('datum') instanceof Datum,
+            aDatum  : SERVER.tree( 'datum' ) instanceof Datum,
             aPOJO   : SERVER.tree() 
         }, null, 2 )
     },
@@ -256,28 +325,28 @@ new Exam.Exam ( {
 
         //console.log(`Before getting pointers.`)
 
-        //console.log(SERVER('datum').value.computed2a('datum').pointers.in.causal[0].ikey
+        //console.log(SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey
         //)
 
         let computed2apointers    = [
-            SERVER('datum').value.computed2a('datum').pointers.in.causal[0].ikey,
-            SERVER('datum').value.computed2a('datum').pointers.in.causal[1].ikey 
+            SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey,
+            SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[1].ikey 
         ]
           //console.log(`After getting pointers.`)
 
-          //console.log (SERVER('datum').value
-          //                            .source1('datum')
+          //console.log (SERVER( 'datum' ).value
+          //                            .source1( 'datum' )
           //                            .pointers.out.causal[0].okey
           //)
 
         return JSON.stringify ( {
             computedValue   :   SERVER.computed2a,
             computed2apointers:   computed2apointers,
-            source1Pointer    :   SERVER('datum').value
-                                    .source1('datum')
+            source1Pointer    :   SERVER( 'datum' ).value
+                                    .source1( 'datum' )
                                     .pointers.out.causal[0].okey,
-            source2Pointer    :   SERVER('vertices')
-                                    .source2('datum')
+            source2Pointer    :   SERVER( 'vertices' )
+                                    .source2( 'datum' )
                                     .pointers.out.causal[0].okey,
         } )
     },
@@ -321,7 +390,7 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER('vertices').sink4('unproxy').pointers.in )
+        //console.log( SERVER( 'vertices' ).sink4( 'unproxy' ).pointers.in )
 
         return JSON.stringify ( {
             sink4Before     : SERVER.sink4,
@@ -359,25 +428,25 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER('vertices').sink4('unproxy').pointers.in )
+        //console.log( SERVER( 'vertices' ).sink4( 'unproxy' ).pointers.in )
 
         return JSON.stringify ( {
             sink4Before     : SERVER.sink4,
             computed3       : SERVER.computed3,
             sink4After      : SERVER.sink4,
-            computed3pointers :   [   SERVER('datum').value
-                                        .computed3('datum').pointers.in.causal[0].ikey,
-                                    SERVER('datum').value
-                                        .computed3('datum').pointers.in.causal[1].ikey 
+            computed3pointers :   [   SERVER( 'datum' ).value
+                                        .computed3( 'datum' ).pointers.in.causal[0].ikey,
+                                    SERVER( 'datum' ).value
+                                        .computed3( 'datum' ).pointers.in.causal[1].ikey 
             ],
-            source1Pointer    :   SERVER('datum').value
-                                    .source1('datum')
+            source1Pointer    :   SERVER( 'datum' ).value
+                                    .source1( 'datum' )
                                     .pointers.out.causal[0].okey,
-            source2Pointer    :   SERVER('vertices')
-                                    .source2('datum')
+            source2Pointer    :   SERVER( 'vertices' )
+                                    .source2( 'datum' )
                                     .pointers.out.causal[0].okey,
-            sink4Pointer      :   SERVER('vertices')
-                                    .sink4('datum')
+            sink4Pointer      :   SERVER( 'vertices' )
+                                    .sink4( 'datum' )
                                     .pointers.in.causal[0].ikey
         } )
     },
@@ -395,8 +464,8 @@ new Exam.Exam ( {
 {   test : `graph() and datum() should eject the same thing`,
     code : function () {
 
-        let g = new Graph('server')
-        let h = new Graph('server')
+        let g = new Graph( 'server' )
+        let h = new Graph( 'server' )
 
     //console.warn ( 'Prepare DATUM', g.a = {}, g.a.i = 4, g.a.j = 5, g)
     //console.warn ( 'Apply DATUM', g.a() )
@@ -431,7 +500,7 @@ new Exam.Exam ( {
 {   test : `Sourcing subkeys in Codes`,
     code : function () {
 
-        let g = new Graph('server')
+        let g = new Graph( 'server' )
         g.h = new Code ( e => e.h.i + e.h.j )
 
         return JSON.stringify( g() ) 
@@ -442,7 +511,7 @@ new Exam.Exam ( {
 smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
 
-        let G = new Graph('server')
+        let G = new Graph( 'server' )
 
         G.a = 1
         G.b = 2
@@ -470,7 +539,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Code.trait: getHandler`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
         SERVER.a = 1
 
         SERVER.b = new Code ( s => ( s.a + 1 ) )
@@ -485,33 +554,33 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Code.trait: cached - do getters check staleness?`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
         SERVER.a = 1
 
         SERVER.b = new Code ( s => ( s.a + 1 ) )
-        SERVER('vertices').b('datum').stale = false
+        SERVER( 'vertices' ).b( 'datum' ).stale = false
 
-      //console.warn (SERVER('vertices').b('datum').stale)
-      //console.warn (SERVER('vertices').b('datum').value)
-      //console.warn (SERVER('vertices').b('datum').lambda)
-      //console.warn (SERVER('vertices').b('datum').traits.cached)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).value)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).lambda)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).traits.cached)
       //console.warn (SERVER.b)
-      //console.warn (SERVER('vertices').b('datum').stale)
-      //console.warn (SERVER('vertices').b('datum').value)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).value)
 
         SERVER.c = new Code ( s => ( s.a + 1 ), { cached : false } )
-        SERVER('vertices').c('datum').stale = false
+        SERVER( 'vertices' ).c( 'datum' ).stale = false
       
-      //console.warn (SERVER('vertices').c('datum').stale)
-      //console.warn (SERVER('vertices').c('datum').value)
-      //console.warn (SERVER('vertices').c('datum').lambda)
-      //console.warn (SERVER('vertices').c('datum').traits.cached)
+      //console.warn (SERVER( 'vertices' ).c( 'datum' ).stale)
+      //console.warn (SERVER( 'vertices' ).c( 'datum' ).value)
+      //console.warn (SERVER( 'vertices' ).c( 'datum' ).lambda)
+      //console.warn (SERVER( 'vertices' ).c( 'datum' ).traits.cached)
       //console.warn (SERVER.c)
-      //console.warn (SERVER('vertices').b('datum').stale)
-      //console.warn (SERVER('vertices').c('datum').value)
+      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (SERVER( 'vertices' ).c( 'datum' ).value)
 
-        let datumB = SERVER('vertices').b('datum')
-        let datumC = SERVER('vertices').c('datum')
+        let datumB = SERVER( 'vertices' ).b( 'datum' )
+        let datumC = SERVER( 'vertices' ).c( 'datum' )
 
         return JSON.stringify ( {
             defaultCachedStaleFlagBefore    : datumB.stale  == false,
@@ -546,13 +615,13 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 {   test : `Code.trait: cached - do sources invalidate dependent caches via
 stale flag?`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
 
         SERVER.a = 1
         SERVER.b = new Code (  s => s.a + 2 )
 
-        let vertices = SERVER('vertices')
-        let b = vertices.b('datum')
+        let vertices = SERVER( 'vertices' )
+        let b = vertices.b( 'datum' )
 
 
       //console.warn ( b.stale, b.value, b.pointers, b.lambda )
@@ -567,14 +636,14 @@ stale flag?`,
 },
 {   test : `Code.trait: hasSinks`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
         SERVER.a1 = new Code (  s => { s.a2 = 2; return true } )
         SERVER.b1 = new Code (  s => { s.b2 = 2; return true }, 
                                 { hasSinks: false } )
 
         //console.log ( SERVER.a1, SERVER.a2 )
         //console.log ( SERVER.b1, SERVER.b2 )
-        //console.log ( SERVER('vertices') )
+        //console.log ( SERVER( 'vertices' ) )
     
         return JSON.stringify ( 
             [ SERVER.a1, SERVER.a2, SERVER.b1, SERVER.b2 ]
@@ -585,14 +654,14 @@ stale flag?`,
 
 {   test : `Code.trait: hasSources`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
 
         SERVER.a = 1
         SERVER.b = new Code (  s => s.a + 2 )
 
       //console.warn ( SERVER.b )
       //console.warn ( SERVER.c )
-      //console.log ( SERVER('vertices') )
+      //console.log ( SERVER( 'vertices' ) )
     
         return JSON.stringify ( 
             [ SERVER.b, SERVER.c ]
@@ -603,7 +672,7 @@ stale flag?`,
 
 {   test : `Code.trait: reactive`,
     code : function () {
-        let SERVER = new Graph ('server')
+        let SERVER = new Graph ( 'server' )
         let sideEffected
 
         SERVER.a = 1
@@ -671,7 +740,7 @@ not sure if it is feasible.`
 //*/
 /* Testing conveniences for the browser:
 
-g = new Graph('server')
+g = new Graph( 'server' )
 
 //g.d = new Code ( e => e.a + e.b )
 
@@ -684,7 +753,7 @@ g.h.i = 4
 g.h.j = 5
 g.h.k = new Code ( e => e.h.i + e.h.j )
 
-g('vertices')
+g( 'vertices' )
 
 */
 
@@ -708,42 +777,3 @@ g('vertices')
 */
     ] } )
 
-// D3 visualisation experiment:
-// https://bl.ocks.org/d3indepth/181b398d5305cefcd10186617cb9250c
-{
-
-}
-{
-/*
-    var nodes = [{}, {}, {}, {}, {}]
-    var width = 300, height = 300
-    var svg = d3.select ( 'body' ).append ( 'svg' )
-        .attr ( 'width', width )
-        .attr ( 'height', height )
-        .attr ( 'style', 'background-color:#ddddff' )
-    var simulation = d3.forceSimulation(nodes)
-        .force('charge?', d3.forceManyBody().strength(-30))
-        .force('center?', d3.forceCenter(width / 2, height / 2))
-        .force('x?', d3.forceX( width / 2 ).strength ( 0.05 ) )
-        .force('y?', d3.forceY( width / 2 ).strength ( 0.05 ) )
-        .on('tick', ticked)
-
-    function ticked () {
-      var update = svg 
-        .selectAll('circle')
-        .data(nodes)
-        .join(
-            enter   => enter    .append ( 'circle' ).attr ( 'r', 5 ),
-            update  => update   .attr( 'cx', d => d.x )
-                                .attr( 'cy', d => d.y )
-            // implicit update.exit().remove()
-        )
-        //simulation.restart()
-    }
-
-window.nodes        = nodes
-window.ticked       = ticked
-window.simulation   = simulation
-window.svg          = svg
-*/
-}
