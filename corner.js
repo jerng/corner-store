@@ -112,13 +112,13 @@ class AsyncDispatcher extends EventLog {
         return this 
     }
 
-    // overwrites parent class
+    // overwrites parent class method:
     // 
     //  1.  See below.
-    //  2.  In order to be able to use 'await', we need to make (emit) an
-    //      AsyncFunction. The functional difference is, while (emit) will
-    //      asynchronously 'await' task execution, (emit's calling function)
-    //      will proceed synchronously without waiting for (emit).
+    //  2.  In order to be able to use 'await', we need to make (dispatch) an
+    //      AsyncFunction. The functional difference is, while (dispatch) will
+    //      asynchronously 'await' task execution, (dispatch's calling function)
+    //      will proceed synchronously without waiting for (dispatch).
     async dispatch() {
         let resolvedPromises = await Promise.all (
             Object.values ( this.tasks ) .map ( t => t() )

@@ -14,11 +14,14 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
                     .attr ( 'width', width )
                     .attr ( 'height', height )
                     .attr ( 'style', 'background-color:#eeeeee' )
-
+/*
     let a = { id: 'a' },
         b = { id: 'b' },
         c = { id: 'c' },
         dataArray = [ a, b, c ]
+*/
+
+    let dataArray = []
 
     let g       = svg.append ( 'g' )
                     .attr (  'transform', 
@@ -28,11 +31,10 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
                     .attr ( 'stroke-width', 1.5)
                     .selectAll () // empty selection
 
-    let     tickHandler = function () {
-        //console.log(`tick`)
-                gg  .attr( 'cx', d => d.x )
-                    .attr( 'cy', d => d.y )
-            }
+    let tickHandler = function () {
+        gg  .attr( 'cx', d => d.x )
+            .attr( 'cy', d => d.y )
+    }
 
     let simulation = d3.forceSimulation (  dataArray )
         .force ( 'charge', d3.forceManyBody ().strength ( -1000 ) )
@@ -57,19 +59,16 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
             )
     }
 
-  updateSimulation ( dataArray )
-
-//*
-    setTimeout ( () => {
-        dataArray.pop()
+    updateSimulation ( dataArray )
+    
+    let intervalHandle = setInterval ( () => {
+        dataArray.push ( {} )
         updateSimulation ( dataArray )
     }, 1000 ) 
 
     setTimeout ( () => {
-        dataArray.push({}, {}, {})
-        updateSimulation ( dataArray )
-    }, 2000 ) 
-//*/      
+        clearInterval ( intervalHandle )
+    }, 5000 ) 
 
 }
 new Exam.Exam ( { 
@@ -698,6 +697,36 @@ stale flag?`,
     },
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
 },
+{   test : `D3 graph visualiser`,
+    code : function () {
+        throw Error
+        //  Draft architecture:
+        //  
+        //  Whenever a Graph instance is touched, it shall log its activity in a
+        //  high-level natural language manner.
+        //
+        //  Currently, Datum log low-level events to their (gets.hits),
+        //  (gets.misses), and (sets) EventLog instances.
+        //
+        //      One possibility: we add functionality to EventLog and
+        //      AsyncDispatcher classes to also add pointers to an Event index
+        //      in Graph.log (such that Graph.log tracks Graph.value in the same
+        //      way that Datum.log tracks Datum.value).
+        //
+        //          The risk of doing so, is that the Graph log becomes
+        //          redundant with various Datum logs. A fat model of robotics
+        //          would appreciate this redundancy, but of course that comes
+        //          at the cost of performance.
+        //
+        //          Yet if we do this, Graph log becomes the clearing house for
+        //          operations upon the Graph as a whole, such as historical
+        //          playback, and Graph visualisation.
+        //
+
+
+    },
+    want : ''
+},
 {   warning : `A chimerical issue: 
 
     Code.TRAITS
@@ -709,10 +738,13 @@ stale flag?`,
     however, at this time, the code which implements graph functionality does
     not fully depend on this meta-data at runtime; 
 
-    instead, the meta-data is initially used by graphHandler/SERVER to write the
-    meta-data, after which DATUM.pointers are not used by any code - as the graph
-    already has this information stored in the logic of its various handlers;
-    whereas Code.TRAITS continues to be used by runtime code.
+    instead,  graphHandler.set/n  writes the meta-data, after which
+    DATUM.pointers are NOT YET used by any code - as the graph already has this
+    information stored in the logic of its various handlers; whereas Code.TRAITS
+    continues to be used by runtime code.
+
+        Particularly, refer to  -   cachedDependentHandler
+                                -   reactiveDependentHandler
 
     We should see if it is possible to completely separate these approaches, or
     if we should simply port all implements to one approach, and throw the other
