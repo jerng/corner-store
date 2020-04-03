@@ -82,7 +82,7 @@ class AsyncDispatcher extends EventLog {
             // .push() to add on the right
             // .shift() to remove on the left
 
-//console.error (`WIP here - get reactive Codes running.`)
+//console.error (`WIP here - get reactive Funs running.`)
 
             // Task class?
         this.tasks = {
@@ -184,8 +184,8 @@ class Datum {
                 writable    : true
             },
 
-            // This is used both by Datum and its subclass Code. 
-            // In Code, it is used to store the return value of Codes.
+            // This is used both by Datum and its subclass Fun. 
+            // In Fun, it is used to store the return value of Funs.
             value   : {
                 configurable: true,
                 enumerable  : false,
@@ -264,7 +264,7 @@ class Datum {
     }
 }
 
-//  Generally, when defining an Code:
+//  Generally, when defining an Fun:
 //  
 //  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
 //
@@ -367,7 +367,7 @@ class Datum {
 //  Some candidates for discussion:
 //
 //  -   "Proc"  "Procedure"
-//  -   "Code"  "Prog"  "Program"
+//  -   "Fun"  "Prog"  "Program"
 //  -   "Sub"  "Routine"  "Subroutine"
 //  -   Probably too conflicty: "Service" "Exec" 
 //
@@ -380,7 +380,7 @@ class Datum {
 //  - MetaData
 //  - Snippets
 //  - Trigger
-//  - Code
+//  - Fun
 //  - LambdaFunction Lambda
 //  - pick a unicode character like λ
 //
@@ -400,33 +400,33 @@ class Datum {
 //  ... here's what's left:
 //
 //  - Op
-//  - Code
+//  - Fun
 //  - Fun
 //  - Lambda
 //  - Anon
 //
-//  On one hand, Code fits with the rule of naming brandy things with harsh
+//  On one hand, Fun fits with the rule of naming brandy things with harsh
 //  syllables. On the other, Lambda and Fun are much more specific about what we're
 //  actually parking at those nodes. Anon is cute, but seems a bit distracting.
 //  Will continue to ruminate on the shortlist for a bit.
 //
 //  ---
-//  Someone suggested NoCode for optimal confusion. Another wanted CoLaDa.
+//  Someone suggested NoFun for optimal confusion. Another wanted CoLaDa.
 //  I think we're down to a single-syllable shootout, sorted by minimalism:
 //
 //  - Op
 //  - Fun (typing F is leftier)
 //  - Lam (typing L is rightier)
-//  - Code (the only unabbreviated remainer)
+//  - Fun (the only unabbreviated remainer)
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
 // args[0] must be function
 // args[0] must be an object of traits
-class Code extends Datum {
+class Fun extends Datum {
 
     toString () {
-        return  {   'Code.toString/0 returned:' : 
+        return  {   'Fun.toString/0 returned:' : 
                     super.toString()
                 }
     }
@@ -437,18 +437,18 @@ class Code extends Datum {
 
         switch ( args.length ) {
             case 0:
-                throw Error (`Code.constructor/0 : we require more arguments`) 
+                throw Error (`Fun.constructor/0 : we require more arguments`) 
             case 1:
                 // allowed!
             case 2:
                 // allowed!
                 break
             default:
-                throw Error (`Code.constructor/${args.length} called, branch for this arity is undefined.`)
+                throw Error (`Fun.constructor/${args.length} called, branch for this arity is undefined.`)
         }
 
         if ( typeof args[0] !== 'function' ) {
-            throw Error (`Code.constructor : first argument must be a 'function'`)
+            throw Error (`Fun.constructor : first argument must be a 'function'`)
         }
 
         Object.defineProperty ( this, 'lambda', {
@@ -566,6 +566,30 @@ class Graph extends Datum {
                                           get : this.handlers.datumHandlerGet } )        
         } )
 
+//      // Here we've overriding Datum.log
+//      Object.defineProperty ( this, 'log', {
+//          configurable: true,
+//          enumerable  : false,
+//          value       : new AsyncDispatcher, 
+//              //  EventLog.actuallyNote/1 stores [ performance.now(), value ],
+//              //  so what should we pass as (value) ? Discussion:
+//              //
+//              //  [
+//              //      delete: [ 'd', Datum ] 
+//              //          ... Datum's own log should contain history of values
+//              //
+//              //      set:    [ 's', Datum ]
+//              //          ... Datum's own log should contain history of values
+//              //
+//              //      get:    [ 'g', (gotten value), Datum ]
+//              //          ... Datum's own log should contain history of values
+//              //
+//              //
+//              //  ]
+
+//          writable    : true
+//      } )
+
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
             
@@ -605,7 +629,7 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
-    runCodeAndLog ( datum ) {
+    runFunAndLog ( datum ) {
                 //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
                 //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
           
@@ -639,7 +663,7 @@ class Graph extends Datum {
             // !stale && cached
         
             result = datum.value        
-            // cache hit, scenario 1 of 3; an Code
+            // cache hit, scenario 1 of 3; an Fun
 
             datum.stale = false // for general coherence
 
@@ -696,8 +720,8 @@ class Graph extends Datum {
 
         let result 
 
-        if ( datum instanceof Code && datum.traits.getHandler ) { 
-            return this.runCodeAndLog ( datum ) 
+        if ( datum instanceof Fun && datum.traits.getHandler ) { 
+            return this.runFunAndLog ( datum ) 
         }
 
         else
@@ -712,15 +736,15 @@ class Graph extends Datum {
 
             
                     result = this.value[ datum.key ]  
-                    // cache hit, scenario 1 of 2; not an Code, no cache 
+                    // cache hit, scenario 1 of 2; not an Fun, no cache 
         }                                           
 
         else {      result  =  datum.value      
-                    // cache hit, scenario 2 of 2; not an Code, no cache  
+                    // cache hit, scenario 2 of 2; not an Fun, no cache  
         }                                           
 
         // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
-        //              graphHandlerApply, datumHandlerApply, runCode
+        //              graphHandlerApply, datumHandlerApply, runFun
 
         //console.log(datum, this.value[key])
         datum.log.gets.hits.note ( result )
@@ -809,56 +833,56 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value IS an Code, call it on a keySniffer to plant pointers.
-        if ( datumToSet.value instanceof Code )
+        // If datumToSet.value IS an Fun, call it on a keySniffer to plant pointers.
+        if ( datumToSet.value instanceof Fun )
         {
-                //console.log (`graph.vertexSet/[n>1] : value instanceof Code `)
+                //console.log (`graph.vertexSet/[n>1] : value instanceof Fun `)
 
-            // Assign all old Datum's own properties except (those listed below) to Code.
+            // Assign all old Datum's own properties except (those listed below) to Fun.
             delete datumToSet.lambda
             delete datumToSet.value
             delete datumToSet.proxyTarget
 
-            let codeToSet 
+            let funToSet 
                     =   Object.defineProperties ( 
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
     
             let keySniffer = new Proxy ( {}, {
 
-                get :   codeToSet.traits.hasSources
+                get :   funToSet.traits.hasSources
                         ? this.handlers
-                            .scopedCodeKeySnifferHandlerGet ( codeToSet )
+                            .scopedFunKeySnifferHandlerGet ( funToSet )
                         : undefined,
 
-                set : codeToSet.traits.hasSinks
+                set : funToSet.traits.hasSinks
                         ? this.handlers
-                            .scopedCodeKeySnifferHandlerSet ( codeToSet )
+                            .scopedFunKeySnifferHandlerSet ( funToSet )
                         : undefined
             } )
 
-                  //console.log (`graph.vertexSet/>1 : Code : BEFORE
-                  //codeToSet.lambda(keySniffer), codeToSet.lambda: `,
-                  //codeToSet.lambda,'traits:', codeToSet.traits)
+                  //console.log (`graph.vertexSet/>1 : Fun : BEFORE
+                  //funToSet.lambda(keySniffer), funToSet.lambda: `,
+                  //funToSet.lambda,'traits:', funToSet.traits)
             
             // Detect dependencies and plant pointers.
-            codeToSet.lambda ( keySniffer )
+            funToSet.lambda ( keySniffer )
 
-                  //console.log (`graph.vertexSet/>1 : Code : AFTER
-                  //value.lambda(keySniffer)`, codeToSet.traits )
-                    //console.log ( codeToSet.toString() )
+                  //console.log (`graph.vertexSet/>1 : Fun : AFTER
+                  //value.lambda(keySniffer)`, funToSet.traits )
+                    //console.log ( funToSet.toString() )
 
-            codeToSet.stale = true
-                // Code will not run until the next get (no gets here)
+            funToSet.stale = true
+                // Fun will not run until the next get (no gets here)
                 //
-                // Whether Code.traits.cached is true or not, the Code.stale
+                // Whether Fun.traits.cached is true or not, the Fun.stale
                 // property will be defined. Because it is defined for all
-                // Datum, and Code extends Datum.
+                // Datum, and Fun extends Datum.
 
             this.value [ keyToSet ]
-                = new Proxy ( codeToSet.proxyTarget, this.datumHandler )   
+                = new Proxy ( funToSet.proxyTarget, this.datumHandler )   
 
-                //console.log(  `graph.vertexSet/[n>1], Code, AFTER SET,
+                //console.log(  `graph.vertexSet/[n>1], Fun, AFTER SET,
                 //keyToSet:`, keyToSet, 
                 //  'value which was set:', this.value [ keyToSet ]('datum'), 
                 //  'success check components :', this.value [ keyToSet ]('datum'),'==', args[1] ,
@@ -866,7 +890,7 @@ class Graph extends Datum {
 
             let result = this.value [ keyToSet ]('datum') == args[1] 
             
-            //console.log (`graph.vertexSet/[n>1], Code, result obtained: result`)
+            //console.log (`graph.vertexSet/[n>1], Fun, result obtained: result`)
             //console.log (this.value [ keyToSet ]('datum').traits)
 
             if ( result ) {
@@ -878,9 +902,9 @@ class Graph extends Datum {
         } 
 
         else 
-        {  // If datumToSet.value is NOT an Code, then complete the assignment.
+        {  // If datumToSet.value is NOT an Fun, then complete the assignment.
 
-            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Code `)
+            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Fun `)
 
 
             // If valuetoset is an object ...
@@ -912,7 +936,7 @@ class Graph extends Datum {
             } 
             return result
 
-        } // End of block where: (value instanceof Code) 
+        } // End of block where: (value instanceof Fun) 
 
     }
   
@@ -1109,22 +1133,22 @@ class Graph extends Datum {
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Codes, when the Code is set to the graph.
-    'scopedCodeKeySnifferHandlerGet': codeToSet => {
+    // Funs, when the Fun is set to the graph.
+    'scopedFunKeySnifferHandlerGet': funToSet => {
         
-            //console.log(`scopedCodeKeySnifferHandlerGet/1`)
+            //console.log(`scopedFunKeySnifferHandlerGet/1`)
 
-                // If you're pulling data into your Code, you'll trigger getters
+                // If you're pulling data into your Fun, you'll trigger getters
                 // on the other Datums-
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-            //console.log (`graph.scopedCodeKeySnifferHandlerGet/[n>1] : Code : keySnifferHandler.get: `, ksProp)
+            //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun : keySnifferHandler.get: `, ksProp)
 
             //  Configure (this) dependent to track dependencies:
-            if ( ! ( 'causal' in codeToSet.pointers.in ) ) {
-                codeToSet.pointers.in.causal = []
+            if ( ! ( 'causal' in funToSet.pointers.in ) ) {
+                funToSet.pointers.in.causal = []
             }
-            codeToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
+            funToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
 
             // WARNING: does not require dependency keys to be in the graph
             // before dependents are set FIXME
@@ -1132,8 +1156,8 @@ class Graph extends Datum {
             //  Configure dependencies to track (this) dependent:
                    
             if ( ! ( ksProp in this.value ) ) {
-                throw Error (`graph.vertexSet/n tried to set an Code, but the
-                        Code referred to a source address which has not been
+                throw Error (`graph.vertexSet/n tried to set an Fun, but the
+                        Fun referred to a source address which has not been
                         set: (${ ksProp })`)
             }
 
@@ -1145,10 +1169,10 @@ class Graph extends Datum {
                     dependencyDatum.pointers.out.causal = []
                 }
 
-                //console.log (  codeToSet.key )
+                //console.log (  funToSet.key )
 
                 dependencyDatum
-                    .pointers.out.causal.push ( new PointerOut ( codeToSet.key ) )
+                    .pointers.out.causal.push ( new PointerOut ( funToSet.key ) )
 
 
                 //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
@@ -1159,28 +1183,28 @@ class Graph extends Datum {
                 
 
                 // .cached and .reactive: FIXME - should use pointers instead?
-                if ( codeToSet.traits.cached ) {
+                if ( funToSet.traits.cached ) {
 
                     let cachedDependentHandlerKey 
-                        = 'cachedDependentHandler:' + codeToSet.key
+                        = 'cachedDependentHandler:' + funToSet.key
 
                     dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
-                            codeToSet.stale = true
+                            funToSet.stale = true
                             fulfill( cachedDependentHandlerKey )
                         } )
                 }
-                if ( codeToSet.traits.reactive ) {
+                if ( funToSet.traits.reactive ) {
                     
                     let reactiveDependentHandlerKey 
-                        = 'reactiveDependentHandler:' + codeToSet.key
+                        = 'reactiveDependentHandler:' + funToSet.key
 
                     dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
                             
-                            //console.log( `scopedCodeKeySnifferHandlerGet` )
+                            //console.log( `scopedFunKeySnifferHandlerGet` )
                             
-                            this.runCodeAndLog ( codeToSet )
+                            this.runFunAndLog ( funToSet )
                             fulfill( reactiveDependentHandlerKey )
                         } )
 
@@ -1188,30 +1212,30 @@ class Graph extends Datum {
 
 //console.error (`WIP here -  insert tasks to dependencies.`)
 
-                    //console.log (`graph.scopedCodeKeySnifferHandlerGet/>1 : Code : keySnifferHandler.get: ended`)
+                    //console.log (`graph.scopedFunKeySnifferHandlerGet/>1 : Fun : keySnifferHandler.get: ended`)
 
         }
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Codes, when the Code is set to the graph.
-    'scopedCodeKeySnifferHandlerSet': codeToSet => {
+    // Funs, when the Fun is set to the graph.
+    'scopedFunKeySnifferHandlerSet': funToSet => {
         
-            //console.log(`scopedCodeKeySnifferHandlerSet/1`)
+            //console.log(`scopedFunKeySnifferHandlerSet/1`)
 
-                // If you're pushing data from your Code, you'll trigger setters
+                // If you're pushing data from your Fun, you'll trigger setters
                 // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+            //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
 
             //  Configure (this) dependency to track dependents:
-            if ( ! ( 'causal' in codeToSet.pointers.out ) ) {
-                codeToSet.pointers.out.causal = []
+            if ( ! ( 'causal' in funToSet.pointers.out ) ) {
+                funToSet.pointers.out.causal = []
             }
-            codeToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
+            funToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
 
-                //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set: PointerOut-s inserted at:`, key )
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set: PointerOut-s inserted at:`, key )
 
             //  Configure dependents to track (this) dependency:
             if ( ! ( ksProp in this.value ) ) {
@@ -1223,9 +1247,9 @@ class Graph extends Datum {
                     dependentDatum.pointers.in.causal = []
                 }
                 dependentDatum
-                    .pointers.in.causal.push ( new PointerIn ( codeToSet.key ) )
+                    .pointers.in.causal.push ( new PointerIn ( funToSet.key ) )
 
-                //console.log (`graph.scopedCodeKeySnifferHandlerSet/[n>1] : Code : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
             
             return true // FIXME: pointers unchecked?
         }
@@ -1294,6 +1318,6 @@ class Graph extends Datum {
     }
 }
 
-globalThis.Code     = Code
+globalThis.Fun     = Fun
 globalThis.Datum    = Datum
 globalThis.Graph    = Graph 
