@@ -354,6 +354,73 @@ class Datum {
 //  }     
 //        
 
+////////////////////////////////////////////////////////////////////////////////
+//  Discussion: I originally named the class "Algo", which is nice and short.
+//  But I realised later the code stored here is not always algorithmic
+//  (algorithms must end in a finite number of steps). These are more open-ended
+//  anonymous functions. Factors to consider in naming:
+//
+//  -   Fewest characters to type
+//  -   Easy to pronounce, and does not clash with common Javascript morphemes
+//  -   Accurately describes what the thing is: code stored as data
+//
+//  Some candidates for discussion:
+//
+//  -   "Proc"  "Procedure"
+//  -   "Code"  "Prog"  "Program"
+//  -   "Sub"  "Routine"  "Subroutine"
+//  -   Probably too conflicty: "Service" "Exec" 
+//
+//  Concluding:
+//
+//  Suggestions received:
+//  - Procedure StoredProcedure
+//  - ScriptNode Script
+//  - Clodes Stodes
+//  - MetaData
+//  - Snippets
+//  - Trigger
+//  - Code
+//  - LambdaFunction Lambda
+//  - pick a unicode character like λ
+//
+//  Next thoughts, I'm still rather preferential towards any name of four characters
+//  or less. Looking at the intersection of <five character morphemes which are also
+//  semantically accurate, and easy to speak, and easy to write, and un-confusable
+//  with existing Javascript ontology...
+//
+//  ... first up, I'm thinking that perhaps the class should never be extended in
+//  the system just so that users can extend it and use any morpheme that they
+//  want...
+//
+//  ... that being said, it still needs a canonical name. Here's the shortlist:
+//
+//  - Script (probably semantically unsound, as it'd get mixed up with modules)
+//
+//  ... here's what's left:
+//
+//  - Op
+//  - Code
+//  - Fun
+//  - Lambda
+//  - Anon
+//
+//  On one hand, Code fits with the rule of naming brandy things with harsh
+//  syllables. On the other, Lambda and Fun are much more specific about what we're
+//  actually parking at those nodes. Anon is cute, but seems a bit distracting.
+//  Will continue to ruminate on the shortlist for a bit.
+//
+//  ---
+//  Someone suggested NoCode for optimal confusion. Another wanted CoLaDa.
+//  I think we're down to a single-syllable shootout, sorted by minimalism:
+//
+//  - Op
+//  - Fun (typing F is leftier)
+//  - Lam (typing L is rightier)
+//  - Code (the only unabbreviated remainer)
+//
+////////////////////////////////////////////////////////////////////////////////
+//
 // args[0] must be function
 // args[0] must be an object of traits
 class Code extends Datum {
