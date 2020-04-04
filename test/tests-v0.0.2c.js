@@ -14,12 +14,6 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
                     .attr ( 'width', width )
                     .attr ( 'height', height )
                     .attr ( 'style', 'background-color:#eeeeee' )
-/*
-    let a = { id: 'a' },
-        b = { id: 'b' },
-        c = { id: 'c' },
-        dataArray = [ a, b, c ]
-*/
 
     let dataArray = []
 
@@ -34,15 +28,18 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
     let tickHandler = function () {
         gg  .attr( 'cx', d => d.x )
             .attr( 'cy', d => d.y )
+            console.log('t')
     }
 
     let simulation = d3.forceSimulation (  dataArray )
         .force ( 'charge', d3.forceManyBody ().strength ( -1000 ) )
         .force ( 'x', d3.forceX () )
         .force ( 'y', d3.forceY () )
-        .alphaTarget ( 1 )
+        .alphaTarget ( 0.0001 )
+        .alphaDecay ( 0.01 ) 
+        .velocityDecay ( 0.1 )
         .on ( 'tick', tickHandler )
-      
+                                                                  
     let updateSimulation = function ( latestData ) {
 
         // Ensure that SIMULATION knows (node ontology).
@@ -68,9 +65,13 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 
     setTimeout ( () => {
         clearInterval ( intervalHandle )
+        //simulation.stop()
     }, 5000 ) 
 
 }
+
+let p = thing => JSON.stringify ( thing, null, 4 )
+
 new Exam.Exam ( { 
     config : {
         expand : {
@@ -83,6 +84,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
+///*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -668,7 +670,6 @@ stale flag?`,
     },
     want : JSON.stringify ( [ 3, NaN ] )
 },
-
 {   test : `Fun.trait: reactive`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -696,6 +697,31 @@ stale flag?`,
         ] )
     },
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
+},
+//*/
+/*
+{   test : `Graph Logger (canon)`,
+    code : function () {
+        let S  = new Graph ( 'server' )
+        let GRAPH   = S ( 'graph' )
+
+        S.a = 1 
+        S.b = new Fun ( q => q.a )  
+        console.log ('getting S.b ', S.b)
+        console.log ('getting S.b ', S.b)
+        
+        S.b = 2
+
+        console.log (   `GRAPH LOG`, p ( GRAPH.log ),
+                        "\n\n",
+                        `GRAPH.a LOG`, p ( GRAPH.value.a ('unproxy').datum.log),
+                        "\n\n",
+                        `GRAPH.b LOG`, p ( GRAPH.value.b ('unproxy').datum.log )
+        )
+
+
+    },
+    want : ''
 },
 {   test : `D3 graph visualiser`,
     code : function () {
@@ -772,6 +798,10 @@ not sure if it is feasible.`
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 //*/
+
+
+
+
 /* Testing conveniences for the browser:
 
 g = new Graph( 'server' )
@@ -790,6 +820,11 @@ g.h.k = new Fun ( e => e.h.i + e.h.j )
 g( 'vertices' )
 
 */
+
+
+
+
+
 
 /* Templates: 
 

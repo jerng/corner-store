@@ -57,19 +57,24 @@ class EventLog {
         return this 
     }
 
-    note ( value ) {
+    note ( preferATimeStampBoxedValue  ) {
         this.dispatch () 
-        this.actuallyNote ( value ) 
+        this.actuallyNote ( preferATimeStampBoxedValue ) 
             //console.log ( this.book[ this.book.length -1 ] )
     }
 
-    actuallyNote ( value ) {
-        this.book.push( [ performance.now(), value ] )
+    // (graph) is optional
+    actuallyNote ( preferATimeStampBoxedValue ) {
+        this.book.push( preferATimeStampBoxedValue )
     }
 
     async dispatch () {}
         // Interpreter should inline this out of existence unless
         // emit actually does something in a subclass
+
+    static timeStampBox ( value ) {
+        return [ performance.now(), value ]
+    }
 }
 
 // DOM already has an EventTarget class.
@@ -85,30 +90,21 @@ class AsyncDispatcher extends EventLog {
 //console.error (`WIP here - get reactive Funs running.`)
 
             // Task class?
-        this.tasks = {
+        this.tasks = { } 
 
             // Don't put (new Promise)s here, as their executors will start
             // running immediately. Only put functions which return (new
             // Promise)s in order that Promise executors are run only when the
             // function is applied.
 
+            // EXAMPLE TASK:
+            // (key) is not yet used.
+            //'1TEST' : args => new Promise ( ( fulfill, reject ) => {
+            //function primeFactorsTo(max) { var store  = [], i, j, primes = []; for (i = 2; i <= max; ++i) { if (!store [i]) { primes.push(i); for (j = i << 1; j <= max; j += i) { store[j] = true; } } } return primes; } 
 
+            //setTimeout( ()=>{ fulfill ( [ args, primeFactorsTo ( Math.pow ( 8, 7 ) ) ] ) }, 3000 ) 
+            //            } )    
 
-
-// EXAMPLE TASK:
-// (key) is not yet used.
-//'1TEST' : args => new Promise ( ( fulfill, reject ) => {
-
-//function primeFactorsTo(max) { var store  = [], i, j, primes = []; for (i = 2; i <= max; ++i) { if (!store [i]) { primes.push(i); for (j = i << 1; j <= max; j += i) { store[j] = true; } } } return primes; } 
-
-//setTimeout( ()=>{ fulfill ( [ args, primeFactorsTo ( Math.pow ( 8, 7 ) ) ] ) }, 3000 ) 
-//            } )    
-
-
-
-
-
-        } // this.tasks
         return this 
     }
 
@@ -123,7 +119,8 @@ class AsyncDispatcher extends EventLog {
         let resolvedPromises = await Promise.all (
             Object.values ( this.tasks ) .map ( t => t() )
         )
-        this.actuallyNote ( resolvedPromises ) // logs own events to self!
+        this.actuallyNote ( EventLog.timeStampBox ( resolvedPromises ) ) 
+            // logs own events to self!
     } 
 
 }
@@ -435,6 +432,13 @@ class Fun extends Datum {
         
         super()
 
+//      // Configuration (initialised by super())
+//      // OVERRIDES Datum.log.sets
+//      this.log.sets = {
+//          pointers : new EventLog,
+//          value : new AsyncDispatcher
+//      }
+
         switch ( args.length ) {
             case 0:
                 throw Error (`Fun.constructor/0 : we require more arguments`) 
@@ -508,6 +512,13 @@ class Graph extends Datum {
         // configuration (initialised by super())
         this.key            = ''
         this.value          = {} 
+
+      //this.log.sets       = {             // Datum uses AsyncDispatcher
+      //    datum   : new AsyncDispatcher
+      //}
+      //this.log.gets.hits  = new AsyncDispatcher   // Datum uses EventLog
+      //this.log.gets.misses= new AsyncDispatcher   // Datum uses EventLog
+      //this.log.deletes    = new AsyncDispatcher   // key not in Datum
 
         // an alias
         Object.defineProperty ( this.proxyTarget, 'graph', {
@@ -656,7 +667,7 @@ class Graph extends Datum {
             datum.stale = false
 
             // LOGGING - CACHE MISS 
-            datum.log.gets.misses.note ( result )
+            datum.log.gets.misses.note ( EventLog.timeStampBox ( result ) )
         }
 
         else {
@@ -669,7 +680,7 @@ class Graph extends Datum {
 
             //  LOGGING - CACHE HIT - more scenarios in vertexGetTyped; more
                     // scenarios in graphHandlerApply, datumHandlerApply
-            datum.log.gets.hits.note ( result )
+            datum.log.gets.hits.note ( EventLog.timeStampBox ( result ) )
         }                                   
 
         return result
@@ -747,7 +758,7 @@ class Graph extends Datum {
         //              graphHandlerApply, datumHandlerApply, runFun
 
         //console.log(datum, this.value[key])
-        datum.log.gets.hits.note ( result )
+        datum.log.gets.hits.note ( EventLog.timeStampBox ( result ) )
         
         return result
     }    
@@ -896,7 +907,12 @@ class Graph extends Datum {
             if ( result ) {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
-                datumToSet.log.sets.note ( args[1] )
+                datumToSet.log.sets.note ( EventLog.timeStampBox ( { 
+                    'Fun instance'  :   funToSet ,
+                    'FIXME'         :   `Placeholder log format for Fun, because
+                                         Fun.toString/n doesn't handle circular
+                                         objects yet.`                
+                } ) )
             }
             return result
         } 
@@ -932,7 +948,7 @@ class Graph extends Datum {
             if ( result ) {
             
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
-                datumToSet.log.sets.note ( args[1] )
+                datumToSet.log.sets.note ( EventLog.timeStampBox ( args[1] ) )
             } 
             return result
 
