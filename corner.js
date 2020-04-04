@@ -87,7 +87,11 @@ class AsyncDispatcher extends EventLog {
         let resolvedPromises = await Promise.all (
             Object.values ( this.tasks ) .map ( t => t() )
         )
-        this.actuallyNote ( EventLog.timeStampBox ( resolvedPromises ) ) 
+        let timeStampBoxedValue = EventLog.timeStampBox ( resolvedPromises ) 
+        this.actuallyNote ( {
+            time    : timeStampBoxedValue[0],
+            resolution   : resolvedPromises
+        } ) 
             // logs own events to self!
     } 
 
@@ -610,7 +614,7 @@ class Graph extends Datum {
 
     logFormat ( typeString, vertexObject, timeStamp ) {
         return  {
-                    timeStamp   : timeStamp,
+                    time        : timeStamp,
                     datum       : vertexObject,
                     type        : typeString
                 }
