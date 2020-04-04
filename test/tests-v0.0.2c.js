@@ -84,7 +84,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-///*
+/*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -699,30 +699,49 @@ stale flag?`,
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
 },
 //*/
-/*
+//*
 {   test : `Graph Logger (canon)`,
     code : function () {
         let S  = new Graph ( 'server' )
         let GRAPH   = S ( 'graph' )
 
         S.a = 1 
-        S.b = new Fun ( q => q.a )  
-        console.log ('getting S.b ', S.b)
+        S.b = new Fun ( q => { 
+            q.c = 3
+            return q.a 
+        } )  
         console.log ('getting S.b ', S.b)
         
         S.b = 2
 
-        console.log (   `GRAPH LOG`, p ( GRAPH.log ),
-                        "\n\n",
-                        `GRAPH.a LOG`, p ( GRAPH.value.a ('unproxy').datum.log),
-                        "\n\n",
-                        `GRAPH.b LOG`, p ( GRAPH.value.b ('unproxy').datum.log )
-        )
+        delete S.b
 
+        console.log ('getting S.b ', S.b)
+        
+for ( const note of GRAPH.log.canon.book ) {
+    console.log (
+      note.timeStamp,
+      note.type,
+      note.datum.key, ':', note.datum.value
+    )
+}
+/*
+        console.log (   `GRAPH LOG`, 
+                        p ( GRAPH.log ),
+                        "\n\n",
+                        `GRAPH.a LOG`, 
+                        p ( GRAPH.value.a ('unproxy').datum.log.setsPointerOut),
+                        "\n\n",
+                        `GRAPH.b LOG`, 
+                        p ( GRAPH.value.b ('unproxy').datum.log.setsPointerIn ),
+                        p ( GRAPH.value.b ('unproxy').datum.pointers ),
+        )
+*/
 
     },
     want : ''
 },
+/*/
 {   test : `D3 graph visualiser`,
     code : function () {
         throw Error
@@ -753,9 +772,43 @@ stale flag?`,
     },
     want : ''
 },
-{   warning : `Set logging - keySniffer details; Fun get/set flags; Delete logging; Get... logging details?`,
-},
-{   warning : `Pointer creation generally doesn't check for old pointers.`,
+{   test : 'Pointer logging.',
+    code : function () {
+    
+        let S  = new Graph ( 'server' )
+        let GRAPH   = S ( 'graph' )
+
+        S.a = 1 
+        S.b = new Fun ( q => { 
+            q.c = 3
+            return q.a 
+        } )  
+        console.log ('getting S.b ', S.b)
+        
+        S.b = 2
+
+for ( const note of GRAPH.log.canon.book ) {
+    console.log (
+      note.timeStamp,
+      note.type,
+      note.datum.key
+    )
+}
+
+        console.log (   `GRAPH LOG`, 
+                        p ( GRAPH.log ),
+                        "\n\n",
+                        `GRAPH.a LOG`, 
+                        p ( GRAPH.value.a ('unproxy').datum.log.setsPointerOut),
+                        "\n\n",
+                        `GRAPH.b LOG`, 
+                        p ( GRAPH.value.b ('unproxy').datum.log.setsPointerIn ),
+                        p ( GRAPH.value.b ('unproxy').datum.pointers ),
+        )
+
+    }
+}
+{   warning : `Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
 },
 {   warning : `When a Datum is replaced by an Fun, what happens to pointers
 initially known to the Datum?.`,

@@ -1,51 +1,19 @@
 // data type for use in Datum
 class PointerOut {
-
     constructor ( _okey ) {
-        
-        this.okey       = _okey
-        this.reads      = [    
-            // e.g. 1583344147570.9219
-        ]
-        this.updates    = [
-            // e.g. [   1583344147570.932,
-            //          "the relevant okey value"
-            //      ]
-        ]
-        this.deletes    = [
-            // e.g. [   1583344147570.932,
-            //          "the relevant okey value"
-            //      ]
-        ]
-
+        this.okey   = _okey
+        this.gets   = new EventLog 
         return this
     }
-
 }
 
 // data type for use in Datum
 class PointerIn {
-
     constructor ( _ikey ) {
-        
-        this.ikey       = _ikey
-        this.reads      = [    
-            // e.g. 1583344147570.9219
-        ]
-        this.updates    = [
-            // e.g. [   1583344147570.932,
-            //          "the relevant ikey value"
-            //      ]
-        ]
-        this.deletes    = [
-            // e.g. [   1583344147570.932,
-            //          "the relevant ikey value"
-            //      ]
-        ]
-
+        this.ikey   = _ikey
+        this.gets   = new EventLog   
         return this
     }
-
 }
 
 // data type for use in Datum
@@ -227,6 +195,12 @@ class Datum {
                     // Maybe this can change in the future. TODO
 
                   // Should we log cache invalidations?
+
+                    setsPointerIn   : new EventLog,
+                    setsPointerOut  : new EventLog,
+
+                    getsPointerIn   : new EventLog,
+                    getsPointerOut  : new EventLog,
 
                 },                                              
                 writable    : true
@@ -512,13 +486,7 @@ class Graph extends Datum {
         // configuration (initialised by super())
         this.key            = ''
         this.value          = {} 
-
-      //this.log.sets       = {             // Datum uses AsyncDispatcher
-      //    datum   : new AsyncDispatcher
-      //}
-      //this.log.gets.hits  = new AsyncDispatcher   // Datum uses EventLog
-      //this.log.gets.misses= new AsyncDispatcher   // Datum uses EventLog
-      //this.log.deletes    = new AsyncDispatcher   // key not in Datum
+        this.log.canon      = new AsyncDispatcher
 
         // an alias
         Object.defineProperty ( this.proxyTarget, 'graph', {
@@ -640,6 +608,14 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
+    logFormat ( typeString, vertexObject, timeStamp ) {
+        return  {
+                    timeStamp   : timeStamp,
+                    datum       : vertexObject,
+                    type        : typeString
+                }
+    }
+
     runFunAndLog ( datum ) {
                 //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
                 //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
@@ -667,7 +643,13 @@ class Graph extends Datum {
             datum.stale = false
 
             // LOGGING - CACHE MISS 
-            datum.log.gets.misses.note ( EventLog.timeStampBox ( result ) )
+            let timeStampBoxedValue = EventLog.timeStampBox ( result )
+            datum.log.gets.misses.note ( timeStampBoxedValue )
+            this.log.canon.note ( this.logFormat (
+                'get_vertex_miss_runFunAndLog',
+                datum,
+                timeStampBoxedValue[0]
+            ) )
         }
 
         else {
@@ -680,24 +662,43 @@ class Graph extends Datum {
 
             //  LOGGING - CACHE HIT - more scenarios in vertexGetTyped; more
                     // scenarios in graphHandlerApply, datumHandlerApply
-            datum.log.gets.hits.note ( EventLog.timeStampBox ( result ) )
+            let timeStampBoxedValue = EventLog.timeStampBox ( result )
+            datum.log.gets.hits.note ( timeStampBoxedValue )
+            this.log.canon.note ( this.logFormat (
+                'get_vertex_hit_runFunAndLog',
+                datum,
+                timeStampBoxedValue[0]
+            ) )
         }                                   
 
         return result
     }
 
     vertexDelete ( key ) {
-
         if ( ! ( key in this.value ) ) { return true }
 
         if ( ( typeof this.value[ key ]('datum').value == 'object' ) ) 
         {
             if ( ! this.vertexPrune ( key ) ) { return false }
         }
-        
-        delete this.value[ key ]
+        let deletedDatum = this.value[ key ]('unproxy').datum
 
-        return ! ( key in this.value )
+        delete this.value[ key ]
+        let success = ! ( key in this.value )
+
+        // LOGGING
+        if ( success ) {
+            let timeStampBoxedValue = EventLog.timeStampBox ( deletedDatum )
+            this.log.canon.note ( this.logFormat (
+                'delete_vertex_vertexDelete',
+                deletedDatum,
+                timeStampBoxedValue[0]
+            ) )
+            // Only time stamp is needed; refactoring may make this more
+            // efficient later. FIXME
+        }
+            
+        return success 
     }
 
     vertexGet ( key ) {
@@ -727,7 +728,7 @@ class Graph extends Datum {
     //      graphHandlerApply
     vertexGetTyped ( datum ) {
 
-            //console.log ( datum.traits )
+            //console.log ( `vertexGetTyped`, datum )
 
         let result 
 
@@ -754,11 +755,17 @@ class Graph extends Datum {
                     // cache hit, scenario 2 of 2; not an Fun, no cache  
         }                                           
 
-        // LOGGING - 3 cache hit scenarios in vertexGetTyped; more scenarios in 
+        // LOGGING - 2 cache hit scenarios in vertexGetTyped; more scenarios in 
         //              graphHandlerApply, datumHandlerApply, runFun
 
         //console.log(datum, this.value[key])
-        datum.log.gets.hits.note ( EventLog.timeStampBox ( result ) )
+        let timeStampBoxedValue = EventLog.timeStampBox ( result )
+        datum.log.gets.hits.note ( timeStampBoxedValue )
+        this.log.canon.note ( this.logFormat (
+            'get_vertex_hit_vertexGetTyped',
+            datum,
+            timeStampBoxedValue[0]
+        ) )
         
         return result
     }    
@@ -840,7 +847,7 @@ class Graph extends Datum {
             datumToSet.value    = valueToSet
         }
 
-        //console.log(`graph.vertexSet/[n>1] datumToSet has been defined.`)
+            //console.log(`graph.vertexSet/[n>1] datumToSet has been defined.`)
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
@@ -907,12 +914,18 @@ class Graph extends Datum {
             if ( result ) {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
-                datumToSet.log.sets.note ( EventLog.timeStampBox ( { 
+                let timeStampBoxedValue =  EventLog.timeStampBox ( { 
                     'Fun instance'  :   funToSet ,
                     'FIXME'         :   `Placeholder log format for Fun, because
                                          Fun.toString/n doesn't handle circular
                                          objects yet.`                
-                } ) )
+                } ) 
+                datumToSet.log.sets.note ( timeStampBoxedValue )
+                this.log.canon.note ( this.logFormat ( 
+                    'set_vertex_Fun_vertexSet',
+                    datumToSet,
+                    timeStampBoxedValue[0]
+                ) ) 
             }
             return result
         } 
@@ -944,11 +957,17 @@ class Graph extends Datum {
               //              'value:', this.value [ keyToSet ], 
               //              'success check components :', this.value [ keyToSet ],'==', args[1] ) 
 
-            let result = this.value [ keyToSet ]() == args[1]  
+            let result = this.value [ keyToSet ]('unproxy').datum.value == args[1]  
             if ( result ) {
             
                 // LOGGING - 1 scenario (2 of 2 in vertexSet/n)
-                datumToSet.log.sets.note ( EventLog.timeStampBox ( args[1] ) )
+                let timeStampBoxedValue =  EventLog.timeStampBox ( args[1] )
+                datumToSet.log.sets.note ( timeStampBoxedValue )
+                this.log.canon.note ( this.logFormat ( 
+                    'set_vertex_vertexSet',
+                    datumToSet,
+                    timeStampBoxedValue[0]
+                ) ) 
             } 
             return result
 
@@ -994,7 +1013,7 @@ class Graph extends Datum {
         //  the instance of graph.
       
 
-        //console.log (`graphHandler.get : graph.value['${prop}'].`)
+        //console.log (`datumHandler.get : graph.value['${prop}'].`)
         let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
             // performance optimisation opportunity? resplit datumHandler and
             // graphHandler
@@ -1013,7 +1032,7 @@ class Graph extends Datum {
         //  because this is an aef in a method on graph, (this) here refers to
         //  the instance of graph.
       
-        //console.log ( `graphHandler.set : Try to set graph.value['${prop}'] to (${val}).` ) 
+        //console.log ( `datumHandler.set : Try to set graph.value['${prop}'] to (${val}).` ) 
 
         let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
             // performance optimisation opportunity? resplit datumHandler and
@@ -1032,7 +1051,7 @@ class Graph extends Datum {
         //  because this is an aef in a method on graph, (this) here refers to
         //  the instance of graph.
       
-        //console.log(`datumHandlerApply`, args, targ.key, targ)           
+        //console.log( `datumHandlerApply`, args, targ.key, targ)           
                  
         switch ( args.length ) {
 
@@ -1150,21 +1169,34 @@ class Graph extends Datum {
 
     // vertexSet is using a keysniffer to get the keys of functions called in
     // Funs, when the Fun is set to the graph.
+    //
+    // If you're pulling data into your Fun, you'll trigger getters
+    // on the other Datums-
     'scopedFunKeySnifferHandlerGet': funToSet => {
-        
-            //console.log(`scopedFunKeySnifferHandlerGet/1`)
-
-                // If you're pulling data into your Fun, you'll trigger getters
-                // on the other Datums-
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-            //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun : keySnifferHandler.get: `, ksProp)
+                //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
+                //: keySnifferHandler.get: `, ksProp)
 
-            //  Configure (this) dependent to track dependencies:
+//  Configure (this) dependent to track dependencies:
+
+//  RECORD POINTERS IN
+
             if ( ! ( 'causal' in funToSet.pointers.in ) ) {
                 funToSet.pointers.in.causal = []
             }
-            funToSet.pointers.in.causal.push ( new PointerIn ( ksProp) )
+            let pointerIn = new PointerIn ( ksProp)
+            funToSet.pointers.in.causal.push ( pointerIn )
+
+            // LOGGING
+            let timeStampBoxedPointerIn = EventLog.timeStampBox ( pointerIn )
+            funToSet.log.setsPointerIn
+                .note ( timeStampBoxedPointerIn )
+            this.log.canon.note ( this.logFormat (
+                'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet',
+                funToSet,
+                timeStampBoxedPointerIn[0]
+            ) )
 
             // WARNING: does not require dependency keys to be in the graph
             // before dependents are set FIXME
@@ -1175,21 +1207,34 @@ class Graph extends Datum {
                 throw Error (`graph.vertexSet/n tried to set an Fun, but the
                         Fun referred to a source address which has not been
                         set: (${ ksProp })`)
-            }
+            } // Note the asymmetry with ---HandlerSet
 
+//  Configure dependencies to track (this) dependent:
 
-            // Configure dependencies to track (this) dependent:
             let dependencyDatum = this.value[ ksProp ]('datum')
+
+//  RECORD POINTERS OUT 
 
                 if ( ! ( 'causal' in dependencyDatum.pointers.out ) ) {
                     dependencyDatum.pointers.out.causal = []
                 }
 
-                //console.log (  funToSet.key )
+                    //console.log (  funToSet.key )
 
+                let pointerOut = new PointerOut ( funToSet.key )
                 dependencyDatum
-                    .pointers.out.causal.push ( new PointerOut ( funToSet.key ) )
+                    .pointers.out.causal.push ( pointerOut )
 
+                // LOGGING
+                let timeStampBoxedPointerOut 
+                    = EventLog.timeStampBox ( pointerOut )
+                dependencyDatum.log.setsPointerOut
+                    .note ( timeStampBoxedPointerOut )    
+                this.log.canon.note ( this.logFormat (
+                    'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet',
+                    dependencyDatum,
+                    timeStampBoxedPointerOut[0]
+                ) )
 
                 //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
 
@@ -1235,38 +1280,68 @@ class Graph extends Datum {
 
     // vertexSet is using a keysniffer to get the keys of functions called in
     // Funs, when the Fun is set to the graph.
+    //
+    // If you're pushing data from your Fun, you'll trigger setters
+    // on the other Datums-
     'scopedFunKeySnifferHandlerSet': funToSet => {
-        
-            //console.log(`scopedFunKeySnifferHandlerSet/1`)
-
-                // If you're pushing data from your Fun, you'll trigger setters
-                // on the other Datums-
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-            //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal)
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
+                //: keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal )
 
-            //  Configure (this) dependency to track dependents:
+//  Configure (this) dependency to track dependents:
+
+//  RECORD POINTERS OUT
+
             if ( ! ( 'causal' in funToSet.pointers.out ) ) {
                 funToSet.pointers.out.causal = []
             }
-            funToSet.pointers.out.causal.push ( new PointerOut ( ksProp ) )
+            let pointerOut = new PointerOut ( ksProp )
+            funToSet.pointers.out.causal.push ( pointerOut )
 
-                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set: PointerOut-s inserted at:`, key )
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
+                //: keySnifferHandler.set: PointerOut-s inserted at:`, key )
 
-            //  Configure dependents to track (this) dependency:
+            // LOGGING
+            let timeStampBoxedPointerOut 
+                = EventLog.timeStampBox ( pointerOut )
+            funToSet.log.setsPointerOut.note ( timeStampBoxedPointerOut )    
+            this.log.canon.note ( this.logFormat (
+                'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet',
+                funToSet,
+                timeStampBoxedPointerOut[0]
+            ) )
+
+//  Configure dependents to track (this) dependency:
+
+//  RECORD POINTERS IN
+
             if ( ! ( ksProp in this.value ) ) {
                 this.vertexSet ( ksProp, undefined ) 
-            }
+            } // Note the asymmetry with ---HandlerGet
+
             let dependentDatum = this.value[ ksProp ]('datum')
 
-                if ( ! ( 'causal' in dependentDatum.pointers.in ) ) {
-                    dependentDatum.pointers.in.causal = []
-                }
-                dependentDatum
-                    .pointers.in.causal.push ( new PointerIn ( funToSet.key ) )
+            if ( ! ( 'causal' in dependentDatum.pointers.in ) ) {
+                dependentDatum.pointers.in.causal = []
+            }
+            let pointerIn = new PointerIn ( funToSet.key )
+            dependentDatum
+                .pointers.in.causal.push ( pointerIn )
 
-                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun : keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
+                //: keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
             
+            // LOGGING
+            let timeStampBoxedPointerIn = EventLog.timeStampBox ( pointerIn )
+            dependentDatum.log.setsPointerIn
+                .note ( timeStampBoxedPointerIn )
+            this.log.canon.note ( this.logFormat (
+                'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet',
+                dependentDatum,
+                timeStampBoxedPointerIn[0]
+            ) )
+
             return true // FIXME: pointers unchecked?
         }
     }
