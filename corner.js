@@ -26,17 +26,17 @@ class EventLog {
     }
 
     note ( preferATimeStampBoxedValue  ) {
-        this.dispatch () 
+        this.dispatch ( preferATimeStampBoxedValue ) 
         this.actuallyNote ( preferATimeStampBoxedValue ) 
             //console.log ( this.book[ this.book.length -1 ] )
     }
 
     // (graph) is optional
-    actuallyNote ( preferATimeStampBoxedValue ) {
-        this.book.push( preferATimeStampBoxedValue )
+    actuallyNote ( boxedValue ) {
+        this.book.push( boxedValue )
     }
 
-    async dispatch () {}
+    async dispatch ( boxedValue ) {}
         // Interpreter should inline this out of existence unless
         // emit actually does something in a subclass
 
@@ -88,9 +88,9 @@ class AsyncDispatcher extends EventLog {
     //      AsyncFunction. The functional difference is, while (dispatch) will
     //      asynchronously 'await' task execution, (dispatch's calling function)
     //      will proceed synchronously without waiting for (dispatch).
-    async dispatch() {
+    async dispatch( boxedValue ) {
         let resolvedPromises = await Promise.all (
-            Object.values ( this.tasks ) .map ( t => t() )
+            Object.values ( this.tasks ) .map ( t => t( boxedValue ) )
         )
         this.actuallyNote ( {
             time        : EventLog.time(),

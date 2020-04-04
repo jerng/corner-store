@@ -4,70 +4,116 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
 // D3 visualisation experiment:
-{
+function d3App () {
 
-    let width   = 500,
-        height  = 500,
-        color   = d3.scaleOrdinal(d3.schemeCategory10),
-        svg     = d3.select ( 'body' )
-                    .append ( 'svg' )
-                    .attr ( 'width', width )
-                    .attr ( 'height', height )
-                    .attr ( 'style', 'background-color:#eeeeee' )
+    let 
 
-    let dataArray = []
+    initialData = [],
+    width       = 500,
+    height      = 500,
 
-    let g       = svg.append ( 'g' )
-                    .attr (  'transform', 
-                            'translate( ' + width / 2 + ',' + height / 2 + ' )' ),
-        gg      = g.append ( 'g' )
-                    .attr ( 'stroke', '#fff' )
-                    .attr ( 'stroke-width', 1.5)
-                    .selectAll () // empty selection
+    color   = d3.scaleOrdinal(d3.schemeCategory10),
 
-    let tickHandler = function () {
-        gg  .attr( 'cx', d => d.x )
-            .attr( 'cy', d => d.y )
-            console.log('t')
-    }
+    //  HENCEFORTH, the syntax 
+    //
+    //      X_Y
+    //
+    //  ... shall refer to SELECTIONS, where ...
+    //
+    //      X refers to a GROUP, and
+    //      Y refers to ELEMENTS, in that group.
+    //
+    //  It is MANDATORY to brain d3's documentation on the differences between
+    //  what is returned by (d3.select / d3.selectAll) and what is returned by
+    //  (SELECTION.select / SELECTION.selectALL), before proceeding.
 
-    let simulation = d3.forceSimulation (  dataArray )
+
+    body_svg
+    = d3.select ( 'body' )
+        .append ( 'svg' )
+        .attr ( 'width', width )
+        .attr ( 'height', height )
+        .attr ( 'style', 'background-color:#eeeeee' ),
+
+
+    svg_g1 
+    = body_svg
+        .append ( 'g' )
+        .attr ( 'transform', 
+                'translate( ' + width / 2 + ',' + height / 2 + ' )' ),
+                
+    g1_g2    
+    
+        //  The SELECTION (g1_g2)'s FIRST reference.
+        //  This has one group for each <g>1 in svg_g1;
+        //  groups will be empty as <g>2s have not been appended.
+
+    = svg_g1
+        .selectAll (),
+
+    tickHandler
+    = function () {
+        g1_g2.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
+    },
+
+    simulation 
+    = d3.forceSimulation ( initialData )
         .force ( 'charge', d3.forceManyBody ().strength ( -1000 ) )
         .force ( 'x', d3.forceX () )
         .force ( 'y', d3.forceY () )
         .alphaTarget ( 0.0001 )
         .alphaDecay ( 0.01 ) 
         .velocityDecay ( 0.1 )
-        .on ( 'tick', tickHandler )
+        .on ( 'tick', tickHandler ),
                                                                   
-    let updateSimulation = function ( latestData ) {
+    updateSimulation 
+    = function ( latestData ) {
 
         // Ensure that SIMULATION knows (node ontology).
-        simulation.nodes ( latestData )
+
+        simulation.nodes ( latestData, datum => datum.key )
 
         // Ensure that (element ontology) has a 1-1 mapping to (node ontology)
-        gg = gg
+
+        g1_g2
+
+            // The SELECTION (g1_g2)'s SECOND reference. 
+        
+        = g1_g2
             .data ( latestData , d => d.id  )
+                
+                //  This DATA GROUP is then JOINED to ELEMENT GROUP, g1, 
+                //  in the SELECTION (g1_g2).
+
             .join (
-                enterer => enterer
-                    .append ( 'circle' )
-                    .attr("fill", d => color(d.id) )
-                    .attr("r", 8)
+                enterer => {
+
+                        // Each (enterer) is a datum in the group, g1, which
+                        // isn't already mapped to a <g>2 element.
+
+                    let g2 = enterer
+                        .append ( 'g' )
+
+                    let circle = g2
+                        .append ( 'circle' )
+                        .attr ( 'fill', d => color(d.id) )
+                        .attr ( 'stroke', '#fff' )
+                        .attr ( 'stroke-width', 1.5 )
+                        .attr ( 'r', 8 )
+
+                    let text = g2
+                        .append ( 'text' )
+                        .text ( d => d.key )
+
+                    return g2 
+                }
             )
     }
 
-    updateSimulation ( dataArray )
-    
-    let intervalHandle = setInterval ( () => {
-        dataArray.push ( {} )
-        updateSimulation ( dataArray )
-    }, 1000 ) 
-
-    setTimeout ( () => {
-        clearInterval ( intervalHandle )
-        //simulation.stop()
-    }, 5000 ) 
-
+    return {
+        simulation  : simulation,
+        update      : updateSimulation
+    }
 }
 
 let p = thing => JSON.stringify ( thing, null, 4 )
@@ -84,7 +130,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -430,7 +476,7 @@ new Exam.Exam ( {
         } ) 
         
         //console.log( SERVER( 'vertices' ).sink4( 'unproxy' ).pointers.in )
-        console.log( SERVER( 'graph').log.canon.book )
+        //console.log( SERVER( 'graph').log.canon.book )
         //console.log( JSON.stringify ( SERVER( 'graph').log.canon.book, null, 4 ) )
 
         return JSON.stringify ( {
@@ -741,37 +787,59 @@ stale flag?`,
     want : ''
 },
 //*/
-//*/
 {   test : `D3 graph visualiser`,
     code : function () {
-        throw Error
-        //  Draft architecture:
-        //  
-        //  Whenever a Graph instance is touched, it shall log its activity in a
-        //  high-level natural language manner.
-        //
-        //  Currently, Datum log low-level events to their (gets.hits),
-        //  (gets.misses), and (sets) EventLog instances.
-        //
-        //      One possibility: we add functionality to EventLog and
-        //      AsyncDispatcher classes to also add pointers to an Event index
-        //      in Graph.log (such that Graph.log tracks Graph.value in the same
-        //      way that Datum.log tracks Datum.value).
-        //
-        //          The risk of doing so, is that the Graph log becomes
-        //          redundant with various Datum logs. A fat model of robotics
-        //          would appreciate this redundancy, but of course that comes
-        //          at the cost of performance.
-        //
-        //          Yet if we do this, Graph log becomes the clearing house for
-        //          operations upon the Graph as a whole, such as historical
-        //          playback, and Graph visualisation.
-        //
+
+        let S       = new Graph ( 'server' )
+        let GRAPH   = S ( 'graph' )
+        let V       = d3App()
+        let fsData  = []
+        
+
+        GRAPH.log.canon.tasks.d3 = boxedValue => new Promise ( ( fulfill, reject ) => {
+       
+            //console.log ( boxedValue ) 
+
+            switch ( boxedValue.type ) {
+            
+             case 'set_vertex_vertexSet' :
+                
+                fsData.push ( {
+                    key : boxedValue.datum.key
+                } )
+                V.update ( fsData ) 
+
+
+             default:
+            }
+
+        } )
+        
+        S.a = 1 
+        S.b = new Fun ( q => { 
+            q.c = 3
+            return q.a 
+        } )  
+        S.b = 2
+        delete S.b
+
+
+  for ( const note of GRAPH.log.canon.book ) {
+      console.error (
+        //note.timeStamp,
+        note.type,
+        //note.datum.key, ':', note.datum.value
+      )
+  }
+  
+
+
 
 
     },
-    want : ''
+    want : 'legible'
 },
+/*/
 {   test : 'Pointer logging.',
     code : function () {
     
