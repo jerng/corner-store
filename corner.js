@@ -40,8 +40,13 @@ class EventLog {
         // Interpreter should inline this out of existence unless
         // emit actually does something in a subclass
 
+    static time () { return performance.now() }
+
     static timeStampBox ( value ) {
-        return [ performance.now(), value ]
+        return { 
+            time    :   EventLog.time(), 
+            value   :   value
+        }
     }
 }
 
@@ -87,10 +92,9 @@ class AsyncDispatcher extends EventLog {
         let resolvedPromises = await Promise.all (
             Object.values ( this.tasks ) .map ( t => t() )
         )
-        let timeStampBoxedValue = EventLog.timeStampBox ( resolvedPromises ) 
         this.actuallyNote ( {
-            time    : timeStampBoxedValue[0],
-            resolution   : resolvedPromises
+            time        : EventLog.time(),
+            resolution  : resolvedPromises
         } ) 
             // logs own events to self!
     } 
@@ -612,9 +616,9 @@ class Graph extends Datum {
 
     } // Graph.constructor
 
-    logFormat ( typeString, vertexObject, timeStamp ) {
+    logFormat ( typeString, vertexObject, time ) {
         return  {
-                    time        : timeStamp,
+                    time        : time,
                     datum       : vertexObject,
                     type        : typeString
                 }
@@ -652,7 +656,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'get_vertex_miss_runFunAndLog',
                 datum,
-                timeStampBoxedValue[0]
+                timeStampBoxedValue.time
             ) )
         }
 
@@ -671,7 +675,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'get_vertex_hit_runFunAndLog',
                 datum,
-                timeStampBoxedValue[0]
+                timeStampBoxedValue.time
             ) )
         }                                   
 
@@ -696,7 +700,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'delete_vertex_vertexDelete',
                 deletedDatum,
-                timeStampBoxedValue[0]
+                timeStampBoxedValue.time
             ) )
             // Only time stamp is needed; refactoring may make this more
             // efficient later. FIXME
@@ -768,7 +772,7 @@ class Graph extends Datum {
         this.log.canon.note ( this.logFormat (
             'get_vertex_hit_vertexGetTyped',
             datum,
-            timeStampBoxedValue[0]
+            timeStampBoxedValue.time
         ) )
         
         return result
@@ -928,7 +932,7 @@ class Graph extends Datum {
                 this.log.canon.note ( this.logFormat ( 
                     'set_vertex_Fun_vertexSet',
                     datumToSet,
-                    timeStampBoxedValue[0]
+                    timeStampBoxedValue.time
                 ) ) 
             }
             return result
@@ -970,7 +974,7 @@ class Graph extends Datum {
                 this.log.canon.note ( this.logFormat ( 
                     'set_vertex_vertexSet',
                     datumToSet,
-                    timeStampBoxedValue[0]
+                    timeStampBoxedValue.time
                 ) ) 
             } 
             return result
@@ -1199,7 +1203,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet',
                 funToSet,
-                timeStampBoxedPointerIn[0]
+                timeStampBoxedPointerIn.time
             ) )
 
             // WARNING: does not require dependency keys to be in the graph
@@ -1237,7 +1241,7 @@ class Graph extends Datum {
                 this.log.canon.note ( this.logFormat (
                     'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet',
                     dependencyDatum,
-                    timeStampBoxedPointerOut[0]
+                    timeStampBoxedPointerOut.time
                 ) )
 
                 //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
@@ -1313,7 +1317,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet',
                 funToSet,
-                timeStampBoxedPointerOut[0]
+                timeStampBoxedPointerOut.time
             ) )
 
 //  Configure dependents to track (this) dependency:
@@ -1343,7 +1347,7 @@ class Graph extends Datum {
             this.log.canon.note ( this.logFormat (
                 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet',
                 dependentDatum,
-                timeStampBoxedPointerIn[0]
+                timeStampBoxedPointerIn.time
             ) )
 
             return true // FIXME: pointers unchecked?
