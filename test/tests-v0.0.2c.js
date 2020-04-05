@@ -33,8 +33,12 @@ function d3App () {
         .append ( 'svg' )
         .attr ( 'width', width )
         .attr ( 'height', height )
-        .attr ( 'style', 'background-color:#eeeeee' ),
-
+        .attr ( 'stroke-width', 1 )
+        .attr ( 'style',   `background-color: #eeeeee;
+                            font-family: Roboto, Helvetica, sans-serif;
+                            font-weight: 300;
+                            font-size: 16px;`
+        ),
 
     svg_g1 
     = body_svg
@@ -67,8 +71,8 @@ function d3App () {
         .on ( 'tick', tickHandler ),
                                                                   
     updateSimulation 
-    = function ( latestData ) {
-
+    = function ( latestData ) 
+    {
         // Ensure that SIMULATION knows (node ontology).
 
         simulation.nodes ( latestData, datum => datum.key )
@@ -86,8 +90,8 @@ function d3App () {
                 //  in the SELECTION (g1_g2).
 
             .join (
-                enterer => {
-
+                enterer =>
+                {
                         // Each (enterer) is a datum in the group, g1, which
                         // isn't already mapped to a <g>2 element.
 
@@ -96,20 +100,37 @@ function d3App () {
 
                     let circle = g2
                         .append ( 'circle' )
-                        .attr ( 'fill', d => color(d.id) )
-                        .attr ( 'stroke', '#fff' )
-                        .attr ( 'stroke-width', 1.5 )
-                        .attr ( 'r', 8 )
+                            .attr ( 'r', 12 )
+                            .attr ( 'fill', d => color(d.id) )
+                            .attr ( 'stroke', '#fff' )
 
-                    let text = g2
-                        .append ( 'text' )
-                        .text ( d => d.key )
+                    let textXOffset = 25
 
+                    let foreignObject = g2
+                        .append( 'foreignObject' )
+                            .attr( 'height', '50')
+                            .attr( 'width', '50')
+
+                    let div = foreignObject
+                        .append( 'xhtml:div' )
+                            .attr( 'style', 'overflow-wrap: break-word;' )
+                            .text ( d => d.key )
+  
+
+                //  let textBox = g2
+                //      .append ( 'rect' )
+                //      .attr ( 'width', 1.8 * textXOffset + text.node().getBBox().width )
+                //      .attr ( 'height', 1.7 * textXOffset )
+                //      .attr ( 'rx', '5' )
+                //      .attr ( 'stroke', '#999' )
+                //      .attr ( 'fill-opacity', '0.1' )
+  
                     return g2 
                 }
             )
     }
 
+                            console.log ( d3.namespaces ) 
     return {
         simulation  : simulation,
         update      : updateSimulation
@@ -815,13 +836,13 @@ stale flag?`,
 
         } )
         
-        S.a = 1 
-        S.b = new Fun ( q => { 
-            q.c = 3
-            return q.a 
+        S.abacus = 1 
+        S.blanket = new Fun ( q => { 
+            q.change = 3
+            return q.abacus
         } )  
-        S.b = 2
-        delete S.b
+        S.blanket = 2
+        delete S.blanket
 
 
   for ( const note of GRAPH.log.canon.book ) {
