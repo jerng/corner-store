@@ -108,22 +108,22 @@ function d3App () {
 
                     let foreignObject = g2
                         .append( 'foreignObject' )
-                            .attr( 'height', '50')
-                            .attr( 'width', '50')
+                            .attr( 'x', '5')
+                            .attr( 'y', '5')
+                            .attr( 'height', '500')
+                            .attr( 'width', '100')
 
                     let div = foreignObject
                         .append( 'xhtml:div' )
-                            .attr( 'style', 'overflow-wrap: break-word;' )
+                            .attr( 'style',    
+                                   `padding: 5px;
+                                    overflow-wrap: break-word; 
+                                    border: 1px solid #999;
+                                    border-radius: 5px;
+                                    background-color: rgba(255,255,255,0.7);
+                                    ` 
+                            )
                             .text ( d => d.key )
-  
-
-                //  let textBox = g2
-                //      .append ( 'rect' )
-                //      .attr ( 'width', 1.8 * textXOffset + text.node().getBBox().width )
-                //      .attr ( 'height', 1.7 * textXOffset )
-                //      .attr ( 'rx', '5' )
-                //      .attr ( 'stroke', '#999' )
-                //      .attr ( 'fill-opacity', '0.1' )
   
                     return g2 
                 }
@@ -838,7 +838,7 @@ stale flag?`,
         
         S.abacus = 1 
         S.blanket = new Fun ( q => { 
-            q.change = 3
+            q.changeAVeryLongKeyName = 3
             return q.abacus
         } )  
         S.blanket = 2
