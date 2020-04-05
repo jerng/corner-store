@@ -4,11 +4,11 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
 // D3 visualisation experiment:
-function d3App () {
+function graphViewer ( graphServer ) {
 
     let 
 
-    initialData = [],
+    dataArray   = [],
     width       = 500,
     height      = 500,
 
@@ -61,13 +61,13 @@ function d3App () {
     },
 
     simulation 
-    = d3.forceSimulation ( initialData )
-        .force ( 'charge', d3.forceManyBody ().strength ( -1000 ) )
+    = d3.forceSimulation ( dataArray )
+        .force ( 'charge', d3.forceManyBody ().strength ( -400 ) )
         .force ( 'x', d3.forceX () )
         .force ( 'y', d3.forceY () )
         .alphaTarget ( 0.0001 )
         .alphaDecay ( 0.01 ) 
-        .velocityDecay ( 0.1 )
+        .velocityDecay ( 0.7 )
         .on ( 'tick', tickHandler ),
                                                                   
     updateSimulation 
@@ -128,12 +128,39 @@ function d3App () {
                     return g2 
                 }
             )
-    }
 
-                            console.log ( d3.namespaces ) 
+        simulation.alpha(1).restart()
+    },
+    startSimulation  = server => {
+        
+        let graph       = server ( 'graph' )
+
+        graph.log.canon.tasks.d3 
+        = boxedValue => new Promise ( ( F, R ) => {
+       
+            switch ( boxedValue.type ) {
+            
+                case 'set_vertex_vertexSet' :
+                
+                    dataArray.push ( {
+                        key : boxedValue.datum.key
+                    } )
+                    updateSimulation ( dataArray ) 
+
+
+             default:
+            }
+            F ( 'd3 visualiser, updated' )
+
+        } )
+    }
+    
+    startSimulation ( graphServer )
+
     return {
         simulation  : simulation,
-        update      : updateSimulation
+        update      : updateSimulation,
+        data        : dataArray
     }
 }
 
@@ -151,7 +178,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -813,29 +840,19 @@ stale flag?`,
 
         let S       = new Graph ( 'server' )
         let GRAPH   = S ( 'graph' )
-        let V       = d3App()
-        let fsData  = []
+  
+        graphViewer ( S ) 
         
+        setTimeout ( () => {
+            S.d = 1
+        }, 1000 )
+        setTimeout ( () => {
+            S.e = 1
+        }, 2000 )
+        setTimeout ( () => {
+            S.f = 1
+        }, 3000 )
 
-        GRAPH.log.canon.tasks.d3 = boxedValue => new Promise ( ( fulfill, reject ) => {
-       
-            //console.log ( boxedValue ) 
-
-            switch ( boxedValue.type ) {
-            
-             case 'set_vertex_vertexSet' :
-                
-                fsData.push ( {
-                    key : boxedValue.datum.key
-                } )
-                V.update ( fsData ) 
-
-
-             default:
-            }
-
-        } )
-        
         S.abacus = 1 
         S.blanket = new Fun ( q => { 
             q.changeAVeryLongKeyName = 3
