@@ -101,7 +101,7 @@ function graphViewer ( graphServer ) {
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
                             .attr ( 'fill', 
-                                    d => d.lambda ? '#ee0' : '#59f'
+                                    d => d.lambda ? '#ee0' : '#6af'
                             )
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
@@ -136,14 +136,14 @@ function graphViewer ( graphServer ) {
                         .transition()
                     .duration ( 700 ) 
                             .attr ( 'fill', d =>    d.hit 
-                                                    ?   '#0f0' 
+                                                    ?   '#6d8' 
                                                     :   d.lambda
                                                         ?   '#ee0'
-                                                        :   '#59f' )
+                                                        :   '#6af' )
                         .transition()
                             .attr ( 'fill', d =>    d.lambda
                                                     ?   '#ee0'
-                                                    :   '#59f' )
+                                                    :   '#6af' )
 
                     // This feels expensive; find a cheaper way later. FIXME
                     return updater
@@ -194,20 +194,53 @@ function graphViewer ( graphServer ) {
         graph.log.canon.tasks.d3 
         = boxedValue => new Promise ( ( F, R ) => {
 
-            let index
+            // Not all cases of the switch require this; separate. FIXME
+            let index = dataArray.findIndex ( 
+                e => e.key == boxedValue.datum.key
+            )
+            if ( ~index ) { // Found an index; remove ephemeral signals.
+                delete dataArray[ index ].hit
+                delete dataArray[ index ].miss
+            }
+            let dataElement
 
             switch ( boxedValue.type ) {
                 
+                case 'delete_vertex_vertexDelete' :
+                    dataArray = dataArray.filter (
+                        vertex => vertex.key != boxedValue.datum.key
+                    )
+                    break
+
+                case 'get_vertex_hit_vertexGetTyped' :
+                    if ( ~index ) { // Found an index; report.
+                        dataArray[ index ].hit = true
+                    }
+                    else {          // Found no index; complain.
+                        R (`d3 visualiser (get_vertex_hit_vertexGetTyped) :
+                            dataArray has no node with the key : 
+                            ${ boxedValue.datum.key }` )
+                    }
+                    break
+
+                case 'get_vertex_miss_runFunAndLog' :
+                    if ( ~index ) { // Found an index; report.
+                        dataArray[ index ].miss = true
+                    }
+                    else {          // Found no index; complain.
+                        R (`d3 visualiser (get_vertex_miss_runFunAndLog) :
+                            dataArray has no node with the key : 
+                            ${ boxedValue.datum.key }` )
+                    }
+                    break
+
                 case 'set_vertex_vertexSet' :
-                    let dataElement = {
+                    dataElement = {
                         key     : boxedValue.datum.key,
                         value   : boxedValue.datum.value,
-                        lambda  : boxedValue.datum.lambda
+                        lambda  : boxedValue.datum.lambda 
+                                        // TODO check: (lambda) may be redundant
                     }
-                    index = dataArray.findIndex ( 
-                        e => e.key == boxedValue.datum.key
-                    )
-
                     if ( ~index ) { // Found an index; replace element.
                         dataArray[ index ]  = dataElement
                     }
@@ -216,22 +249,17 @@ function graphViewer ( graphServer ) {
                     }
                     break
 
-                case 'delete_vertex_vertexDelete' :
-                    dataArray = dataArray.filter (
-                        vertex => vertex.key != boxedValue.datum.key
-                    )
-                    break
-
-                case 'get_vertex_hit_vertexGetTyped' :
-                    index = dataArray.findIndex ( 
-                        e => e.key == boxedValue.datum.key
-                    )
-
-                    if ( ~index ) { // Found an index; report.
-                        dataArray[ index ].hit = true
+                case 'set_vertex_Fun_vertexSet' :
+                    dataElement = {
+                        key     : boxedValue.datum.key,
+                        value   : boxedValue.datum.value,
+                        lambda  : boxedValue.datum.lambda
                     }
-                    else {          // Found no index; complain.
-                        R (`d3 visualiser : dataArray has no node with the key : ${ boxedValue.datum.key }` )
+                    if ( ~index ) { // Found an index; replace element.
+                        dataArray[ index ]  = dataElement
+                    }
+                    else {          // Found no index; add element.
+                        dataArray.push ( dataElement )
                     }
                     break
 
@@ -244,11 +272,11 @@ function graphViewer ( graphServer ) {
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-//console.log ( 
-//    boxedValue.datum.key,
-//    boxedValue.datum.value, 
-//    p ( dataArray ) 
-//)
+  console.log ( 
+    boxedValue.datum instanceof Fun,    
+    boxedValue,
+    dataArray
+  )
             updateSimulation ( dataArray ) 
             F ( 'd3 visualiser, updated' )
         } )
@@ -965,15 +993,13 @@ stale flag?`,
         graphViewer ( S ) 
         
         S.abacus = 1 
-        S.donkey = 2
+        //S.donkey = 2
         S.blanket = new Fun ( q => { 
-            q.changeAVeryLongKeyName = Math.random()
+            //q.changeAVeryLongKeyName = Math.random()
             return q.abacus
         } )  
 
-        S.blanket
-        S.blanket = 2
-        S.abacus
+        //S.abacus
 
 
         setTimeout ( () => {
@@ -981,13 +1007,14 @@ stale flag?`,
         }, 1000 )
         setTimeout ( () => {
             //S.e = null
-            delete S.abacus
+            //delete S.abacus
             //console.log ( S('vertices') )
         }, 2000 )
         setTimeout ( () => {
             //S.f = 1
-            S.abacus = 2 
+            //S.abacus = 2 
             //S.donkey = 2
+            //S.blanket
         }, 3000 )
 
 

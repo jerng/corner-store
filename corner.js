@@ -931,7 +931,7 @@ class Graph extends Datum {
                 datumToSet.log.sets.note ( timeStampBoxedValue )
                 this.log.canon.note ( this.logFormat ( 
                     'set_vertex_Fun_vertexSet',
-                    datumToSet,
+                    funToSet,
                     timeStampBoxedValue.time
                 ) ) 
             }
