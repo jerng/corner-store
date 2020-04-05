@@ -42,9 +42,7 @@ function graphViewer ( graphServer ) {
 
     svg_g1 
     = body_svg
-        .append ( 'g' )
-        .attr ( 'transform', 
-                'translate( ' + width / 2 + ',' + height / 2 + ' )' ),
+        .append ( 'g' ),
                 
     g1_g2    
     
@@ -62,12 +60,16 @@ function graphViewer ( graphServer ) {
 
     simulation 
     = d3.forceSimulation ( dataArray )
-        .force ( 'charge', d3.forceManyBody ().strength ( -400 ) )
-        .force ( 'x', d3.forceX () )
-        .force ( 'y', d3.forceY () )
-        .alphaTarget ( 0.0001 )
-        .alphaDecay ( 0.01 ) 
-        .velocityDecay ( 0.7 )
+
+        .force ( '?charge',     d3.forceManyBody () )
+        .force ( '?x',          d3.forceX () )
+        .force ( '?y',          d3.forceY () )
+        .force ( '?collision',  d3.forceCollide (70) )
+
+        .velocityDecay  ( 0.7 )
+        .alphaTarget    ( 0.0001 )
+        .alphaDecay     ( 0.01 ) 
+
         .on ( 'tick', tickHandler ),
                                                                   
     updateSimulation 
@@ -103,8 +105,6 @@ function graphViewer ( graphServer ) {
                             .attr ( 'r', 12 )
                             .attr ( 'fill', d => color(d.id) )
                             .attr ( 'stroke', '#fff' )
-
-                    let textXOffset = 25
 
                     let foreignObject = g2
                         .append( 'foreignObject' )
@@ -149,9 +149,9 @@ function graphViewer ( graphServer ) {
                             .transition () .style ( 'fill', 'grey' )
                     
                     exiter
-                        .transition().delay ( 4000 ) 
+                        .transition().delay ( 3000 ) 
                         .transition().duration ( 1000 ) 
-                            .ease ( d3.easeCubicOut )
+                            .ease ( d3.easeCubicIn )
                             .style ( 'opacity', 0 )
                             .remove()
                     
@@ -161,7 +161,8 @@ function graphViewer ( graphServer ) {
 
         simulation.alpha(1).restart()
     },
-    startSimulation  = server => {
+    startSimulation  = server => 
+    {
         
         let graph       = server ( 'graph' )
 
@@ -195,8 +196,30 @@ function graphViewer ( graphServer ) {
             updateSimulation ( dataArray ) 
             F ( 'd3 visualiser, updated' )
         } )
-    }
-    
+    },
+
+    zoom =
+        d3
+        .zoom()
+        .scaleExtent([.1, 4])
+        .on( "zoom", () =>  svg_g1
+                            .transition ()
+                            .duration ( 200 )
+                            .ease ( d3.easeCubicOut ) 
+                            .attr ( "transform", d3.event.transform ) 
+        )
+
+    // end of (let)s - continue imperatives:
+
+    zoom ( body_svg )
+    zoom.translateBy (  body_svg
+                            .transition ()
+                            .duration ( 400 )
+                            .ease ( d3.easeCubicOut ), 
+                        width / 2, 
+                        height / 2 
+    )
+
     startSimulation ( graphServer )
 
     return {
