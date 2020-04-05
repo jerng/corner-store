@@ -103,8 +103,12 @@ function graphViewer ( graphServer ) {
                     let circle = g2
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
-                            .attr ( 'fill', d => color(d.id) )
-                            .attr ( 'stroke', '#fff' )
+                            .attr ( 'fill', 
+                                    d => d.lambda ? '#ee0' : '#59f'
+                            )
+                            .attr ( 'stroke', 
+                                    d => d.lambda ? '#c70' : '#fff' 
+                            )
 
                     let foreignObject = g2
                         .append( 'foreignObject' )
@@ -123,7 +127,7 @@ function graphViewer ( graphServer ) {
                                     background-color: rgba(255,255,255,0.7);
                                     ` 
                             )
-                            .text ( d => d.key )
+                            .text ( d => d.key + ' : ' + d.value )
   
                     return g2 
                 },
@@ -172,7 +176,11 @@ function graphViewer ( graphServer ) {
             switch ( boxedValue.type ) {
             
                 case 'set_vertex_vertexSet' :
-                    dataArray.push ( { key : boxedValue.datum.key } )
+                    dataArray.push ( { 
+                        key     : boxedValue.datum.key,
+                        value   : boxedValue.datum.value,
+                        lambda  : boxedValue.datum.lambda
+                    } )
                     break
                 case 'delete_vertex_vertexDelete' :
                     dataArray = dataArray.filter (
@@ -181,15 +189,10 @@ function graphViewer ( graphServer ) {
                     console.log ( dataArray )
                     break
 
-//\ set_vertex_vertexSet
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet
-//\ set_vertex_vertexSet
 //\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet
 //\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet
-//\ set_vertex_Fun_vertexSet
-//\ set_vertex_vertexSet
-//\ 
 
              default:
             }
@@ -916,13 +919,13 @@ stale flag?`,
         S.blanket = 2
 
         setTimeout ( () => {
-            S.d = 1
+            S.d = {}
         }, 1000 )
         setTimeout ( () => {
             S.f = 1
         }, 3000 )
         setTimeout ( () => {
-            S.e = 1
+            S.e = null
             delete S.abacus
             console.log ( S('vertices') )
         }, 2000 )
