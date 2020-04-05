@@ -101,7 +101,9 @@ function graphViewer ( graphServer ) {
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
                             .attr ( 'fill', 
-                                    d => d.lambda ? '#ee0' : '#6af'
+                                    d =>    d.lambda 
+                                            ? ( d.stale ? '#550' : '#ee0' )
+                                            : '#6af'
                             )
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
@@ -132,9 +134,8 @@ function graphViewer ( graphServer ) {
                 {
                     let circle = updater
                         .select ( 'circle' )
-                    circle
                         .transition()
-                    .duration ( 700 ) 
+                        .duration ( 700 ) 
                             .attr ( 'fill', d =>    d.hit 
                                                     ?   '#6d8' 
                                                     :   d.lambda
@@ -144,6 +145,9 @@ function graphViewer ( graphServer ) {
                             .attr ( 'fill', d =>    d.lambda
                                                     ?   '#ee0'
                                                     :   '#6af' )
+                    let div = updater 
+                        .select( 'div' )
+                            .text ( d => d.key + ' : ' + d.value )
 
                     // This feels expensive; find a cheaper way later. FIXME
                     return updater
@@ -195,14 +199,24 @@ function graphViewer ( graphServer ) {
         = boxedValue => new Promise ( ( F, R ) => {
 
             // Not all cases of the switch require this; separate. FIXME
+
             let index = dataArray.findIndex ( 
                 e => e.key == boxedValue.datum.key
             )
+
             if ( ~index ) { // Found an index; remove ephemeral signals.
                 delete dataArray[ index ].hit
                 delete dataArray[ index ].miss
             }
-            let dataElement
+
+            let dataElement = {
+                key     : boxedValue.datum.key,
+                value   : boxedValue.datum.value,
+                lambda  : boxedValue.datum.lambda ,
+                    // This should destructively update the .lambda
+                    // field if .lambda no longer exists here.
+                stale   : boxedValue.datum.stale
+            }
 
             switch ( boxedValue.type ) {
                 
@@ -226,6 +240,7 @@ function graphViewer ( graphServer ) {
                 case 'get_vertex_miss_runFunAndLog' :
                     if ( ~index ) { // Found an index; report.
                         dataArray[ index ].miss = true
+                        dataArray[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_miss_runFunAndLog) :
@@ -235,12 +250,6 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    dataElement = {
-                        key     : boxedValue.datum.key,
-                        value   : boxedValue.datum.value,
-                        lambda  : boxedValue.datum.lambda 
-                                        // TODO check: (lambda) may be redundant
-                    }
                     if ( ~index ) { // Found an index; replace element.
                         dataArray[ index ]  = dataElement
                     }
@@ -250,11 +259,6 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
-                    dataElement = {
-                        key     : boxedValue.datum.key,
-                        value   : boxedValue.datum.value,
-                        lambda  : boxedValue.datum.lambda
-                    }
                     if ( ~index ) { // Found an index; replace element.
                         dataArray[ index ]  = dataElement
                     }
@@ -999,6 +1003,8 @@ stale flag?`,
             return q.abacus
         } )  
 
+
+
         //S.abacus
 
 
@@ -1014,7 +1020,7 @@ stale flag?`,
             //S.f = 1
             //S.abacus = 2 
             //S.donkey = 2
-            //S.blanket
+            S.blanket
         }, 3000 )
 
 
