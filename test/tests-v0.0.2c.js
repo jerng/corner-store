@@ -84,7 +84,7 @@ function graphViewer ( graphServer ) {
             // The SELECTION (g1_g2)'s SECOND reference. 
         
         = g1_g2
-            .data ( latestData , d => d.id  )
+            .data ( latestData , d => d.key  )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP, g1, 
                 //  in the SELECTION (g1_g2).
@@ -126,7 +126,37 @@ function graphViewer ( graphServer ) {
                             .text ( d => d.key )
   
                     return g2 
+                },
+                null, // updater => {}
+                exiter => 
+                { 
+                    let circle = exiter
+                        .select ( 'circle' )
+                        .transition ()
+                        .ease ( d3.easeCubicOut )
+                        .duration ( 500 )
+
+                            .transition () .style ( 'fill', 'red' )
+                            .transition () .style ( 'fill', 'grey' )
+
+                            .transition () .style ( 'fill', 'red' )
+                            .transition () .style ( 'fill', 'grey' )
+
+                            .transition () .style ( 'fill', 'red' )
+                            .transition () .style ( 'fill', 'grey' )
+
+                            .transition () .style ( 'fill', 'red' )
+                            .transition () .style ( 'fill', 'grey' )
+                    
+                    exiter
+                        .transition().delay ( 4000 ) 
+                        .transition().duration ( 1000 ) 
+                            .ease ( d3.easeCubicOut )
+                            .style ( 'opacity', 0 )
+                            .remove()
+                    
                 }
+
             )
 
         simulation.alpha(1).restart()
@@ -141,17 +171,29 @@ function graphViewer ( graphServer ) {
             switch ( boxedValue.type ) {
             
                 case 'set_vertex_vertexSet' :
-                
-                    dataArray.push ( {
-                        key : boxedValue.datum.key
-                    } )
-                    updateSimulation ( dataArray ) 
+                    dataArray.push ( { key : boxedValue.datum.key } )
+                    break
+                case 'delete_vertex_vertexDelete' :
+                    dataArray = dataArray.filter (
+                        vertex => vertex.key != boxedValue.datum.key
+                    )
+                    console.log ( dataArray )
+                    break
 
+//\ set_vertex_vertexSet
+//\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet
+//\ set_vertex_vertexSet
+//\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet
+//\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet
+//\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet
+//\ set_vertex_Fun_vertexSet
+//\ set_vertex_vertexSet
+//\ 
 
              default:
             }
+            updateSimulation ( dataArray ) 
             F ( 'd3 visualiser, updated' )
-
         } )
     }
     
@@ -178,7 +220,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -843,23 +885,24 @@ stale flag?`,
   
         graphViewer ( S ) 
         
-        setTimeout ( () => {
-            S.d = 1
-        }, 1000 )
-        setTimeout ( () => {
-            S.e = 1
-        }, 2000 )
-        setTimeout ( () => {
-            S.f = 1
-        }, 3000 )
-
         S.abacus = 1 
         S.blanket = new Fun ( q => { 
             q.changeAVeryLongKeyName = 3
             return q.abacus
         } )  
         S.blanket = 2
-        delete S.blanket
+
+        setTimeout ( () => {
+            S.d = 1
+        }, 1000 )
+        setTimeout ( () => {
+            S.f = 1
+        }, 3000 )
+        setTimeout ( () => {
+            S.e = 1
+            delete S.abacus
+            console.log ( S('vertices') )
+        }, 2000 )
 
 
   for ( const note of GRAPH.log.canon.book ) {
