@@ -33,7 +33,7 @@ function graphViewer ( graphServer ) {
         .append ( 'svg' )
         .attr ( 'width', width )
         .attr ( 'height', height )
-        .attr ( 'stroke-width', 1 )
+        .attr ( 'stroke-width', 3 )
         .attr ( 'style',   `background-color: #eeeeee;
                             font-family: Roboto, Helvetica, sans-serif;
                             font-weight: 300;
@@ -75,9 +75,6 @@ function graphViewer ( graphServer ) {
     updateSimulation 
     = function ( latestData ) 
     {
-        // Ensure that SIMULATION knows (node ontology).
-
-        simulation.nodes ( latestData, datum => datum.key )
 
         // Ensure that (element ontology) has a 1-1 mapping to (node ontology)
 
@@ -107,7 +104,7 @@ function graphViewer ( graphServer ) {
                                     d => d.lambda ? '#ee0' : '#59f'
                             )
                             .attr ( 'stroke', 
-                                    d => d.lambda ? '#c70' : '#fff' 
+                                    d => d.lambda ? '#000' : '#fff' 
                             )
 
                     let foreignObject = g2
@@ -131,7 +128,7 @@ function graphViewer ( graphServer ) {
   
                     return g2 
                 },
-                null, // updater => {}
+                updater => updater,
                 exiter => 
                 { 
                     let circle = exiter
@@ -140,7 +137,9 @@ function graphViewer ( graphServer ) {
                         .ease ( d3.easeCubicOut )
                         .duration ( 500 )
 
-                            .transition () .style ( 'fill', 'red' )
+                            .transition () 
+                                .style ( 'fill', 'red' )
+                                .attr ('r', 20 )
                             .transition () .style ( 'fill', 'grey' )
 
                             .transition () .style ( 'fill', 'red' )
@@ -163,7 +162,13 @@ function graphViewer ( graphServer ) {
 
             )
 
+        // Ensure that SIMULATION knows (node ontology).
+
+        simulation.nodes ( latestData ) // , datum => datum.key )
         simulation.alpha(1).restart()
+console.log (
+    
+)
     },
     startSimulation  = server => 
     {
@@ -172,21 +177,33 @@ function graphViewer ( graphServer ) {
 
         graph.log.canon.tasks.d3 
         = boxedValue => new Promise ( ( F, R ) => {
-       
+
+
             switch ( boxedValue.type ) {
             
                 case 'set_vertex_vertexSet' :
-                    dataArray.push ( { 
+                    let dataElement = {
                         key     : boxedValue.datum.key,
                         value   : boxedValue.datum.value,
                         lambda  : boxedValue.datum.lambda
-                    } )
+                    }
+                    let index = dataArray.findIndex ( 
+                        e => e.key == boxedValue.datum.key
+                    )
+
+                    if ( ~index ) { // Found an index.
+                        console.log( `found an index` )
+                        dataArray[ index ]  = dataElement
+                    }
+                    else {          // Found no index.
+                        console.log( `found no index` )
+                        dataArray.push ( dataElement )
+                    }
                     break
                 case 'delete_vertex_vertexDelete' :
                     dataArray = dataArray.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
-                    console.log ( dataArray )
                     break
 
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet
@@ -195,7 +212,14 @@ function graphViewer ( graphServer ) {
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet
 
              default:
+                    return false
             }
+
+console.log ( 
+    boxedValue.datum.key,
+    boxedValue.datum.value, 
+    p ( dataArray ) 
+)
             updateSimulation ( dataArray ) 
             F ( 'd3 visualiser, updated' )
         } )
@@ -912,23 +936,30 @@ stale flag?`,
         graphViewer ( S ) 
         
         S.abacus = 1 
+        S.donkey = 2
         S.blanket = new Fun ( q => { 
-            q.changeAVeryLongKeyName = 3
+            q.changeAVeryLongKeyName = Math.random()
             return q.abacus
         } )  
+
+        S.blanket
         S.blanket = 2
+        S.abacus
+
 
         setTimeout ( () => {
-            S.d = {}
+            //S.d = {}
         }, 1000 )
         setTimeout ( () => {
-            S.f = 1
-        }, 3000 )
-        setTimeout ( () => {
-            S.e = null
+            //S.e = null
             delete S.abacus
-            console.log ( S('vertices') )
+            //console.log ( S('vertices') )
         }, 2000 )
+        setTimeout ( () => {
+            //S.f = 1
+            S.abacus = 2 
+            //S.donkey = 2
+        }, 3000 )
 
 
   for ( const note of GRAPH.log.canon.book ) {
