@@ -128,7 +128,26 @@ function graphViewer ( graphServer ) {
   
                     return g2 
                 },
-                updater => updater,
+                updater => 
+                {
+                    let circle = updater
+                        .select ( 'circle' )
+                    circle
+                        .transition()
+                    .duration ( 700 ) 
+                            .attr ( 'fill', d =>    d.hit 
+                                                    ?   '#0f0' 
+                                                    :   d.lambda
+                                                        ?   '#ee0'
+                                                        :   '#59f' )
+                        .transition()
+                            .attr ( 'fill', d =>    d.lambda
+                                                    ?   '#ee0'
+                                                    :   '#59f' )
+
+                    // This feels expensive; find a cheaper way later. FIXME
+                    return updater
+                },
                 exiter => 
                 { 
                     let circle = exiter
@@ -138,18 +157,18 @@ function graphViewer ( graphServer ) {
                         .duration ( 500 )
 
                             .transition () 
-                                .style ( 'fill', 'red' )
+                                .attr ( 'fill', 'red' )
                                 .attr ('r', 20 )
-                            .transition () .style ( 'fill', 'grey' )
+                            .transition () .attr ( 'fill', '#eee' )
 
-                            .transition () .style ( 'fill', 'red' )
-                            .transition () .style ( 'fill', 'grey' )
+                            .transition () .attr ( 'fill', 'red' )
+                            .transition () .attr ( 'fill', '#eee' )
 
-                            .transition () .style ( 'fill', 'red' )
-                            .transition () .style ( 'fill', 'grey' )
+                            .transition () .attr ( 'fill', 'red' )
+                            .transition () .attr ( 'fill', '#eee' )
 
-                            .transition () .style ( 'fill', 'red' )
-                            .transition () .style ( 'fill', 'grey' )
+                            .transition () .attr ( 'fill', 'red' )
+                            .transition () .attr ( 'fill', '#eee' )
                     
                     exiter
                         .transition().delay ( 3000 ) 
@@ -166,9 +185,6 @@ function graphViewer ( graphServer ) {
 
         simulation.nodes ( latestData ) // , datum => datum.key )
         simulation.alpha(1).restart()
-console.log (
-    
-)
     },
     startSimulation  = server => 
     {
@@ -178,32 +194,45 @@ console.log (
         graph.log.canon.tasks.d3 
         = boxedValue => new Promise ( ( F, R ) => {
 
+            let index
 
             switch ( boxedValue.type ) {
-            
+                
                 case 'set_vertex_vertexSet' :
                     let dataElement = {
                         key     : boxedValue.datum.key,
                         value   : boxedValue.datum.value,
                         lambda  : boxedValue.datum.lambda
                     }
-                    let index = dataArray.findIndex ( 
+                    index = dataArray.findIndex ( 
                         e => e.key == boxedValue.datum.key
                     )
 
-                    if ( ~index ) { // Found an index.
-                        console.log( `found an index` )
+                    if ( ~index ) { // Found an index; replace element.
                         dataArray[ index ]  = dataElement
                     }
-                    else {          // Found no index.
-                        console.log( `found no index` )
+                    else {          // Found no index; add element.
                         dataArray.push ( dataElement )
                     }
                     break
+
                 case 'delete_vertex_vertexDelete' :
                     dataArray = dataArray.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
+                    break
+
+                case 'get_vertex_hit_vertexGetTyped' :
+                    index = dataArray.findIndex ( 
+                        e => e.key == boxedValue.datum.key
+                    )
+
+                    if ( ~index ) { // Found an index; report.
+                        dataArray[ index ].hit = true
+                    }
+                    else {          // Found no index; complain.
+                        R (`d3 visualiser : dataArray has no node with the key : ${ boxedValue.datum.key }` )
+                    }
                     break
 
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet
@@ -212,14 +241,14 @@ console.log (
 //\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet
 
              default:
-                    return false
+                R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-console.log ( 
-    boxedValue.datum.key,
-    boxedValue.datum.value, 
-    p ( dataArray ) 
-)
+//console.log ( 
+//    boxedValue.datum.key,
+//    boxedValue.datum.value, 
+//    p ( dataArray ) 
+//)
             updateSimulation ( dataArray ) 
             F ( 'd3 visualiser, updated' )
         } )
@@ -962,13 +991,13 @@ stale flag?`,
         }, 3000 )
 
 
-  for ( const note of GRAPH.log.canon.book ) {
-      console.error (
-        //note.timeStamp,
-        note.type,
-        //note.datum.key, ':', note.datum.value
-      )
-  }
+//for ( const note of GRAPH.log.canon.book ) {
+//    console.error (
+//      //note.timeStamp,
+//      note.type,
+//      //note.datum.key, ':', note.datum.value
+//    )
+//}
   
 
 
