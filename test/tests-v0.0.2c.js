@@ -77,7 +77,12 @@ function graphViewer ( graphServer ) {
     tickHandler
     = function () {
         manyNodesG_oneNodeG.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
-        manyLinksG_oneLinkG.attr ( 'd', d => console.log (d) )
+        manyLinksG_oneLinkG
+            .attr   ( 'd', d => { 
+                                console.log (d) 
+                                return `M ${ d.source.x }, ${ d.source.y } 
+                                        T ${ d.target.x }, ${ d.target.y }`
+                                } )
     },
 
     forceLink 
@@ -102,6 +107,17 @@ function graphViewer ( graphServer ) {
     updateSimulation 
     = function ( latest ) 
     {
+        // Ensure that SIMULATION knows (NODE Ontology),
+        //                              (LINK Ontology).
+
+console.log ( latest )
+try {
+        simulation  .nodes ( latest.forceNodeData ) 
+//        forceLink   .links ( latest.forceLinkData ) 
+} catch ( e) {
+    console.error (e, latest)
+}
+
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -226,20 +242,18 @@ function graphViewer ( graphServer ) {
 
                     let path = oneLinkG 
                         .append ( 'path' )
-                            .attr ( 'd', `  M 10,20 
-                                            S 20,50 70,30`
-                                  )
+                            .attr ( 'd', d => {
+                                    //console.log ( p ( d ) )
+                                    return `M ${ d.source.x }, ${ d.source.y } 
+                                            T ${ d.target.x }, ${ d.target.y }`
+                                  } )
                             .attr ( 'stroke', '#000' )
                             .attr ( 'stroke-width', '1' )
                             .attr ( 'fill', 'none' )
 
                 }
             )
-        // Ensure that SIMULATION knows (NODE Ontology),
-        //                              (LINK Ontology).
 
-        simulation  .nodes ( latest.forceNodeData ) 
-        forceLink   .links ( latest.forceLinkData ) 
         simulation  .alpha (1).restart()
     },
 
@@ -248,7 +262,7 @@ function graphViewer ( graphServer ) {
         
         let graph       = server ( 'graph' )
 
-        graph.log.canon.tasks.d3 
+        graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
 
             // Not all cases of the switch require this; separate. FIXME
@@ -270,16 +284,53 @@ function graphViewer ( graphServer ) {
                     // field if .lambda no longer exists here.
                 stale   : boxedValue.datum.stale
             }
+            let pushNodeButPreferUpdate = ( __index, __nodeDatum) => {
+                if ( ~__index ) { // Found an index; replace element.
+                    forceNodeData[ index ]  = __nodeDatum
+                }
+                else {          // Found no index; add element.
+                    forceNodeData.push ( __nodeDatum )
+                }
+            }
+
+            let sourceKey 
+            let sinkKey
+            let pushLink = ( __sourceKey, __sinkKey) => {
+                forceLinkData.push ( {
+                    source  : __sourceKey, 
+                    target  : __sinkKey,
+                    type    : 'causal'
+                } ) 
+            }
+            
+            let pushLastLinkIn = () => {
+
+                sourceKey   = boxedValue.datum.pointers.in.causal[
+                        boxedValue.datum.pointers.in.causal.length - 1
+                    ].ikey
+                sinkKey     = boxedValue.datum.key
+                pushLink ( sourceKey, sinkKey )
+            }
+            let pushLastLinkOut = () => {
+
+                sourceKey   = boxedValue.datum.key
+                sinkKey     = boxedValue.datum.pointers.out.causal[
+                        boxedValue.datum.pointers.out.causal.length - 1
+                    ].okey
+                pushLink ( sourceKey, sinkKey )
+            }
 
             switch ( boxedValue.type ) {
                 
                 case 'delete_vertex_vertexDelete' :
+                    console.log ( `DELETE` )
                     forceNodeData = forceNodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
+                    console.log ( `GET, HIT` )
                     if ( ~index ) { // Found an index; report.
                         forceNodeData[ index ].hit = true
                     }
@@ -291,6 +342,7 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'get_vertex_miss_runFunAndLog' :
+                    console.log ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
                         forceNodeData[ index ].miss = true
                         forceNodeData[ index ].value = boxedValue.datum.value
@@ -303,71 +355,69 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    if ( ~index ) { // Found an index; replace element.
-                        forceNodeData[ index ]  = forceNodeDatum
-                    }
-                    else {          // Found no index; add element.
-                        forceNodeData.push ( forceNodeDatum )
-                    }
+                    console.log ( `SET,NOT FUN` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
-                    if ( ~index ) { // Found an index; replace element.
-                        forceNodeData[ index ]  = forceNodeDatum
-                    }
-                    else {          // Found no index; add element.
-                        forceNodeData.push ( forceNodeDatum )
-                    }
+                    console.log ( `SET,FUN` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                    
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
-                    forceLinkData.push ( {
-                        source  : boxedValue.datum.pointers.in.causal[
-                            boxedValue.datum.pointers.in.causal.length - 1
-                        ].ikey, 
-                        target  : boxedValue.datum.key,
-                        type    : 'causal'
-                    } ) 
+                    
+                    console.log ( `IN,SET` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushLastLinkIn ()
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                    
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
-                    forceLinkData.push ( {
-                        source  : boxedValue.datum.pointers.in.causal[
-                            boxedValue.datum.pointers.in.causal.length - 1
-                        ].ikey,
-                        target  : boxedValue.datum.key,
-                        type    : 'causal'
-                    } ) 
+                    
+                    console.log ( `IN,GET` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushLastLinkIn ()
                     break
 
-                case 'set_pointer_out_CAUSAL_scopedFun/KeySnifferHandlerSet' :
+  
+                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                    
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
-                    forceLinkData.push ( {
-                        source  : boxedValue.datum.key,
-                        target  : boxedValue.datum.pointers.out.causal[
-                            boxedValue.datum.pointers.out.causal.length - 1
-                        ].okey,
-                        type    : 'causal'
-                    } ) 
+                    
+                    console.log ( `OUT,SET` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushLastLinkOut ()
+                    
+                        // If sink-Datum did not previously exist, then we need to
+                        // insert a placeholder node into the forceSimulation
+
+                      //let placeholderIndex = forceNodeData.findIndex ( 
+                      //    e => e.key == sinkKey 
+                      //)
+                      //if ( ! ( ~ placeholderIndex ) ) { 
+                      //    
+                      //    // Index not found. 
+                      //    
+                      //    forceNodeData.push ( { key: sinkKey } ) 
+                      //}
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                    
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
-                    forceLinkData.push ( {
-                        source  : boxedValue.datum.key,
-                        target  : boxedValue.datum.pointers.out.causal[
-                            boxedValue.datum.pointers.out.causal.length - 1
-                        ].okey,
-                        type    : 'causal'
-                    } ) 
+                    
+                    console.log ( `OUT,GET` )
+                    pushNodeButPreferUpdate ()
+                    pushLastLinkOut ()
                     break
-
+  
              default:
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
@@ -410,7 +460,8 @@ function graphViewer ( graphServer ) {
     return {
         simulation  : simulation,
         update      : updateSimulation,
-        data        : forceNodeData
+        nodeData    : forceNodeData,
+        linkData    : forceLinkData
     }
 }
 
@@ -1096,8 +1147,9 @@ stale flag?`,
         S.abacus = 1 
         //S.donkey = 2
         S.blanket = new Fun ( q => { 
-            q.changeAVeryLongKeyName = Math.random()
-            return q.abacus
+            //q.changeAVeryLongKeyName = Math.random()
+            q.abacus
+            return true 
         } )  
 
 
