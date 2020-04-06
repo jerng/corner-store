@@ -6,9 +6,12 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 // D3 visualisation experiment:
 function graphViewer ( graphServer ) {
 
+    d3.namespaces.corner = '127.0.0.1'
+
     let 
 
-    dataArray   = [],
+    forceNodeData   = [],
+    forceLinkData   = [],
     width       = 500,
     height      = 500,
 
@@ -40,31 +43,55 @@ function graphViewer ( graphServer ) {
                             font-size: 16px;`
         ),
 
-    svg_g1 
+    svg_positionerG 
     = body_svg
-        .append ( 'g' ),
-                
-    g1_g2    
+        .append ( 'g' )
+        .attr ('corner:GraphViewerRole','positioner'),
+               
+    positionerG_manyNodesG
+    = svg_positionerG
+        .append ( 'g' )
+        .attr ('corner:GraphViewerRole','nodeGroups'),
+
+        manyNodesG_oneNodeG    
+        = positionerG_manyNodesG
+            .selectAll (),
     
-        //  The SELECTION (g1_g2)'s FIRST reference.
-        //  This has one group for each <g>1 in svg_g1;
+        //  The SELECTION (manyNodesG_oneNodeG)'s FIRST reference.
+        //  This has one group for each <g>1 in svg_positionerG;
         //  groups will be empty as <g>2s have not been appended.
 
-    = svg_g1
-        .selectAll (),
+    positionerG_manyLinksG
+    = svg_positionerG
+        .append ( 'g' )
+        .attr ('corner:GraphViewerRole','linkGroups'),
+
+        manyLinksG_oneLinkG    
+        = positionerG_manyLinksG
+            .selectAll (),
+    
+        //  The SELECTION (manyLinksG_oneLinkG)'s FIRST reference.
+        //  This has one group for each <g>1 in svg_positionerG;
+        //  groups will be empty as <g>2s have not been appended.
 
     tickHandler
     = function () {
-        g1_g2.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
+        manyNodesG_oneNodeG.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
+        manyLinksG_oneLinkG.attr ( 'd', d => console.log (d) )
     },
 
+    forceLink 
+    = d3.forceLink ( forceLinkData )
+        .id ( d => d.key ),
+
     simulation 
-    = d3.forceSimulation ( dataArray )
+    = d3.forceSimulation ( forceNodeData )
 
         .force ( '?charge',     d3.forceManyBody () )
         .force ( '?x',          d3.forceX () )
         .force ( '?y',          d3.forceY () )
         .force ( '?collision',  d3.forceCollide (70) )
+        .force ( '?links',      forceLink )
 
         .velocityDecay  ( 0.7 )
         .alphaTarget    ( 0.0001 )
@@ -73,31 +100,32 @@ function graphViewer ( graphServer ) {
         .on ( 'tick', tickHandler ),
                                                                   
     updateSimulation 
-    = function ( latestData ) 
+    = function ( latest ) 
     {
 
-        // Ensure that (element ontology) has a 1-1 mapping to (node ontology)
+        // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
-        g1_g2
+        manyNodesG_oneNodeG   // The SELECTION (manyNodesG_oneNodeG)'s SECOND reference. 
+        = manyNodesG_oneNodeG
 
-            // The SELECTION (g1_g2)'s SECOND reference. 
-        
-        = g1_g2
-            .data ( latestData , d => d.key  )
+            .data ( latest.forceNodeData , d => d.key  )
                 
-                //  This DATA GROUP is then JOINED to ELEMENT GROUP, g1, 
-                //  in the SELECTION (g1_g2).
+                //  This DATA GROUP is then JOINED to ELEMENT GROUP,
+                //  manyNodesG[GraphViewerRole=nodeGroups], 
+                //  in the SELECTION (manyNodesG_oneNodeG).
 
-            .join (
+            .join 
+            (
                 enterer =>
                 {
-                        // Each (enterer) is a datum in the group, g1, which
-                        // isn't already mapped to a <g>2 element.
+                        // Each (enterer) is a datum in the
+                        // group,manyNodesG[GraphViewerRole=nodeGroups], which
+                        // isn't already mapped to a oneNodeG element.
 
-                    let g2 = enterer
+                    let oneNodeG = enterer
                         .append ( 'g' )
 
-                    let circle = g2
+                    let circle = oneNodeG
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
                             .attr ( 'fill', 
@@ -109,7 +137,7 @@ function graphViewer ( graphServer ) {
                                     d => d.lambda ? '#000' : '#fff' 
                             )
 
-                    let foreignObject = g2
+                    let foreignObject = oneNodeG
                         .append( 'foreignObject' )
                             .attr( 'x', '5')
                             .attr( 'y', '5')
@@ -128,7 +156,7 @@ function graphViewer ( graphServer ) {
                             )
                             .text ( d => d.key + ' : ' + d.value )
   
-                    return g2 
+                    return oneNodeG 
                 },
                 updater => 
                 {
@@ -158,26 +186,15 @@ function graphViewer ( graphServer ) {
                         .select ( 'circle' )
                         .transition ()
                         .ease ( d3.easeCubicOut )
-                        .duration ( 500 )
 
                             .transition () 
-                                .attr ( 'fill', 'red' )
+                                .attr ( 'fill', 'black' )
                                 .attr ('r', 20 )
-                            .transition () .attr ( 'fill', '#eee' )
-
-                            .transition () .attr ( 'fill', 'red' )
-                            .transition () .attr ( 'fill', '#eee' )
-
-                            .transition () .attr ( 'fill', 'red' )
-                            .transition () .attr ( 'fill', '#eee' )
-
-                            .transition () .attr ( 'fill', 'red' )
-                            .transition () .attr ( 'fill', '#eee' )
                     
                     exiter
-                        .transition().delay ( 3000 ) 
-                        .transition().duration ( 1000 ) 
-                            .ease ( d3.easeCubicIn )
+                        .transition().delay ( 1000 ) 
+                        .transition().duration ( 3000 ) 
+                            .ease ( d3.easeCubicOut )
                             .style ( 'opacity', 0 )
                             .remove()
                     
@@ -185,11 +202,47 @@ function graphViewer ( graphServer ) {
 
             )
 
-        // Ensure that SIMULATION knows (node ontology).
+        // Ensure that (element ontology) has a 1-1 mapping to (LINK Ontology)
 
-        simulation.nodes ( latestData ) // , datum => datum.key )
-        simulation.alpha(1).restart()
+        manyLinksG_oneLinkG   // The SELECTION (manyLinksG_oneLinkG)'s SECOND reference. 
+        = manyLinksG_oneLinkG
+
+            .data ( latest.forceLinkData )
+                
+                //  This DATA GROUP is then JOINED to ELEMENT GROUP,
+                //  manyLinksG[GraphViewerRole=linkGroups], 
+                //  in the SELECTION (manyLinksG_oneLinkG).
+
+            .join 
+            (
+                enterer =>
+                {
+                        // Each (enterer) is a datum in the
+                        // group,manyNodesG[GraphViewerRole=nodeGroups], which
+                        // isn't already mapped to a oneLinkG element.
+
+                    let oneLinkG = enterer
+                        .append ( 'g' )
+
+                    let path = oneLinkG 
+                        .append ( 'path' )
+                            .attr ( 'd', `  M 10,20 
+                                            S 20,50 70,30`
+                                  )
+                            .attr ( 'stroke', '#000' )
+                            .attr ( 'stroke-width', '1' )
+                            .attr ( 'fill', 'none' )
+
+                }
+            )
+        // Ensure that SIMULATION knows (NODE Ontology),
+        //                              (LINK Ontology).
+
+        simulation  .nodes ( latest.forceNodeData ) 
+        forceLink   .links ( latest.forceLinkData ) 
+        simulation  .alpha (1).restart()
     },
+
     startSimulation  = server => 
     {
         
@@ -200,16 +253,16 @@ function graphViewer ( graphServer ) {
 
             // Not all cases of the switch require this; separate. FIXME
 
-            let index = dataArray.findIndex ( 
+            let index = forceNodeData.findIndex ( 
                 e => e.key == boxedValue.datum.key
             )
 
             if ( ~index ) { // Found an index; remove ephemeral signals.
-                delete dataArray[ index ].hit
-                delete dataArray[ index ].miss
+                delete forceNodeData[ index ].hit
+                delete forceNodeData[ index ].miss
             }
 
-            let dataElement = {
+            let forceNodeDatum = {
                 key     : boxedValue.datum.key,
                 value   : boxedValue.datum.value,
                 lambda  : boxedValue.datum.lambda ,
@@ -221,67 +274,111 @@ function graphViewer ( graphServer ) {
             switch ( boxedValue.type ) {
                 
                 case 'delete_vertex_vertexDelete' :
-                    dataArray = dataArray.filter (
+                    forceNodeData = forceNodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
                     if ( ~index ) { // Found an index; report.
-                        dataArray[ index ].hit = true
+                        forceNodeData[ index ].hit = true
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_hit_vertexGetTyped) :
-                            dataArray has no node with the key : 
+                            forceNodeData has no node with the key : 
                             ${ boxedValue.datum.key }` )
                     }
                     break
 
                 case 'get_vertex_miss_runFunAndLog' :
                     if ( ~index ) { // Found an index; report.
-                        dataArray[ index ].miss = true
-                        dataArray[ index ].value = boxedValue.datum.value
+                        forceNodeData[ index ].miss = true
+                        forceNodeData[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_miss_runFunAndLog) :
-                            dataArray has no node with the key : 
+                            forceNodeData has no node with the key : 
                             ${ boxedValue.datum.key }` )
                     }
                     break
 
                 case 'set_vertex_vertexSet' :
                     if ( ~index ) { // Found an index; replace element.
-                        dataArray[ index ]  = dataElement
+                        forceNodeData[ index ]  = forceNodeDatum
                     }
                     else {          // Found no index; add element.
-                        dataArray.push ( dataElement )
+                        forceNodeData.push ( forceNodeDatum )
                     }
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
                     if ( ~index ) { // Found an index; replace element.
-                        dataArray[ index ]  = dataElement
+                        forceNodeData[ index ]  = forceNodeDatum
                     }
                     else {          // Found no index; add element.
-                        dataArray.push ( dataElement )
+                        forceNodeData.push ( forceNodeDatum )
                     }
                     break
 
-//\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet
-//\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet
-//\ set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet
-//\ set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet
+                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    forceLinkData.push ( {
+                        source  : boxedValue.datum.pointers.in.causal[
+                            boxedValue.datum.pointers.in.causal.length - 1
+                        ].ikey, 
+                        target  : boxedValue.datum.key,
+                        type    : 'causal'
+                    } ) 
+                    break
+
+                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    forceLinkData.push ( {
+                        source  : boxedValue.datum.pointers.in.causal[
+                            boxedValue.datum.pointers.in.causal.length - 1
+                        ].ikey,
+                        target  : boxedValue.datum.key,
+                        type    : 'causal'
+                    } ) 
+                    break
+
+                case 'set_pointer_out_CAUSAL_scopedFun/KeySnifferHandlerSet' :
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    forceLinkData.push ( {
+                        source  : boxedValue.datum.key,
+                        target  : boxedValue.datum.pointers.out.causal[
+                            boxedValue.datum.pointers.out.causal.length - 1
+                        ].okey,
+                        type    : 'causal'
+                    } ) 
+                    break
+
+                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    forceLinkData.push ( {
+                        source  : boxedValue.datum.key,
+                        target  : boxedValue.datum.pointers.out.causal[
+                            boxedValue.datum.pointers.out.causal.length - 1
+                        ].okey,
+                        type    : 'causal'
+                    } ) 
+                    break
 
              default:
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-  console.log ( 
-    boxedValue.datum instanceof Fun,    
-    boxedValue,
-    dataArray
-  )
-            updateSimulation ( dataArray ) 
+//console.log ( 
+//  p ( forceLinkData ),
+//  boxedValue
+//)
+            updateSimulation    ( { forceNodeData: forceNodeData,
+                                    forceLinkData: forceLinkData
+                                } ) 
             F ( 'd3 visualiser, updated' )
         } )
     },
@@ -290,7 +387,7 @@ function graphViewer ( graphServer ) {
         d3
         .zoom()
         .scaleExtent([.1, 4])
-        .on( "zoom", () =>  svg_g1
+        .on( "zoom", () =>  svg_positionerG
                             .transition ()
                             .duration ( 200 )
                             .ease ( d3.easeCubicOut ) 
@@ -313,7 +410,7 @@ function graphViewer ( graphServer ) {
     return {
         simulation  : simulation,
         update      : updateSimulation,
-        data        : dataArray
+        data        : forceNodeData
     }
 }
 
@@ -999,29 +1096,29 @@ stale flag?`,
         S.abacus = 1 
         //S.donkey = 2
         S.blanket = new Fun ( q => { 
-            //q.changeAVeryLongKeyName = Math.random()
+            q.changeAVeryLongKeyName = Math.random()
             return q.abacus
         } )  
 
 
 
-        //S.abacus
+        S.abacus
 
 
         setTimeout ( () => {
             //S.d = {}
-        }, 1000 )
-        setTimeout ( () => {
-            //S.e = null
             //delete S.abacus
-            //console.log ( S('vertices') )
         }, 2000 )
         setTimeout ( () => {
+            //S.e = null
+            //console.log ( S('vertices') )
+        }, 4000 )
+        setTimeout ( () => {
             //S.f = 1
-            //S.abacus = 2 
+            //S.abacus = 3.142 
             //S.donkey = 2
-            S.blanket
-        }, 3000 )
+            //S.blanket
+        }, 6000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
@@ -1047,6 +1144,9 @@ stale flag?`,
         let GRAPH   = S ( 'graph' )
 
     }
+},
+{   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
+invalidated, unless Fun runs immediately.'
 },
 {   warning : `Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
 },
