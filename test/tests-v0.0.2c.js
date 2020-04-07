@@ -8,7 +8,7 @@ function graphViewer ( graphServer ) {
 
     let 
 
-    verbosity       = 1,    // larger is noisier
+    verbosity       = 0,    // larger is noisier
     forceNodeData   = [],
     forceLinkData   = [],
     width       = 500,
@@ -269,7 +269,8 @@ console.log(oneLinkGs)
                                     return `M ${ d.source.x }, ${ d.source.y } 
                                             T ${ d.target.x }, ${ d.target.y }`
                                   } )
-                    return path 
+                    //return path 
+                    return oneLinkGs 
                 },
                 updater => 
                 {
@@ -283,7 +284,6 @@ console.log(oneLinkGs)
                             //console.log(path)
                     return updater
                 }
-
             )
 ////////////////////////////////////////////////////////////////////////////////
         //try {
@@ -1219,12 +1219,12 @@ stale flag?`,
         graphViewer ( S ) 
         
           S.abacus = 1 
-          S.donkey = 2
+//          S.donkey = 2
         S.blanket = new Fun ( q => { 
           
 //          q.changeAVeryLongKeyName = Math.random()
             q.abacus
-            q.donkey
+//            q.donkey
           
           return true 
         } )  
