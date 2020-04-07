@@ -6,17 +6,13 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 // D3 visualisation experiment:
 function graphViewer ( graphServer ) {
 
-    d3.namespaces.corner = '127.0.0.1'
-
     let 
 
-    verbosity       = 0,    // larger is noisier
+    verbosity       = 1,    // larger is noisier
     forceNodeData   = [],
     forceLinkData   = [],
     width       = 500,
     height      = 500,
-
-    color   = d3.scaleOrdinal(d3.schemeCategory10),
 
     //  HENCEFORTH, the syntax 
     //
@@ -47,43 +43,48 @@ function graphViewer ( graphServer ) {
     svg_positionerG 
     = body_svg
         .append ( 'g' )
-        .attr ('corner:GraphViewerRole','positioner'),
+        .attr ('graph-viewer-role','positioner'),
                
         positionerG_manyNodesG
         = svg_positionerG
             .append ( 'g' )
-            .attr ('corner:GraphViewerRole','nodeGroups'),
+            .attr ('graph-viewer-role','node-groups'),
 
-            manyNodesG_oneNodeG    
+            manyNodesG_oneNodeGs    
             = positionerG_manyNodesG
                 .selectAll (),
         
-            //  The SELECTION (manyNodesG_oneNodeG)'s FIRST reference.
+            //  The SELECTION (manyNodesG_oneNodeGs)'s FIRST reference.
             //  This has one group for each <g>1 in svg_positionerG;
             //  groups will be empty as <g>2s have not been appended.
 
         positionerG_manyLinksG
         = svg_positionerG
             .append ( 'g' )
-            .attr ('corner:GraphViewerRole','linkGroups'),
+            .attr ('graph-viewer-role','link-groups'),
 
-            manyLinksG_oneLinkG    
+            manyLinksG_oneLinkGs    
             = positionerG_manyLinksG
                 .selectAll (),
         
-            //  The SELECTION (manyLinksG_oneLinkG)'s FIRST reference.
+            //  The SELECTION (manyLinksG_oneLinkGs)'s FIRST reference.
             //  This has one group for each <g>1 in svg_positionerG;
             //  groups will be empty as <g>2s have not been appended.
 
     tickHandler
     = function () {
-        manyNodesG_oneNodeG.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
-    //  manyLinksG_oneLinkG
-    //      .attr   ( 'd', d => { 
-    //                          console.log (d) 
-    //                          return `M ${ d.source.x }, ${ d.source.y } 
-    //                                  T ${ d.target.x }, ${ d.target.y }`
-    //                          } )
+////////////////////////////////////////////////////////////////////////////////
+        manyNodesG_oneNodeGs
+            .attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
+
+
+        manyLinksG_oneLinkGs
+            .selectAll ( 'path' )
+            .attr ( 'd', d => { 
+            return `M ${ d.source.x }, ${ d.source.y } 
+                    T ${ d.target.x }, ${ d.target.y }`
+        } )
+////////////////////////////////////////////////////////////////////////////////
     },
 
     forceLink 
@@ -114,13 +115,6 @@ function graphViewer ( graphServer ) {
         verbosity && console.group ( `UPDATE SIMULATION`  )
         verbosity && console.warn ( `before`, latest )
 
-        try {
-                simulation  .nodes ( latest.forceNodeData ) 
-        //        forceLink   .links ( latest.forceLinkData ) 
-        } catch ( e) {
-            console.error (e, `updateSimulation:`, latest)
-        }
-
         let nodeNotFun      = '#6af',
             nodeFunStale    = '#550',
             nodeFunFresh    = '#ee0',
@@ -131,27 +125,27 @@ function graphViewer ( graphServer ) {
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
-        manyNodesG_oneNodeG   // The SELECTION (manyNodesG_oneNodeG)'s SECOND reference. 
-        = manyNodesG_oneNodeG
+        manyNodesG_oneNodeGs   // The SELECTION (manyNodesG_oneNodeGs)'s SECOND reference. 
+        = manyNodesG_oneNodeGs
 
             .data ( latest.forceNodeData , d => d.key  )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP,
-                //  manyNodesG[GraphViewerRole=nodeGroups], 
-                //  in the SELECTION (manyNodesG_oneNodeG).
+                //  manyNodesG[graph-viewer-role=node-groups], 
+                //  in the SELECTION (manyNodesG_oneNodeGs).
 
             .join 
             (
                 enterer =>
                 {
                         // Each (enterer) is a datum in the
-                        // group,manyNodesG[GraphViewerRole=nodeGroups], which
-                        // isn't already mapped to a oneNodeG element.
+                        // group,manyNodesG[graph-viewer-role=node-groups], which
+                        // isn't already mapped to a oneNodeGs element.
 
-                    let oneNodeG = enterer
+                    let oneNodeGs = enterer
                         .append ( 'g' )
-
-                    let circle = oneNodeG
+//console.log(oneNodeGs)
+                    let circle = oneNodeGs
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
                             .attr ( 'fill', 
@@ -166,7 +160,7 @@ function graphViewer ( graphServer ) {
                                     d => d.lambda ? '#000' : '#fff' 
                             )
 
-                    let foreignObject = oneNodeG
+                    let foreignObject = oneNodeGs
                         .append( 'foreignObject' )
                             .attr( 'x', '5')
                             .attr( 'y', '5')
@@ -185,7 +179,7 @@ function graphViewer ( graphServer ) {
                             )
                             .text ( d => d.key + ' : ' + d.value )
   
-                    return oneNodeG 
+                    return oneNodeGs 
                 },
                 updater => 
                 {
@@ -193,25 +187,26 @@ function graphViewer ( graphServer ) {
                         .select ( 'circle' )
                         .transition()
                         .duration ( 300 ) 
-                            .attr ( 'fill', d =>    d.hit 
-                                                    ? nodeHit
-                                                    : ( d.lambda
-                                                        ? ( d.stale
-                                                            ? nodeFunStale
-                                                            : nodeFunFresh
-                                                          ) 
-                                                        : nodeNotFun 
-                                                      )
-                                  )
+                            .attr ( 'fill', 
+                                d =>    d.hit 
+                                        ? nodeHit
+                                        : ( d.lambda
+                                            ? ( d.stale
+                                                ? nodeFunStale
+                                                : nodeFunFresh
+                                              ) 
+                                            : nodeNotFun 
+                                          )
+                            )
                         .transition()
                             .attr ( 'fill',                 
-                                    d =>    d.lambda 
-                                            ? ( d.stale 
-                                                ? nodeFunStale 
-                                                : nodeFunFresh
-                                              )
-                                            : nodeNotFun
-                                  )
+                                d =>    d.lambda 
+                                        ? ( d.stale 
+                                            ? nodeFunStale 
+                                            : nodeFunFresh
+                                          )
+                                        : nodeNotFun
+                            )
                     let div = updater 
                         .select( 'div' )
                             .text ( d => d.key + ' : ' + d.value )
@@ -244,42 +239,63 @@ function graphViewer ( graphServer ) {
 
         // Ensure that (element ontology) has a 1-1 mapping to (LINK Ontology)
 
-        manyLinksG_oneLinkG   // The SELECTION (manyLinksG_oneLinkG)'s SECOND reference. 
-        = manyLinksG_oneLinkG
+        manyLinksG_oneLinkGs   // The SELECTION (manyLinksG_oneLinkGs)'s SECOND reference. 
+        = manyLinksG_oneLinkGs
 
-            .data ( latest.forceLinkData )
+            .data ( latest.forceLinkData, d => d.key )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP,
-                //  manyLinksG[GraphViewerRole=linkGroups], 
-                //  in the SELECTION (manyLinksG_oneLinkG).
+                //  manyLinksG[graph-viewer-role=link-groups], 
+                //  in the SELECTION (manyLinksG_oneLinkGs).
 
             .join 
             (
                 enterer =>
                 {
                         // Each (enterer) is a datum in the
-                        // group,manyNodesG[GraphViewerRole=nodeGroups], which
-                        // isn't already mapped to a oneLinkG element.
+                        // group,manyNodesG[graph-viewer-role=node-groups], which
+                        // isn't already mapped to a oneLinkGs element.
 
-                    let oneLinkG = enterer
+                    let oneLinkGs = enterer
                         .append ( 'g' )
-
-                    let path = oneLinkG 
+console.log(oneLinkGs)
+                    let path = oneLinkGs 
                         .append ( 'path' )
+                            .attr ( 'stroke', '#000' )
+                            .attr ( 'stroke-width', '1' )
+                            .attr ( 'fill', 'none' )
                             .attr ( 'd', d => {
                                     //console.log ( p ( d ) )
                                     return `M ${ d.source.x }, ${ d.source.y } 
                                             T ${ d.target.x }, ${ d.target.y }`
                                   } )
-                            .attr ( 'stroke', '#000' )
-                            .attr ( 'stroke-width', '1' )
-                            .attr ( 'fill', 'none' )
-
+                    return path 
+                },
+                updater => 
+                {
+                    let path = updater
+                        .selectAll ( 'path' )
+                            .attr ( 'd', d => {
+                                    //console.log ( p ( d ) )
+                                    return `M ${ d.source.x }, ${ d.source.y } 
+                                            T ${ d.target.x }, ${ d.target.y }`
+                                  } )
+                            //console.log(path)
+                    return updater
                 }
-            )
 
+            )
+////////////////////////////////////////////////////////////////////////////////
+        //try {
+        //} catch ( e) {
+        //  console.error (e, `updateSimulation:`, latest)
+        //}
+
+        simulation  .nodes ( latest.forceNodeData ) 
+        forceLink   .links ( latest.forceLinkData ) 
         simulation  .alpha (1).restart()
         
+////////////////////////////////////////////////////////////////////////////////
         verbosity && console.warn ( `after`, latest )
         verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
     },
@@ -302,7 +318,8 @@ function graphViewer ( graphServer ) {
                                          ) 
             )
 
-            // Not all cases of the switch require this; separate. FIXME
+            // Not all cases of the switch require all the following; separate
+            // to two switches? FIXME
 
             let index = forceNodeData.findIndex ( 
                 e => e.key == boxedValue.datum.key
@@ -332,29 +349,41 @@ function graphViewer ( graphServer ) {
 
             let sourceKey 
             let sinkKey
-            let pushLink = ( __sourceKey, __sinkKey) => {
+            let locatedInSink
+
+            let pushLink = ( __sourceKey, __sinkKey, __locationKey ) => {
                 forceLinkData.push ( {
                     source  : __sourceKey, 
                     target  : __sinkKey,
-                    type    : 'causal'
+                    type    : 'causal',
+                    
+                    owner   : __locationKey    
+                        //  'location' is The Datum whose record is being
+                        //  communiated to the forceSimulation; 
+                        //  both source and target/sink Datum instances will
+                        //  store a pointer; the pointers are redundant from the
+                        //  Graph's point of view.
                 } ) 
             }
             
-            let pushLastLinkIn = () => {
+            // argument is a boolean
+            let pushLastLinkIn = ( locatedInSink ) => {
 
                 sourceKey   = boxedValue.datum.pointers.in.causal[
                         boxedValue.datum.pointers.in.causal.length - 1
                     ].ikey
                 sinkKey     = boxedValue.datum.key
-                pushLink ( sourceKey, sinkKey )
+                pushLink ( sourceKey, sinkKey, locatedInSink )
             }
-            let pushLastLinkOut = () => {
+
+            // argument is a boolean
+            let pushLastLinkOut = ( locatedInSink ) => {
 
                 sourceKey   = boxedValue.datum.key
                 sinkKey     = boxedValue.datum.pointers.out.causal[
                         boxedValue.datum.pointers.out.causal.length - 1
                     ].okey
-                pushLink ( sourceKey, sinkKey )
+                pushLink ( sourceKey, sinkKey, locatedInSink )
             }
 
             switch ( boxedValue.type ) {
@@ -410,7 +439,7 @@ function graphViewer ( graphServer ) {
                     
                     verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkIn ()
+                    pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
@@ -420,7 +449,7 @@ function graphViewer ( graphServer ) {
                     
                     verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkOut ()
+                    pushLastLinkOut ( locatedInSink = false )
                     break
   
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
@@ -430,7 +459,7 @@ function graphViewer ( graphServer ) {
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkIn ()
+                    pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
@@ -440,7 +469,7 @@ function graphViewer ( graphServer ) {
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkOut ()
+                    pushLastLinkOut ( locatedInSink = false )
 
                         // If sink-Datum did not previously exist, then we need to
                         // insert a placeholder node into the forceSimulation
@@ -475,7 +504,7 @@ function graphViewer ( graphServer ) {
         .scaleExtent([.1, 4])
         .on( "zoom", () =>  svg_positionerG
                             .transition ()
-                            .duration ( 200 )
+                            .duration ( 400 )
                             .ease ( d3.easeCubicOut ) 
                             .attr ( "transform", d3.event.transform ) 
         )
@@ -1187,8 +1216,9 @@ stale flag?`,
           S.donkey = 2
         S.blanket = new Fun ( q => { 
           
-          q.changeAVeryLongKeyName = Math.random()
+//          q.changeAVeryLongKeyName = Math.random()
             q.abacus
+            q.donkey
           
           return true 
         } )  
@@ -1198,23 +1228,23 @@ stale flag?`,
 
 
         setTimeout ( () => {
-        S.abacus
+//        S.abacus
             S.d = {}
-            S.b
-            S.abacus = 3.142 
+//            S.b
+//            S.abacus = 3.142 
         }, 2000 )
 
         setTimeout ( () => {
           S.e = null
-          delete S.abacus
-          S.a
-          S.blanket
+//          delete S.abacus
+//          S.a
+//          S.blanket
         }, 4000 )
 
         setTimeout ( () => {
           S.f = 1
-          S.donkey = 2
-          S.blanket
+//          S.donkey = 2
+//          S.blanket
 
 //console.log ( VERTICES.blanket('unproxy').datum.value ) 
 
