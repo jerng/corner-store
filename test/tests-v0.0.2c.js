@@ -9,8 +9,8 @@ function graphViewer ( graphServer ) {
     let 
 
     verbosity       = 1,    // larger is noisier
-    nodeData   = [],
-    linkData   = [],
+    nodeData        = [],
+    linkData        = [],
     width           = 500,
     height          = 500,
 
@@ -276,18 +276,18 @@ function graphViewer ( graphServer ) {
                     //return path 
                     return oneLinkGs 
                 },
-                updater => 
-                {
-                    let path = updater
-                        .selectAll ( 'path' )
-                            .attr ( 'd', d => {
-                                    //console.log ( p ( d ) )
-                                    return `M ${ d.source.x }, ${ d.source.y } 
-                                            T ${ d.target.x }, ${ d.target.y }`
-                                  } )
-                            //console.log(path)
-                    return updater
-                }
+             // updater => 
+             // {
+             //     let path = updater
+             //         .selectAll ( 'path' )
+             //             .attr ( 'd', d => {
+             //                     //console.log ( p ( d ) )
+             //                     return `M ${ d.source.x }, ${ d.source.y } 
+             //                             T ${ d.target.x }, ${ d.target.y }`
+             //                   } )
+             //             //console.log(path)
+             //     return updater
+             // }
             )
 ////////////////////////////////////////////////////////////////////////////////
         //try {
@@ -443,28 +443,28 @@ function graphViewer ( graphServer ) {
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
                    
                     verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
 
                         // If sink-Datum did not previously exist, then we need to
@@ -1212,9 +1212,9 @@ stale flag?`,
           S.donkey = 2
         S.blanket = new Fun ( q => { 
           
-//            q.changeAVeryLongKeyName = Math.random()
+            q.changeAVeryLongKeyName = Math.random()
             q.abacus
-//              q.donkey
+              q.donkey
           
           return true 
         } )  
