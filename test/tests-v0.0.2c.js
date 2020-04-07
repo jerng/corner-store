@@ -8,9 +8,9 @@ function graphViewer ( graphServer ) {
 
     let 
 
-    verbosity       = 0,    // larger is noisier
-    forceNodeData   = [],
-    forceLinkData   = [],
+    verbosity       = 1,    // larger is noisier
+    nodeData   = [],
+    linkData   = [],
     width           = 500,
     height          = 500,
 
@@ -77,8 +77,8 @@ function graphViewer ( graphServer ) {
         manyNodesG_oneNodeGs
             .attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
 
-//console.log ( `NODES`, p ( forceNodeData ) )
-//console.log ( `LINKS`, p ( forceLinkData ) )
+//console.log ( `NODES`, p ( nodeData ) )
+//console.log ( `LINKS`, p ( linkData ) )
         manyLinksG_oneLinkGs
             .selectAll ( 'path' )
             .attr ( 'd', d => { 
@@ -90,11 +90,11 @@ function graphViewer ( graphServer ) {
     },
 
     forceLink 
-    = d3.forceLink ( forceLinkData )
+    = d3.forceLink ( linkData )
         .id ( d => d.key ),
 
     simulation 
-    = d3.forceSimulation ( forceNodeData )
+    = d3.forceSimulation ( nodeData )
 
         .force ( '?charge',     d3.forceManyBody () )
         .force ( '?x',          d3.forceX () )
@@ -116,8 +116,8 @@ function graphViewer ( graphServer ) {
 
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
-        simulation  .nodes ( latest.forceNodeData ) 
-        forceLink   .links ( latest.forceLinkData ) 
+        simulation  .nodes ( latest.nodeData ) 
+        forceLink   .links ( latest.linkData ) 
 
         let nodeNotFun      = '#6af',
             nodeFunStale    = '#550',
@@ -132,7 +132,7 @@ function graphViewer ( graphServer ) {
         manyNodesG_oneNodeGs   // The SELECTION (manyNodesG_oneNodeGs)'s SECOND reference. 
         = manyNodesG_oneNodeGs
 
-            .data ( latest.forceNodeData , d => d.key  )
+            .data ( latest.nodeData , d => d.key  )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP,
                 //  manyNodesG[graph-viewer-role=node-groups], 
@@ -246,7 +246,7 @@ function graphViewer ( graphServer ) {
         manyLinksG_oneLinkGs   // The SELECTION (manyLinksG_oneLinkGs)'s SECOND reference. 
         = manyLinksG_oneLinkGs
 
-            .data ( latest.forceLinkData, d => d.key )
+            .data ( latest.linkData, d => d.key )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP,
                 //  manyLinksG[graph-viewer-role=link-groups], 
@@ -302,11 +302,11 @@ function graphViewer ( graphServer ) {
         verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
-    startSimulation  = server => 
+    startSimulation  = ( __server, __nodeData, __linkData ) => 
     {
         verbosity && console.log ( `START SIMULATION` )
 
-        let graph       = server ( 'graph' )
+        let graph       = __server ( 'graph' )
 
         graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
@@ -323,16 +323,16 @@ function graphViewer ( graphServer ) {
             // Not all cases of the switch require all the following; separate
             // to two switches? FIXME
 
-            let index = forceNodeData.findIndex ( 
+            let index = __nodeData.findIndex ( 
                 e => e.key == boxedValue.datum.key
             )
 
             if ( ~index ) { // Found an index; remove ephemeral signals.
-                delete forceNodeData[ index ].hit
-                delete forceNodeData[ index ].miss
+                delete __nodeData[ index ].hit
+                delete __nodeData[ index ].miss
             }
 
-            let forceNodeDatum = {
+            let nodeDatum = {
                 key     : boxedValue.datum.key,
                 value   : boxedValue.datum.value,
                 lambda  : boxedValue.datum.lambda ,
@@ -342,10 +342,10 @@ function graphViewer ( graphServer ) {
             }
             let pushNodeButPreferUpdate = ( __index, __nodeDatum) => {
                 if ( ~__index ) { // Found an index; replace element.
-                    forceNodeData[ index ]  = __nodeDatum
+                    __nodeData[ index ]  = __nodeDatum
                 }
                 else {          // Found no index; add element.
-                    forceNodeData.push ( __nodeDatum )
+                    __nodeData.push ( __nodeDatum )
                 }
             }
 
@@ -354,7 +354,7 @@ function graphViewer ( graphServer ) {
             let locatedInSink
 
             let pushLink = ( __sourceKey, __sinkKey, __locationKey ) => {
-                forceLinkData.push ( {
+                __linkData.push ( {
                     source  : __sourceKey, 
                     target  : __sinkKey,
                     type    : 'causal',
@@ -398,7 +398,7 @@ function graphViewer ( graphServer ) {
                 
                 case 'delete_vertex_vertexDelete' :
                     verbosity > 1 && console.log ( `DELETE` )
-                    forceNodeData = forceNodeData.filter (
+                    __nodeData = __nodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
@@ -406,11 +406,11 @@ function graphViewer ( graphServer ) {
                 case 'get_vertex_hit_vertexGetTyped' :
                     verbosity > 1 && console.log ( `GET, HIT` )
                     if ( ~index ) { // Found an index; report.
-                        forceNodeData[ index ].hit = true
+                        __nodeData[ index ].hit = true
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_hit_vertexGetTyped) :
-                            forceNodeData has no node with the key : 
+                            __nodeData has no node with the key : 
                             ${ boxedValue.datum.key }` )
                     }
                     break
@@ -418,63 +418,63 @@ function graphViewer ( graphServer ) {
                 case 'get_vertex_miss_runFunAndLog' :
                     verbosity > 1 && console.log ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
-                        forceNodeData[ index ].miss = true
-                        forceNodeData[ index ].stale = boxedValue.datum.stale
-                        forceNodeData[ index ].value = boxedValue.datum.value
+                        __nodeData[ index ].miss = true
+                        __nodeData[ index ].stale = boxedValue.datum.stale
+                        __nodeData[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_miss_runFunAndLog) :
-                            forceNodeData has no node with the key : 
+                            __nodeData has no node with the key : 
                             ${ boxedValue.datum.key }` )
                     }
                     break
 
                 case 'set_vertex_vertexSet' :
                     verbosity > 1 && console.log ( `SET,NOT FUN` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushNodeButPreferUpdate ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
-                    verbosity > 1 && console.log ( `SET,FUN`, forceNodeDatum )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    verbosity > 1 && console.log ( `SET,FUN`, nodeDatum )
+                    pushNodeButPreferUpdate ( index, nodeDatum)
 
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
                    
                     verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
 
                         // If sink-Datum did not previously exist, then we need to
                         // insert a placeholder node into the forceSimulation
 
-                        let placeholderIndex = forceNodeData.findIndex ( 
+                        let placeholderIndex = __nodeData.findIndex ( 
                             e => e.key == sinkKey 
                         )
                         if ( ! ( ~ placeholderIndex ) ) { // Index not found. 
-                            forceNodeData.push ( { key: sinkKey } ) 
+                            __nodeData.push ( { key: sinkKey } ) 
                         }
                     break
 
@@ -482,8 +482,8 @@ function graphViewer ( graphServer ) {
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-            updateSimulation    ( { forceNodeData: forceNodeData,
-                                    forceLinkData: forceLinkData
+            updateSimulation    ( { nodeData: __nodeData,
+                                    linkData: __linkData
                                 } ) 
 
             verbosity && console.groupEnd ( `GraphViewer GRAPH.LOG.CANON.TASK` ) 
@@ -516,15 +516,15 @@ function graphViewer ( graphServer ) {
                         height / 2 
     )
 
-    startSimulation ( graphServer )
+    startSimulation ( graphServer, nodeData, linkData )
 
 setTimeout( simulation.stop, 10000 )
 
     return {
         simulation  : simulation,
         update      : updateSimulation,
-        nodeData    : forceNodeData,
-        linkData    : forceLinkData
+        nodeData    : nodeData,
+        linkData    : linkData
     }
 }
 
@@ -1209,12 +1209,12 @@ stale flag?`,
         graphViewer ( S ) 
         
           S.abacus = 1 
-            S.donkey = 2
+          S.donkey = 2
         S.blanket = new Fun ( q => { 
           
-            q.changeAVeryLongKeyName = Math.random()
+//            q.changeAVeryLongKeyName = Math.random()
             q.abacus
-              q.donkey
+//              q.donkey
           
           return true 
         } )  
@@ -1223,28 +1223,28 @@ stale flag?`,
 
 
 
-        setTimeout ( () => {
-          S.abacus
-            S.d = {}
-              S.b
-              S.abacus = 3.142 
-        }, 2000 )
+//      setTimeout ( () => {
+//        S.abacus
+//          S.d = {}
+//            S.b
+//            S.abacus = 3.142 
+//      }, 2000 )
 
-        setTimeout ( () => {
-            S.e = null
+//      setTimeout ( () => {
+//          S.e = null
 //            delete S.abacus
-            S.a
-            S.blanket
-        }, 4000 )
+//          S.a
+//          S.blanket
+//      }, 4000 )
 
-        setTimeout ( () => {
-            S.f = 1
-            S.donkey = 2
-            S.blanket
+//      setTimeout ( () => {
+//          S.f = 1
+//          S.donkey = 2
+//          S.blanket
 
 //console.log ( VERTICES.blanket('unproxy').datum.value ) 
 
-        }, 5000 )
+ //       }, 5000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
