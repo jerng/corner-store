@@ -11,8 +11,8 @@ function graphViewer ( graphServer ) {
     verbosity       = 0,    // larger is noisier
     forceNodeData   = [],
     forceLinkData   = [],
-    width       = 500,
-    height      = 500,
+    width           = 500,
+    height          = 500,
 
     //  HENCEFORTH, the syntax 
     //
@@ -77,12 +77,14 @@ function graphViewer ( graphServer ) {
         manyNodesG_oneNodeGs
             .attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
 
-
+//console.log ( `NODES`, p ( forceNodeData ) )
+//console.log ( `LINKS`, p ( forceLinkData ) )
         manyLinksG_oneLinkGs
             .selectAll ( 'path' )
             .attr ( 'd', d => { 
+                //console.log ( d )
             return `M ${ d.source.x }, ${ d.source.y } 
-                    T ${ d.target.x }, ${ d.target.y }`
+                    L ${ d.target.x }, ${ d.target.y }`
         } )
 ////////////////////////////////////////////////////////////////////////////////
     },
@@ -109,11 +111,13 @@ function graphViewer ( graphServer ) {
     updateSimulation 
     = function ( latest ) 
     {
+        verbosity && console.group ( `UPDATE SIMULATION`  )
+        verbosity && console.warn ( `before`, p ( latest ) )
+
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
-
-        verbosity && console.group ( `UPDATE SIMULATION`  )
-        verbosity && console.warn ( `before`, latest )
+        simulation  .nodes ( latest.forceNodeData ) 
+        forceLink   .links ( latest.forceLinkData ) 
 
         let nodeNotFun      = '#6af',
             nodeFunStale    = '#550',
@@ -258,7 +262,7 @@ function graphViewer ( graphServer ) {
 
                     let oneLinkGs = enterer
                         .append ( 'g' )
-console.log(oneLinkGs)
+//console.log(oneLinkGs)
                     let path = oneLinkGs 
                         .append ( 'path' )
                             .attr ( 'stroke', '#000' )
@@ -267,7 +271,7 @@ console.log(oneLinkGs)
                             .attr ( 'd', d => {
                                     //console.log ( p ( d ) )
                                     return `M ${ d.source.x }, ${ d.source.y } 
-                                            T ${ d.target.x }, ${ d.target.y }`
+                                            L ${ d.target.x }, ${ d.target.y }`
                                   } )
                     //return path 
                     return oneLinkGs 
@@ -291,12 +295,10 @@ console.log(oneLinkGs)
         //  console.error (e, `updateSimulation:`, latest)
         //}
 
-        simulation  .nodes ( latest.forceNodeData ) 
-        forceLink   .links ( latest.forceLinkData ) 
         simulation  .alpha (1).restart()
         
 ////////////////////////////////////////////////////////////////////////////////
-        verbosity && console.warn ( `after`, latest )
+        verbosity && console.warn ( `after`, p ( latest ) )
         verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
@@ -357,7 +359,7 @@ console.log(oneLinkGs)
                     target  : __sinkKey,
                     type    : 'causal',
                     
-                    owner   : __locationKey    
+                    location: __locationKey    
                         //  'location' is The Datum whose record is being
                         //  communiated to the forceSimulation; 
                         //  both source and target/sink Datum instances will
@@ -440,18 +442,12 @@ console.log(oneLinkGs)
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
                    
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
-                    
                     verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
-                    
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
                     
                     verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
@@ -460,18 +456,12 @@ console.log(oneLinkGs)
   
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
-                    
                     verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
-                    
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
                     
                     verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
@@ -552,7 +542,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -1219,12 +1209,12 @@ stale flag?`,
         graphViewer ( S ) 
         
           S.abacus = 1 
-//          S.donkey = 2
+            S.donkey = 2
         S.blanket = new Fun ( q => { 
           
-//          q.changeAVeryLongKeyName = Math.random()
+            q.changeAVeryLongKeyName = Math.random()
             q.abacus
-//            q.donkey
+              q.donkey
           
           return true 
         } )  
@@ -1234,23 +1224,23 @@ stale flag?`,
 
 
         setTimeout ( () => {
-//        S.abacus
+          S.abacus
             S.d = {}
-//            S.b
-//            S.abacus = 3.142 
+              S.b
+              S.abacus = 3.142 
         }, 2000 )
 
         setTimeout ( () => {
-          S.e = null
-//          delete S.abacus
-//          S.a
-//          S.blanket
+            S.e = null
+//            delete S.abacus
+            S.a
+            S.blanket
         }, 4000 )
 
         setTimeout ( () => {
-          S.f = 1
-//          S.donkey = 2
-//          S.blanket
+            S.f = 1
+            S.donkey = 2
+            S.blanket
 
 //console.log ( VERTICES.blanket('unproxy').datum.value ) 
 

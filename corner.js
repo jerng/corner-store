@@ -887,17 +887,6 @@ class Graph extends Datum {
                         : undefined
             } )
 
-                  //console.log (`graph.vertexSet/>1 : Fun : BEFORE
-                  //funToSet.lambda(keySniffer), funToSet.lambda: `,
-                  //funToSet.lambda,'traits:', funToSet.traits)
-            
-            // Detect dependencies and plant pointers.
-            funToSet.lambda ( keySniffer )
-
-                  //console.log (`graph.vertexSet/>1 : Fun : AFTER
-                  //value.lambda(keySniffer)`, funToSet.traits )
-                    //console.log ( funToSet.toString() )
-
             funToSet.stale = true
                 // Fun will not run until the next get (no gets here)
                 //
@@ -935,6 +924,17 @@ class Graph extends Datum {
                     timeStampBoxedValue.time
                 ) ) 
             }
+                  //console.log (`graph.vertexSet/>1 : Fun : BEFORE
+                  //funToSet.lambda(keySniffer), funToSet.lambda: `,
+                  //funToSet.lambda,'traits:', funToSet.traits)
+            
+            // Detect dependencies and plant pointers.
+            funToSet.lambda ( keySniffer )
+
+                  //console.log (`graph.vertexSet/>1 : Fun : AFTER
+                  //value.lambda(keySniffer)`, funToSet.traits )
+                    //console.log ( funToSet.toString() )
+
             return result
         } 
 
