@@ -121,9 +121,9 @@ function graphViewer ( graphServer ) {
         simulation  .nodes ( latest.nodeData ) 
         forceLink   .links ( latest.linkData ) 
 
-        let nodeNotFun      = '#6af',
-            nodeFunStale    = '#550',
-            nodeFunFresh    = '#ee0',
+        let nodeNotAnon      = '#6af',
+            nodeAnonStale    = '#550',
+            nodeAnonFresh    = '#ee0',
 
             nodeHit         = '#6d8',
             nodeMiss        = '',
@@ -159,10 +159,10 @@ function graphViewer ( graphServer ) {
                             .attr ( 'fill', 
                                     d =>    d.lambda 
                                             ? ( d.stale 
-                                                ? nodeFunStale 
-                                                : nodeFunFresh
+                                                ? nodeAnonStale 
+                                                : nodeAnonFresh
                                               )
-                                            : nodeNotFun
+                                            : nodeNotAnon
                             )
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
@@ -200,20 +200,20 @@ function graphViewer ( graphServer ) {
                                         ? nodeHit
                                         : ( d.lambda
                                             ? ( d.stale
-                                                ? nodeFunStale
-                                                : nodeFunFresh
+                                                ? nodeAnonStale
+                                                : nodeAnonFresh
                                               ) 
-                                            : nodeNotFun 
+                                            : nodeNotAnon 
                                           )
                             )
                         .transition()
                             .attr ( 'fill',                 
                                 d =>    d.lambda 
                                         ? ( d.stale 
-                                            ? nodeFunStale 
-                                            : nodeFunFresh
+                                            ? nodeAnonStale 
+                                            : nodeAnonFresh
                                           )
-                                        : nodeNotFun
+                                        : nodeNotAnon
                             )
                     let div = updater 
                         .select( 'div' )
@@ -419,7 +419,7 @@ function graphViewer ( graphServer ) {
                     }
                     break
 
-                case 'get_vertex_miss_runFunAndLog' :
+                case 'get_vertex_miss_runAnonAndLog' :
                     verbosity && console.log ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].miss = true
@@ -427,7 +427,7 @@ function graphViewer ( graphServer ) {
                         __nodeData[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
-                        R (`d3 visualiser (get_vertex_miss_runFunAndLog) :
+                        R (`d3 visualiser (get_vertex_miss_runAnonAndLog) :
                             __nodeData has no node with the key : 
                             ${ boxedValue.datum.key }` )
                     }
@@ -438,34 +438,34 @@ function graphViewer ( graphServer ) {
                     pushNodeButPreferUpdate ( index, nodeDatum)
                     break
 
-                case 'set_vertex_Fun_vertexSet' :
+                case 'set_vertex_Anon_vertexSet' :
                     verbosity && console.log ( `SET,FUN`, nodeDatum )
                     pushNodeButPreferUpdate ( index, nodeDatum)
 
                     break
 
-                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                case 'set_pointer_in_CAUSAL_scopedAnonKeySnifferHandlerGet' :
                    
                     verbosity && console.log ( `FUN hasSources: own PointerIn` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
-                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
+                case 'set_pointer_out_CAUSAL_scopedAnonKeySnifferHandlerGet' :
                     
                     verbosity && console.log ( `FUN hasSources: SOURCE's PointerOut` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
-                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                case 'set_pointer_in_CAUSAL_scopedAnonKeySnifferHandlerSet' :
                     
                     verbosity && console.log ( `FUN hasSinks: set SINK's PointerIn` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
-                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                case 'set_pointer_out_CAUSAL_scopedAnonKeySnifferHandlerSet' :
 console.error(`RESUMEWORKHERE`)                    
                     verbosity && console.log ( `FUN hasSinks: set own PointerOut` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
@@ -764,7 +764,7 @@ new Exam.Exam ( {
 
         //console.log (`Before setting SERVER.computed2a`)
 
-        SERVER.computed2a       = new Fun ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Anon ( s => s.source1 + s.source2 )
         
         //console.log (`After setting SERVER.computed2a`)
 
@@ -784,7 +784,7 @@ new Exam.Exam ( {
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Fun ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Anon ( s => s.source1 + s.source2 )
 
         //console.log(`Before getting pointers.`)
 
@@ -826,7 +826,7 @@ new Exam.Exam ( {
         //SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Fun ( s => s.source1 + s.source2 )
+        SERVER.computed2a       = new Anon ( s => s.source1 + s.source2 )
     },
     expectError: true
 },
@@ -838,7 +838,7 @@ new Exam.Exam ( {
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Fun ( s => { 
+        SERVER.computed3 = new Anon ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
@@ -876,17 +876,17 @@ new Exam.Exam ( {
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Fun ( s => { 
+        SERVER.computed3 = new Anon ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
             
-            //console.log (`IN Fun: BEFORE PUSH`) 
+            //console.log (`IN Anon: BEFORE PUSH`) 
 
             // push
             s.sink4 = `Yo mama, I got two parts : ${computed}`
             
-            //console.log (`IN Fun: AFTER PUSH`) 
+            //console.log (`IN Anon: AFTER PUSH`) 
 
             return computed
         } ) 
@@ -962,17 +962,17 @@ new Exam.Exam ( {
         },
     } )
 },
-{   test : `Sourcing subkeys in Funs`,
+{   test : `Sourcing subkeys in Anons`,
     code : function () {
 
         let g = new Graph( 'server' )
-        g.h = new Fun ( e => e.h.i + e.h.j )
+        g.h = new Anon ( e => e.h.i + e.h.j )
 
         return JSON.stringify( g() ) 
     },
     expectError : true
 },
-{   test : `Tree insertion should handle Funs smoothly; Funs should be handled
+{   test : `Tree insertion should handle Anons smoothly; Anons should be handled
 smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
 
@@ -981,8 +981,8 @@ smoothly by tree extraction; caching works? Lazy reads?`,
         G.a = 1
         G.b = 2
 
-        G.m = new Fun ( e => e.a + e.b )
-        G.n = { o: new Fun ( e => e.a + e.b ) }
+        G.m = new Anon ( e => e.a + e.b )
+        G.n = { o: new Anon ( e => e.a + e.b ) }
 
         //console.log ( G.n.o ) 
 
@@ -1002,27 +1002,27 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 
     } )
 },
-{   test : `Fun.trait: getHandler`,
+{   test : `Anon.trait: getHandler`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.a = 1
 
-        SERVER.b = new Fun ( s => ( s.a + 1 ) )
+        SERVER.b = new Anon ( s => ( s.a + 1 ) )
         //console.warn (SERVER.b)
 
-        SERVER.c = new Fun ( s => ( s.a + 1 ), { getHandler: false } )
+        SERVER.c = new Anon ( s => ( s.a + 1 ), { getHandler: false } )
         //console.warn (SERVER.c)
 
         return JSON.stringify ( [ SERVER.b, SERVER.c ] )
     },
     want : JSON.stringify ( [ 2, undefined ] ) 
 },
-{   test : `Fun.trait: cached - do getters check staleness?`,
+{   test : `Anon.trait: cached - do getters check staleness?`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         SERVER.a = 1
 
-        SERVER.b = new Fun ( s => ( s.a + 1 ) )
+        SERVER.b = new Anon ( s => ( s.a + 1 ) )
         SERVER( 'vertices' ).b( 'datum' ).stale = false
 
       //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
@@ -1033,7 +1033,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
       //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
       //console.warn (SERVER( 'vertices' ).b( 'datum' ).value)
 
-        SERVER.c = new Fun ( s => ( s.a + 1 ), { cached : false } )
+        SERVER.c = new Anon ( s => ( s.a + 1 ), { cached : false } )
         SERVER( 'vertices' ).c( 'datum' ).stale = false
       
       //console.warn (SERVER( 'vertices' ).c( 'datum' ).stale)
@@ -1077,13 +1077,13 @@ smoothly by tree extraction; caching works? Lazy reads?`,
             notCachedValueAfter         : true,
     },null,2 )
 },
-{   test : `Fun.trait: cached - do sources invalidate dependent caches via
+{   test : `Anon.trait: cached - do sources invalidate dependent caches via
 stale flag?`,
     code : function () {
         let SERVER = new Graph ( 'server' )
 
         SERVER.a = 1
-        SERVER.b = new Fun (  s => s.a + 2 )
+        SERVER.b = new Anon (  s => s.a + 2 )
 
         let vertices = SERVER( 'vertices' )
         let b = vertices.b( 'datum' )
@@ -1099,11 +1099,11 @@ stale flag?`,
     },
     want : JSON.stringify ( [ true, undefined, 3, false, 3 ] )
 },
-{   test : `Fun.trait: hasSinks`,
+{   test : `Anon.trait: hasSinks`,
     code : function () {
         let SERVER = new Graph ( 'server' )
-        SERVER.a1 = new Fun (  s => { s.a2 = 2; return true } )
-        SERVER.b1 = new Fun (  s => { s.b2 = 2; return true }, 
+        SERVER.a1 = new Anon (  s => { s.a2 = 2; return true } )
+        SERVER.b1 = new Anon (  s => { s.b2 = 2; return true }, 
                                 { hasSinks: false } )
 
         //console.log ( SERVER.a1, SERVER.a2 )
@@ -1117,12 +1117,12 @@ stale flag?`,
     want : JSON.stringify ( [ true, 2, true, undefined ] )
 },
 
-{   test : `Fun.trait: hasSources`,
+{   test : `Anon.trait: hasSources`,
     code : function () {
         let SERVER = new Graph ( 'server' )
 
         SERVER.a = 1
-        SERVER.b = new Fun (  s => s.a + 2 )
+        SERVER.b = new Anon (  s => s.a + 2 )
 
       //console.warn ( SERVER.b )
       //console.warn ( SERVER.c )
@@ -1134,13 +1134,13 @@ stale flag?`,
     },
     want : JSON.stringify ( [ 3, NaN ] )
 },
-{   test : `Fun.trait: reactive`,
+{   test : `Anon.trait: reactive`,
     code : function () {
         let SERVER = new Graph ( 'server' )
         let sideEffected
 
         SERVER.a = 1
-        SERVER.b = new Fun ( 
+        SERVER.b = new Anon ( 
             s => sideEffected = s.a + 2, 
             {   reactive    : true,
                 getHandler  : false
@@ -1170,7 +1170,7 @@ stale flag?`,
         let GRAPH   = S ( 'graph' )
 
         S.a = 1 
-        S.b = new Fun ( q => { 
+        S.b = new Anon ( q => { 
             q.c = 3
             return q.a 
         } )  
@@ -1209,7 +1209,7 @@ stale flag?`,
 ////////////////////////////////////////////////////////////////////////////////
 //  Checklist:
 //  - C : ok
-//  - R : ok (except Funs with sinks)
+//  - R : ok (except Anons with sinks)
 //  - U : FAIL
 //  - D : FAIL
 //
@@ -1225,7 +1225,7 @@ stale flag?`,
         S.abacus = 1 
         //S.donkey = 2
 
-        S.blanket = new Fun ( q => { 
+        S.blanket = new Anon ( q => { 
           
           q.changeAVeryLongKeyName = Math.random()
           q.abacus
@@ -1239,23 +1239,23 @@ stale flag?`,
 
 
         setTimeout ( () => {
-            //S.abacus
+            S.abacus
             S.d = {}
-            //S.blanket
-            //S.abacus = 3.142 
+            S.blanket
+            S.abacus = 3.142 
         }, 2000 )
 
         setTimeout ( () => {
-            //S.e = null
-            //delete S.abacus
-            //S.abacus
-            //S.blanket
+            S.e = null
+            delete S.abacus
+            S.abacus
+            S.blanket
         }, 4000 )
 
         setTimeout ( () => {
-            //S.f = 1
-            //S.donkey = 2
-            //S.blanket
+            S.f = 1
+            S.donkey = 2
+            S.blanket
         }, 5000 )
 
 
