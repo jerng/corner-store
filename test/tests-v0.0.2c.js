@@ -10,6 +10,7 @@ function graphViewer ( graphServer ) {
 
     let 
 
+    verbosity       = 0,    // larger is noisier
     forceNodeData   = [],
     forceLinkData   = [],
     width       = 500,
@@ -48,41 +49,41 @@ function graphViewer ( graphServer ) {
         .append ( 'g' )
         .attr ('corner:GraphViewerRole','positioner'),
                
-    positionerG_manyNodesG
-    = svg_positionerG
-        .append ( 'g' )
-        .attr ('corner:GraphViewerRole','nodeGroups'),
+        positionerG_manyNodesG
+        = svg_positionerG
+            .append ( 'g' )
+            .attr ('corner:GraphViewerRole','nodeGroups'),
 
-        manyNodesG_oneNodeG    
-        = positionerG_manyNodesG
-            .selectAll (),
-    
-        //  The SELECTION (manyNodesG_oneNodeG)'s FIRST reference.
-        //  This has one group for each <g>1 in svg_positionerG;
-        //  groups will be empty as <g>2s have not been appended.
+            manyNodesG_oneNodeG    
+            = positionerG_manyNodesG
+                .selectAll (),
+        
+            //  The SELECTION (manyNodesG_oneNodeG)'s FIRST reference.
+            //  This has one group for each <g>1 in svg_positionerG;
+            //  groups will be empty as <g>2s have not been appended.
 
-    positionerG_manyLinksG
-    = svg_positionerG
-        .append ( 'g' )
-        .attr ('corner:GraphViewerRole','linkGroups'),
+        positionerG_manyLinksG
+        = svg_positionerG
+            .append ( 'g' )
+            .attr ('corner:GraphViewerRole','linkGroups'),
 
-        manyLinksG_oneLinkG    
-        = positionerG_manyLinksG
-            .selectAll (),
-    
-        //  The SELECTION (manyLinksG_oneLinkG)'s FIRST reference.
-        //  This has one group for each <g>1 in svg_positionerG;
-        //  groups will be empty as <g>2s have not been appended.
+            manyLinksG_oneLinkG    
+            = positionerG_manyLinksG
+                .selectAll (),
+        
+            //  The SELECTION (manyLinksG_oneLinkG)'s FIRST reference.
+            //  This has one group for each <g>1 in svg_positionerG;
+            //  groups will be empty as <g>2s have not been appended.
 
     tickHandler
     = function () {
         manyNodesG_oneNodeG.attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
-        manyLinksG_oneLinkG
-            .attr   ( 'd', d => { 
-                                console.log (d) 
-                                return `M ${ d.source.x }, ${ d.source.y } 
-                                        T ${ d.target.x }, ${ d.target.y }`
-                                } )
+    //  manyLinksG_oneLinkG
+    //      .attr   ( 'd', d => { 
+    //                          console.log (d) 
+    //                          return `M ${ d.source.x }, ${ d.source.y } 
+    //                                  T ${ d.target.x }, ${ d.target.y }`
+    //                          } )
     },
 
     forceLink 
@@ -110,14 +111,23 @@ function graphViewer ( graphServer ) {
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
 
-console.log ( latest )
-try {
-        simulation  .nodes ( latest.forceNodeData ) 
-//        forceLink   .links ( latest.forceLinkData ) 
-} catch ( e) {
-    console.error (e, latest)
-}
+        verbosity && console.group ( `UPDATE SIMULATION`  )
+        verbosity && console.warn ( `before`, latest )
 
+        try {
+                simulation  .nodes ( latest.forceNodeData ) 
+        //        forceLink   .links ( latest.forceLinkData ) 
+        } catch ( e) {
+            console.error (e, `updateSimulation:`, latest)
+        }
+
+        let nodeNotFun      = '#6af',
+            nodeFunStale    = '#550',
+            nodeFunFresh    = '#ee0',
+
+            nodeHit         = '#6d8',
+            nodeMiss        = '',
+            nodeDeleted     = '#000'
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -146,8 +156,11 @@ try {
                             .attr ( 'r', 12 )
                             .attr ( 'fill', 
                                     d =>    d.lambda 
-                                            ? ( d.stale ? '#550' : '#ee0' )
-                                            : '#6af'
+                                            ? ( d.stale 
+                                                ? nodeFunStale 
+                                                : nodeFunFresh
+                                              )
+                                            : nodeNotFun
                             )
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
@@ -179,21 +192,32 @@ try {
                     let circle = updater
                         .select ( 'circle' )
                         .transition()
-                        .duration ( 700 ) 
+                        .duration ( 300 ) 
                             .attr ( 'fill', d =>    d.hit 
-                                                    ?   '#6d8' 
-                                                    :   d.lambda
-                                                        ?   '#ee0'
-                                                        :   '#6af' )
+                                                    ? nodeHit
+                                                    : ( d.lambda
+                                                        ? ( d.stale
+                                                            ? nodeFunStale
+                                                            : nodeFunFresh
+                                                          ) 
+                                                        : nodeNotFun 
+                                                      )
+                                  )
                         .transition()
-                            .attr ( 'fill', d =>    d.lambda
-                                                    ?   '#ee0'
-                                                    :   '#6af' )
+                            .attr ( 'fill',                 
+                                    d =>    d.lambda 
+                                            ? ( d.stale 
+                                                ? nodeFunStale 
+                                                : nodeFunFresh
+                                              )
+                                            : nodeNotFun
+                                  )
                     let div = updater 
                         .select( 'div' )
                             .text ( d => d.key + ' : ' + d.value )
 
-                    // This feels expensive; find a cheaper way later. FIXME
+                    //  This seems insanely expensive; 
+                    //  find a cheaper way later. FIXME
                     return updater
                 },
                 exiter => 
@@ -204,7 +228,7 @@ try {
                         .ease ( d3.easeCubicOut )
 
                             .transition () 
-                                .attr ( 'fill', 'black' )
+                                .attr ( 'fill', nodeDeleted )
                                 .attr ('r', 20 )
                     
                     exiter
@@ -255,15 +279,28 @@ try {
             )
 
         simulation  .alpha (1).restart()
+        
+        verbosity && console.warn ( `after`, latest )
+        verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
     startSimulation  = server => 
     {
-        
+        verbosity && console.log ( `START SIMULATION` )
+
         let graph       = server ( 'graph' )
 
         graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
+
+            verbosity && (  console.group ( `GraphViewer GRAPH.LOG.CANON.TASK` ),
+                            console.warn (  `type:`, boxedValue.type, "\n",  
+                                            `stale:`, boxedValue.datum.stale, "\n",
+                                            `key:`, boxedValue.datum.key, "\n",
+                                            `value:`, boxedValue.datum.value, "\n",
+                                            boxedValue
+                                         ) 
+            )
 
             // Not all cases of the switch require this; separate. FIXME
 
@@ -323,14 +360,14 @@ try {
             switch ( boxedValue.type ) {
                 
                 case 'delete_vertex_vertexDelete' :
-                    console.log ( `DELETE` )
+                    verbosity > 1 && console.log ( `DELETE` )
                     forceNodeData = forceNodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
-                    console.log ( `GET, HIT` )
+                    verbosity > 1 && console.log ( `GET, HIT` )
                     if ( ~index ) { // Found an index; report.
                         forceNodeData[ index ].hit = true
                     }
@@ -342,9 +379,10 @@ try {
                     break
 
                 case 'get_vertex_miss_runFunAndLog' :
-                    console.log ( `GET, MISS` )
+                    verbosity > 1 && console.log ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
                         forceNodeData[ index ].miss = true
+                        forceNodeData[ index ].stale = boxedValue.datum.stale
                         forceNodeData[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
@@ -355,57 +393,24 @@ try {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    console.log ( `SET,NOT FUN` )
+                    verbosity > 1 && console.log ( `SET,NOT FUN` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
-                    console.log ( `SET,FUN` )
+                    verbosity > 1 && console.log ( `SET,FUN`, forceNodeDatum )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    break
 
-                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
-                    
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
-                    
-                    console.log ( `IN,SET` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkIn ()
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
-                    
+                   
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
                     
-                    console.log ( `IN,GET` )
+                    verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
                     pushNodeButPreferUpdate ( index, forceNodeDatum)
                     pushLastLinkIn ()
-                    break
-
-  
-                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
-                    
-                    // FIXME : may result in pointer salad as this
-                    //  is resolved asynchronously
-                    
-                    console.log ( `OUT,SET` )
-                    pushNodeButPreferUpdate ( index, forceNodeDatum)
-                    pushLastLinkOut ()
-                    
-                        // If sink-Datum did not previously exist, then we need to
-                        // insert a placeholder node into the forceSimulation
-
-                      //let placeholderIndex = forceNodeData.findIndex ( 
-                      //    e => e.key == sinkKey 
-                      //)
-                      //if ( ! ( ~ placeholderIndex ) ) { 
-                      //    
-                      //    // Index not found. 
-                      //    
-                      //    forceNodeData.push ( { key: sinkKey } ) 
-                      //}
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
@@ -413,24 +418,55 @@ try {
                     // FIXME : may result in pointer salad as this
                     //  is resolved asynchronously
                     
-                    console.log ( `OUT,GET` )
-                    pushNodeButPreferUpdate ()
+                    verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
                     pushLastLinkOut ()
                     break
   
+                case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                    
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    
+                    verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushLastLinkIn ()
+                    break
+
+                case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
+                    
+                    // FIXME : may result in pointer salad as this
+                    //  is resolved asynchronously
+                    
+                    verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
+                    pushNodeButPreferUpdate ( index, forceNodeDatum)
+                    pushLastLinkOut ()
+
+                        // If sink-Datum did not previously exist, then we need to
+                        // insert a placeholder node into the forceSimulation
+
+                        let placeholderIndex = forceNodeData.findIndex ( 
+                            e => e.key == sinkKey 
+                        )
+                        if ( ! ( ~ placeholderIndex ) ) { // Index not found. 
+                            forceNodeData.push ( { key: sinkKey } ) 
+                        }
+                    break
+
              default:
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-//console.log ( 
-//  p ( forceLinkData ),
-//  boxedValue
-//)
             updateSimulation    ( { forceNodeData: forceNodeData,
                                     forceLinkData: forceLinkData
                                 } ) 
+
+            verbosity && console.groupEnd ( `GraphViewer GRAPH.LOG.CANON.TASK` ) 
+
             F ( 'd3 visualiser, updated' )
         } )
+        
+        verbosity && console.log ( `START SIMULATION (ENDS)` )
     },
 
     zoom =
@@ -456,6 +492,8 @@ try {
     )
 
     startSimulation ( graphServer )
+
+setTimeout( simulation.stop, 10000 )
 
     return {
         simulation  : simulation,
@@ -1139,38 +1177,48 @@ stale flag?`,
 {   test : `D3 graph visualiser`,
     code : function () {
 
-        let S       = new Graph ( 'server' )
-        let GRAPH   = S ( 'graph' )
+        let S           = new Graph ( 'server' )
+        let GRAPH       = S ( 'graph' )
+        let VERTICES    = S ( 'vertices' )
   
         graphViewer ( S ) 
         
-        S.abacus = 1 
-        //S.donkey = 2
+          S.abacus = 1 
+          S.donkey = 2
         S.blanket = new Fun ( q => { 
-            //q.changeAVeryLongKeyName = Math.random()
+          
+          q.changeAVeryLongKeyName = Math.random()
             q.abacus
-            return true 
+          
+          return true 
         } )  
 
 
 
+
+
+        setTimeout ( () => {
         S.abacus
-
-
-        setTimeout ( () => {
-            //S.d = {}
-            //delete S.abacus
+            S.d = {}
+            S.b
+            S.abacus = 3.142 
         }, 2000 )
+
         setTimeout ( () => {
-            //S.e = null
-            //console.log ( S('vertices') )
+          S.e = null
+          delete S.abacus
+          S.a
+          S.blanket
         }, 4000 )
+
         setTimeout ( () => {
-            //S.f = 1
-            //S.abacus = 3.142 
-            //S.donkey = 2
-            //S.blanket
-        }, 6000 )
+          S.f = 1
+          S.donkey = 2
+          S.blanket
+
+//console.log ( VERTICES.blanket('unproxy').datum.value ) 
+
+        }, 5000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
@@ -1181,7 +1229,6 @@ stale flag?`,
 //    )
 //}
   
-
 
 
 
@@ -1196,6 +1243,10 @@ stale flag?`,
         let GRAPH   = S ( 'graph' )
 
     }
+},
+{   warning : `Increase transactionality of datum+pointer writes.'
+},
+{   warning : `Why are Datums reading on update?'
 },
 {   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
 invalidated, unless Fun runs immediately.'
