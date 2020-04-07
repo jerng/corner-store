@@ -74,11 +74,13 @@ function graphViewer ( graphServer ) {
     tickHandler
     = function () {
 ////////////////////////////////////////////////////////////////////////////////
+
+        //console.log ( `NODES`, p ( nodeData ) )
+        //console.log ( `LINKS`, p ( linkData ) )
+
         manyNodesG_oneNodeGs
             .attr ( 'transform', d => `translate ( ${d.x}, ${d.y} )` )
 
-//console.log ( `NODES`, p ( nodeData ) )
-//console.log ( `LINKS`, p ( linkData ) )
         manyLinksG_oneLinkGs
             .selectAll ( 'path' )
             .attr ( 'd', d => { 
@@ -96,15 +98,15 @@ function graphViewer ( graphServer ) {
     simulation 
     = d3.forceSimulation ( nodeData )
 
-        .force ( '?charge',     d3.forceManyBody () )
-        .force ( '?x',          d3.forceX () )
-        .force ( '?y',          d3.forceY () )
+        //.force ( '?charge',     d3.forceManyBody () )
+        .force ( '?x',          d3.forceX (.05) )
+        .force ( '?y',          d3.forceY (.05) )
         .force ( '?collision',  d3.forceCollide (70) )
         .force ( '?links',      forceLink )
 
-        .velocityDecay  ( 0.7 )
-        .alphaTarget    ( 0.0001 )
-        .alphaDecay     ( 0.01 ) 
+        .velocityDecay  ( .5 )
+        //.alphaTarget    ( 0.0001 )
+        //.alphaDecay     ( 0.01 ) 
 
         .on ( 'tick', tickHandler ),
                                                                   
@@ -112,7 +114,7 @@ function graphViewer ( graphServer ) {
     = function ( latest ) 
     {
         verbosity && console.group ( `UPDATE SIMULATION`  )
-        verbosity && console.warn ( `before`, p ( latest ) )
+        verbosity > 2 && console.warn ( `before`, p ( latest ) )
 
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
@@ -148,7 +150,9 @@ function graphViewer ( graphServer ) {
 
                     let oneNodeGs = enterer
                         .append ( 'g' )
-//console.log(oneNodeGs)
+                    
+                    //console.log(oneNodeGs)
+                    
                     let circle = oneNodeGs
                         .append ( 'circle' )
                             .attr ( 'r', 12 )
@@ -298,7 +302,7 @@ function graphViewer ( graphServer ) {
         simulation  .alpha (1).restart()
         
 ////////////////////////////////////////////////////////////////////////////////
-        verbosity && console.warn ( `after`, p ( latest ) )
+        verbosity > 2 && console.warn ( `after`, p ( latest ) )
         verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
@@ -397,14 +401,14 @@ function graphViewer ( graphServer ) {
             switch ( boxedValue.type ) {
                 
                 case 'delete_vertex_vertexDelete' :
-                    verbosity > 1 && console.log ( `DELETE` )
+                    verbosity && console.log ( `DELETE` )
                     __nodeData = __nodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
-                    verbosity > 1 && console.log ( `GET, HIT` )
+                    verbosity && console.log ( `GET, HIT` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].hit = true
                     }
@@ -416,7 +420,7 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'get_vertex_miss_runFunAndLog' :
-                    verbosity > 1 && console.log ( `GET, MISS` )
+                    verbosity && console.log ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].miss = true
                         __nodeData[ index ].stale = boxedValue.datum.stale
@@ -430,52 +434,52 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    verbosity > 1 && console.log ( `SET,NOT FUN` )
+                    verbosity && console.log ( `SET,NOT FUN` )
                     pushNodeButPreferUpdate ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Fun_vertexSet' :
-                    verbosity > 1 && console.log ( `SET,FUN`, nodeDatum )
+                    verbosity && console.log ( `SET,FUN`, nodeDatum )
                     pushNodeButPreferUpdate ( index, nodeDatum)
 
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerGet' :
                    
-                    verbosity > 1 && console.log ( `FUN hasSources: own PointerIn` )
+                    verbosity && console.log ( `FUN hasSources: own PointerIn` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerGet' :
                     
-                    verbosity > 1 && console.log ( `FUN hasSources: SOURCE's PointerOut` )
+                    verbosity && console.log ( `FUN hasSources: SOURCE's PointerOut` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
                 case 'set_pointer_in_CAUSAL_scopedFunKeySnifferHandlerSet' :
                     
-                    verbosity > 1 && console.log ( `FUN hasSinks: set SINK's PointerIn` )
+                    verbosity && console.log ( `FUN hasSinks: set SINK's PointerIn` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedFunKeySnifferHandlerSet' :
-                    
-                    verbosity > 1 && console.log ( `FUN hasSinks: set own PointerOut` )
+console.error(`RESUMEWORKHERE`)                    
+                    verbosity && console.log ( `FUN hasSinks: set own PointerOut` )
                     //pushNodeButPreferUpdate ( index, nodeDatum)
                     pushLastLinkOut ( locatedInSink = false )
 
                         // If sink-Datum did not previously exist, then we need to
                         // insert a placeholder node into the forceSimulation
 
-                        let placeholderIndex = __nodeData.findIndex ( 
-                            e => e.key == sinkKey 
-                        )
-                        if ( ! ( ~ placeholderIndex ) ) { // Index not found. 
-                            __nodeData.push ( { key: sinkKey } ) 
-                        }
+                      //let placeholderIndex = __nodeData.findIndex ( 
+                      //    e => e.key == sinkKey 
+                      //)
+                      //if ( ! ( ~ placeholderIndex ) ) { // Index not found. 
+                      //    __nodeData.push ( { key: sinkKey } ) 
+                      //}
                     break
 
              default:
@@ -1202,49 +1206,57 @@ stale flag?`,
 {   test : `D3 graph visualiser`,
     code : function () {
 
+////////////////////////////////////////////////////////////////////////////////
+//  Checklist:
+//  - C : ok
+//  - R : ok (except Funs with sinks)
+//  - U : FAIL
+//  - D : FAIL
+//
+//
+////////////////////////////////////////////////////////////////////////////////
+
         let S           = new Graph ( 'server' )
         let GRAPH       = S ( 'graph' )
         let VERTICES    = S ( 'vertices' )
   
         graphViewer ( S ) 
         
-          S.abacus = 1 
-          S.donkey = 2
+        S.abacus = 1 
+        //S.donkey = 2
+
         S.blanket = new Fun ( q => { 
           
-            q.changeAVeryLongKeyName = Math.random()
-            q.abacus
-              q.donkey
+          q.changeAVeryLongKeyName = Math.random()
+          q.abacus
+          //q.donkey
           
           return true 
         } )  
 
+        
 
 
 
+        setTimeout ( () => {
+            //S.abacus
+            S.d = {}
+            //S.blanket
+            //S.abacus = 3.142 
+        }, 2000 )
 
-//      setTimeout ( () => {
-//        S.abacus
-//          S.d = {}
-//            S.b
-//            S.abacus = 3.142 
-//      }, 2000 )
+        setTimeout ( () => {
+            //S.e = null
+            //delete S.abacus
+            //S.abacus
+            //S.blanket
+        }, 4000 )
 
-//      setTimeout ( () => {
-//          S.e = null
-//            delete S.abacus
-//          S.a
-//          S.blanket
-//      }, 4000 )
-
-//      setTimeout ( () => {
-//          S.f = 1
-//          S.donkey = 2
-//          S.blanket
-
-//console.log ( VERTICES.blanket('unproxy').datum.value ) 
-
- //       }, 5000 )
+        setTimeout ( () => {
+            //S.f = 1
+            //S.donkey = 2
+            //S.blanket
+        }, 5000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
