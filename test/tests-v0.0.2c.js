@@ -373,7 +373,10 @@ console.log(oneLinkGs)
                         boxedValue.datum.pointers.in.causal.length - 1
                     ].ikey
                 sinkKey     = boxedValue.datum.key
-                pushLink ( sourceKey, sinkKey, locatedInSink )
+                pushLink (  sourceKey, 
+                            sinkKey, 
+                            locatedInSink ? sinkKey : sourceKey
+                         )
             }
 
             // argument is a boolean
@@ -383,7 +386,10 @@ console.log(oneLinkGs)
                 sinkKey     = boxedValue.datum.pointers.out.causal[
                         boxedValue.datum.pointers.out.causal.length - 1
                     ].okey
-                pushLink ( sourceKey, sinkKey, locatedInSink )
+                pushLink (  sourceKey, 
+                            sinkKey, 
+                            locatedInSink ? sinkKey : sourceKey
+                         )
             }
 
             switch ( boxedValue.type ) {
