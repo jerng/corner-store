@@ -118,10 +118,21 @@ function graphViewer ( graphServer ) {
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `before`, p ( latest ) )
 
+////////////////////////////////////////////////////////////////////////////////
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
-        simulation  .nodes ( latest.nodeData ) 
-        forceLink   .links ( latest.linkData ) 
+        try {
+            forceLink   .links ( latest.linkData ) 
+        } catch (e) {
+            console.error (`.links() data updated`, e)
+        }
+        try {
+            simulation  .nodes ( latest.nodeData ) 
+        } catch (e) {
+            console.error (`.nodes() data updated`, e)
+        }
+
+////////////////////////////////////////////////////////////////////////////////
 
         let nodeNotScript      = '#6af',
             nodeScriptStale    = '#550',
@@ -282,7 +293,7 @@ function graphViewer ( graphServer ) {
             )
 ////////////////////////////////////////////////////////////////////////////////
         //simulation.stop()
-        simulation  .alpha (1).restart()
+        simulation.alpha (1).restart()
 ////////////////////////////////////////////////////////////////////////////////
 
         verbosity > 2 && console.warn ( `after`, p ( latest ) )
@@ -299,9 +310,8 @@ function graphViewer ( graphServer ) {
         = boxedValue => new Promise ( ( F, R ) => {
 
             verbosity > 1 && (  
-                console.group ( `async GraphViewer GRAPH.LOG.CANON.TASK` ),
-                console.warn  ( `type:`, boxedValue.type, "\n",  
-                                `key:`, boxedValue.datum.key, "\n",
+                console.group ( `async GraphViewer GRAPH.LOG.CANON.TASK`, boxedValue.type),
+                console.warn  ( `key:`, boxedValue.datum.key, "\n",
                                 `value:`, boxedValue.datum.value, "\n",
                                 `stale:`, boxedValue.datum.stale, "\n",
                                 boxedValue
@@ -479,7 +489,7 @@ console.error(`RESUMEWORKHERE`)
                                     linkData: __linkData
                                 } ) 
 
-            verbosity && console.groupEnd ( `async GraphViewer GRAPH.LOG.CANON.TASK` ) 
+            verbosity && console.groupEnd ( `async GraphViewer GRAPH.LOG.CANON.TASK`, boxedValue.type) 
 
             //new Promise ( (_F, _R) => console.error ( `test`, _F() ) )
 

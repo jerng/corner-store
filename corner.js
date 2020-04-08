@@ -875,25 +875,25 @@ class Graph extends Datum {
             delete datumToSet.value
             delete datumToSet.proxyTarget
 
-            let funToSet 
+            let scriptToSet 
                     =   Object.defineProperties ( 
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
     
             let keySniffer = new Proxy ( {}, {
 
-                get :   funToSet.traits.hasSources
+                get :   scriptToSet.traits.hasSources
                         ? this.handlers
-                            .scopedScriptKeySnifferHandlerGet ( funToSet )
+                            .scopedScriptKeySnifferHandlerGet ( scriptToSet )
                         : undefined,
 
-                set : funToSet.traits.hasSinks
+                set : scriptToSet.traits.hasSinks
                         ? this.handlers
-                            .scopedScriptKeySnifferHandlerSet ( funToSet )
+                            .scopedScriptKeySnifferHandlerSet ( scriptToSet )
                         : undefined
             } )
 
-            funToSet.stale = true
+            scriptToSet.stale = true
                 // Fun will not run until the next get (no gets here)
                 //
                 // Whether Fun.traits.cached is true or not, the Fun.stale
@@ -901,7 +901,7 @@ class Graph extends Datum {
                 // Datum, and Fun extends Datum.
 
             this.value [ keyToSet ]
-                = new Proxy ( funToSet.proxyTarget, this.datumHandler )   
+                = new Proxy ( scriptToSet.proxyTarget, this.datumHandler )   
 
                 //console.log(  `graph.vertexSet/[n>1], Fun, AFTER SET,
                 //keyToSet:`, keyToSet, 
@@ -918,7 +918,7 @@ class Graph extends Datum {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
                 let timeStampBoxedValue =  EventLog.timeStampBox ( { 
-                    'Script instance'  :   funToSet ,
+                    'Script instance'  :   scriptToSet ,
                     'FIXME'         :   `Placeholder log format for Fun, because
                                          Fun.toString/n doesn't handle circular
                                          objects yet.`                
@@ -926,20 +926,20 @@ class Graph extends Datum {
                 datumToSet.log.sets.note ( timeStampBoxedValue )
                 this.log.canon.note ( this.logFormat ( 
                     'set_vertex_Script_vertexSet',
-                    funToSet,
+                    scriptToSet,
                     timeStampBoxedValue.time
                 ) ) 
             }
                   //console.log (`graph.vertexSet/>1 : Fun : BEFORE
-                  //funToSet.lambda(keySniffer), funToSet.lambda: `,
-                  //funToSet.lambda,'traits:', funToSet.traits)
+                  //scriptToSet.lambda(keySniffer), scriptToSet.lambda: `,
+                  //scriptToSet.lambda,'traits:', scriptToSet.traits)
             
             // Detect dependencies and plant pointers.
-            funToSet.lambda ( keySniffer )
+            scriptToSet.lambda ( keySniffer )
 
                   //console.log (`graph.vertexSet/>1 : Fun : AFTER
-                  //value.lambda(keySniffer)`, funToSet.traits )
-                    //console.log ( funToSet.toString() )
+                  //value.lambda(keySniffer)`, scriptToSet.traits )
+                    //console.log ( scriptToSet.toString() )
 
             return result
         } 
@@ -1186,7 +1186,7 @@ class Graph extends Datum {
     //
     // If you're pulling data into your Fun, you'll trigger getters
     // on the other Datums-
-    'scopedScriptKeySnifferHandlerGet': funToSet => {
+    'scopedScriptKeySnifferHandlerGet': scriptToSet => {
         return ( ksTarg, ksProp, ksRcvr ) => {
           
                 //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
@@ -1196,19 +1196,19 @@ class Graph extends Datum {
 
 //  RECORD POINTERS IN
 
-            if ( ! ( 'causal' in funToSet.pointers.in ) ) {
-                funToSet.pointers.in.causal = []
+            if ( ! ( 'causal' in scriptToSet.pointers.in ) ) {
+                scriptToSet.pointers.in.causal = []
             }
             let pointerIn = new PointerIn ( ksProp)
-            funToSet.pointers.in.causal.push ( pointerIn )
+            scriptToSet.pointers.in.causal.push ( pointerIn )
 
             // LOGGING
             let timeStampBoxedPointerIn = EventLog.timeStampBox ( pointerIn )
-            funToSet.log.setsPointerIn
+            scriptToSet.log.setsPointerIn
                 .note ( timeStampBoxedPointerIn )
             this.log.canon.note ( this.logFormat (
                 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet',
-                funToSet,
+                scriptToSet,
                 timeStampBoxedPointerIn.time
             ) )
 
@@ -1233,9 +1233,9 @@ class Graph extends Datum {
                     dependencyDatum.pointers.out.causal = []
                 }
 
-                    //console.log (  funToSet.key )
+                    //console.log (  scriptToSet.key )
 
-                let pointerOut = new PointerOut ( funToSet.key )
+                let pointerOut = new PointerOut ( scriptToSet.key )
                 dependencyDatum
                     .pointers.out.causal.push ( pointerOut )
 
@@ -1258,28 +1258,28 @@ class Graph extends Datum {
                 
 
                 // .cached and .reactive: FIXME - should use pointers instead?
-                if ( funToSet.traits.cached ) {
+                if ( scriptToSet.traits.cached ) {
 
                     let cachedDependentHandlerKey 
-                        = 'cachedDependentHandler:' + funToSet.key
+                        = 'cachedDependentHandler:' + scriptToSet.key
 
                     dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
-                            funToSet.stale = true
+                            scriptToSet.stale = true
                             fulfill( cachedDependentHandlerKey )
                         } )
                 }
-                if ( funToSet.traits.reactive ) {
+                if ( scriptToSet.traits.reactive ) {
                     
                     let reactiveDependentHandlerKey 
-                        = 'reactiveDependentHandler:' + funToSet.key
+                        = 'reactiveDependentHandler:' + scriptToSet.key
 
                     dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
                     =   args => new Promise ( ( fulfill, reject ) => {
                             
                             //console.log( `scopedFunKeySnifferHandlerGet` )
                             
-                            this.runScriptAndLog ( funToSet )
+                            this.runScriptAndLog ( scriptToSet )
                             fulfill( reactiveDependentHandlerKey )
                         } )
 
@@ -1297,38 +1297,15 @@ class Graph extends Datum {
     //
     // If you're pushing data from your Fun, you'll trigger setters
     // on the other Datums-
-    'scopedScriptKeySnifferHandlerSet': funToSet => {
+    'scopedScriptKeySnifferHandlerSet': scriptToSet => {
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
                 //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
                 //: keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal )
 
-//  Configure (this) dependency to track dependents:
-
-//  RECORD POINTERS OUT
-
-            if ( ! ( 'causal' in funToSet.pointers.out ) ) {
-                funToSet.pointers.out.causal = []
-            }
-            let pointerOut = new PointerOut ( ksProp )
-            funToSet.pointers.out.causal.push ( pointerOut )
-
-                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
-                //: keySnifferHandler.set: PointerOut-s inserted at:`, key )
-
-            // LOGGING
-            let timeStampBoxedPointerOut 
-                = EventLog.timeStampBox ( pointerOut )
-            funToSet.log.setsPointerOut.note ( timeStampBoxedPointerOut )    
-            this.log.canon.note ( this.logFormat (
-                'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet',
-                funToSet,
-                timeStampBoxedPointerOut.time
-            ) )
-
 //  Configure dependents to track (this) dependency:
 
-//  RECORD POINTERS IN
+//  RECORD pointers IN, FROM script TO sink; pointer is located in SINK
 
             if ( ! ( ksProp in this.value ) ) {
                 this.vertexSet ( ksProp, undefined ) 
@@ -1339,7 +1316,7 @@ class Graph extends Datum {
             if ( ! ( 'causal' in dependentDatum.pointers.in ) ) {
                 dependentDatum.pointers.in.causal = []
             }
-            let pointerIn = new PointerIn ( funToSet.key )
+            let pointerIn = new PointerIn ( scriptToSet.key )
             dependentDatum
                 .pointers.in.causal.push ( pointerIn )
 
@@ -1354,6 +1331,29 @@ class Graph extends Datum {
                 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerSet',
                 dependentDatum,
                 timeStampBoxedPointerIn.time
+            ) )
+
+//  Configure (this) dependency to track dependents:
+
+//  RECORD pointers OUT, FROM script TO sink; pointer is located in SCRIPT
+
+            if ( ! ( 'causal' in scriptToSet.pointers.out ) ) {
+                scriptToSet.pointers.out.causal = []
+            }
+            let pointerOut = new PointerOut ( ksProp )
+            scriptToSet.pointers.out.causal.push ( pointerOut )
+
+                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
+                //: keySnifferHandler.set: PointerOut-s inserted at:`, key )
+
+            // LOGGING
+            let timeStampBoxedPointerOut 
+                = EventLog.timeStampBox ( pointerOut )
+            scriptToSet.log.setsPointerOut.note ( timeStampBoxedPointerOut )    
+            this.log.canon.note ( this.logFormat (
+                'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet',
+                scriptToSet,
+                timeStampBoxedPointerOut.time
             ) )
 
             return true // FIXME: pointers unchecked?
