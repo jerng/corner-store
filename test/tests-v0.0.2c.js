@@ -11,8 +11,8 @@ function graphViewer ( graphServer ) {
     verbosity       = 0,    // larger is noisier
     nodeData        = [],
     linkData        = [],
-    width           = 500,
-    height          = 500,
+    width           = window.innerWidth,
+    height          = window.innerHeight / 2,
 
     //  HENCEFORTH, the syntax 
     //
@@ -49,12 +49,12 @@ function graphViewer ( graphServer ) {
             `<marker    id="arrowInSink"    viewBox="0 0 10 10"
                         refX="23"           refY="5"
                         markerWidth="4"     markerHeight="4"
-                        fill-opacity="0.7"
+                        fill="red"          fill-opacity="0.7"
                         orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
             <marker     id="arrowInSource"  viewBox="0 0 10 10"
-                        refX="-15"           refY="5"
+                        refX="-15"          refY="5"
                         markerWidth="4"     markerHeight="4"
                         fill-opacity="0.7"
                         orient="auto">
@@ -68,19 +68,6 @@ function graphViewer ( graphServer ) {
         .append ( 'g' )
         .attr ('graph-viewer-role','positioner'),
                
-        positionerG_manyNodesG
-        = svg_positionerG
-            .append ( 'g' )
-            .attr ('graph-viewer-role','node-groups'),
-
-            manyNodesG_oneNodeGs    
-            = positionerG_manyNodesG
-                .selectAll (),
-        
-            //  The SELECTION (manyNodesG_oneNodeGs)'s FIRST reference.
-            //  This has one group for each <g>1 in svg_positionerG;
-            //  groups will be empty as <g>2s have not been appended.
-
         positionerG_manyLinksG
         = svg_positionerG
             .append ( 'g' )
@@ -91,6 +78,19 @@ function graphViewer ( graphServer ) {
                 .selectAll (),
         
             //  The SELECTION (manyLinksG_oneLinkGs)'s FIRST reference.
+            //  This has one group for each <g>1 in svg_positionerG;
+            //  groups will be empty as <g>2s have not been appended.
+
+        positionerG_manyNodesG
+        = svg_positionerG
+            .append ( 'g' )
+            .attr ('graph-viewer-role','node-groups'),
+
+            manyNodesG_oneNodeGs    
+            = positionerG_manyNodesG
+                .selectAll (),
+        
+            //  The SELECTION (manyNodesG_oneNodeGs)'s FIRST reference.
             //  This has one group for each <g>1 in svg_positionerG;
             //  groups will be empty as <g>2s have not been appended.
 
@@ -147,20 +147,27 @@ function graphViewer ( graphServer ) {
     = function ( latest ) 
     {
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
-        verbosity > 2 && console.warn ( `before`, p ( latest ) )
+        verbosity > 2 && console.warn ( `^(begins)`, p ( latest ) )
 
 ////////////////////////////////////////////////////////////////////////////////
         // Ensure that SIMULATION knows (NODE Ontology),
         //                              (LINK Ontology).
         try {
-            forceLink   .links ( latest.linkData ) 
-        } catch (e) {
-            console.error (`.links() data updated`, e)
-        }
-        try {
             simulation  .nodes ( latest.nodeData ) 
         } catch (e) {
             console.error (`.nodes() data updated`, e)
+        }
+        try {
+
+            verbosity > 2 && console.log( `BEFORE links()`, p( forceLink.links()) )
+            verbosity > 2 && console.log( `latest.linkData()`, p( latest.linkData) )
+
+            forceLink   .links ( latest.linkData ) 
+
+            verbosity > 2 && console.log( `AFTER links()`, p(forceLink.links()) )
+
+        } catch (e) {
+            console.error (`.links() data updated`, e)
         }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,14 +333,39 @@ function graphViewer ( graphServer ) {
                                     : 'url(#arrowInSink)'
                                   )
                     return oneLinkGs 
-                }
+                },
+            //  updater =>
+            //  {
+            //          // Each (enterer) is a datum in the
+            //          // group,manyNodesG[graph-viewer-role=node-groups], which
+            //          // isn't already mapped to a oneLinkGs element.
+
+            //      let oneLinkGs = updater 
+            //          .append ( 'g' )
+ 
+            //  //  let path = oneLinkGs 
+            //  //      .append ( 'path' )
+            //  //          .attr ( 'stroke-opacity',   '0.3' )
+            //  //          .attr ( 'stroke',           '#000') 
+            //  //          .attr ( 'marker-start', d => 
+            //  //                  d.location == d.source.key
+            //  //                  ? 'url(#arrowInSource)'
+            //  //                  : null 
+            //  //                )
+            //  //          .attr ( 'marker-end', d => 
+            //  //                  d.location == d.source.key
+            //  //                  ? null 
+            //  //                  : 'url(#arrowInSink)'
+            //  //                )
+            //      return updater//oneLinkGs 
+            //  }
             )
 ////////////////////////////////////////////////////////////////////////////////
         //simulation.stop()
         simulation.alpha (1).restart()
 ////////////////////////////////////////////////////////////////////////////////
 
-        verbosity > 2 && console.warn ( `after`, p ( latest ) )
+        verbosity > 2 && console.warn ( `v(ends)`, p ( latest ) )
         verbosity > 1 && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
@@ -375,9 +407,9 @@ function graphViewer ( graphServer ) {
                     // field if .lambda no longer exists here.
                 stale   : boxedValue.datum.stale
             }
-            let pushNodeButPreferUpdate = ( __index, __nodeDatum) => {
+            let pushNodeButPreferAssign = ( __index, __nodeDatum) => {
                 if ( ~__index ) { // Found an index; replace element.
-                    __nodeData[ index ]  = __nodeDatum
+                    Object.assign ( __nodeData[ index ], __nodeDatum )
                 }
                 else {          // Found no index; add element.
                     __nodeData.push ( __nodeDatum )
@@ -472,7 +504,7 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'get_vertex_miss_runScriptAndLog' :
-                    verbosity && console.warn ( `GET, MISS (SHOULD be a Script` )
+                    verbosity && console.warn ( `GET, MISS, Script` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].miss = true
                         __nodeData[ index ].stale = boxedValue.datum.stale
@@ -487,12 +519,12 @@ function graphViewer ( graphServer ) {
 
                 case 'set_vertex_vertexSet' :
                     verbosity && console.warn ( `SET, NOT SCRIPT` )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    pushNodeButPreferAssign ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Script_vertexSet' :
                     verbosity && console.warn ( `SET,SCRIPT`, nodeDatum )
-                    pushNodeButPreferUpdate ( index, nodeDatum)
+                    pushNodeButPreferAssign ( index, nodeDatum)
 
                     break
 
@@ -1273,13 +1305,13 @@ stale flag?`,
         graphViewer ( S ) 
         
           S.abacus = 1 
-        //S.donkey = 2
+          S.donkey = 2
 
         S.blanket = new Script ( q => { 
           
-          q.changeAVeryLongKeyName = Math.random()
+            q.changeAVeryLongKeyName = Math.random()
             q.abacus
-          //q.donkey
+            q.donkey
           
           return true 
         } )  
@@ -1289,23 +1321,23 @@ stale flag?`,
 
 
         setTimeout ( () => {
-              S.d = {}
-/*/
-              S.abacus
           S.blanket
+//*/
+              S.d = {}
+              S.abacus
             S.abacus = 3.142 
 //*/
         }, 2000 )
         setTimeout ( () => {
             S.e = null
-/*/
+//*/
             delete S.abacus
             S.abacus
           S.blanket
 //*/
         }, 3000 )
         setTimeout ( () => {
-/*/
+//*/
             S.f = 1
             S.donkey = 2
             S.blanket
