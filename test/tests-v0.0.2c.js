@@ -8,7 +8,7 @@ function graphViewer ( graphServer ) {
 
     let 
 
-    verbosity       = 3,    // larger is noisier
+    verbosity       = 0,    // larger is noisier
     nodeData        = [],
     linkData        = [],
     width           = 500,
@@ -302,7 +302,7 @@ function graphViewer ( graphServer ) {
 
     connectGraphLogToSimulation  = ( __server, __nodeData, __linkData ) => 
     {
-        verbosity && console.log ( `START SIMULATION` )
+        verbosity && console.group ( `CONNECT GRAPH LOG TO SIMULATION` )
 
         let graph       = __server ( 'graph' )
 
@@ -411,19 +411,31 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
-                    verbosity && console.warn ( `GET, HIT` )
+                    verbosity && console.warn ( `GET, HIT, NOT SCRIPT` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].hit = true
                     }
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_hit_vertexGetTyped) :
                             __nodeData has no node with the key : 
-                            ${ boxedValue.datum.key }` )
+                            ${ boxedValue.datum.key }; perhaps a major problem.` )
+                    }
+                    break
+
+                case 'get_vertex_hit_runScriptAndLog' :
+                    verbosity && console.warn ( `GET, HIT, SCRIPT` )
+                    if ( ~index ) { // Found an index; report.
+                        __nodeData[ index ].hit = true
+                    }
+                    else {          // Found no index; complain.
+                        R (`d3 visualiser (get_vertex_hit_vertexGetTyped) :
+                            __nodeData has no node with the key : 
+                            ${ boxedValue.datum.key }; perhaps a major problem.` )
                     }
                     break
 
                 case 'get_vertex_miss_runScriptAndLog' :
-                    verbosity && console.warn ( `GET, MISS` )
+                    verbosity && console.warn ( `GET, MISS (SHOULD be a Script` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].miss = true
                         __nodeData[ index ].stale = boxedValue.datum.stale
@@ -432,12 +444,12 @@ function graphViewer ( graphServer ) {
                     else {          // Found no index; complain.
                         R (`d3 visualiser (get_vertex_miss_runScriptAndLog) :
                             __nodeData has no node with the key : 
-                            ${ boxedValue.datum.key }` )
+                            ${ boxedValue.datum.key }; perhaps a major problem.` )
                     }
                     break
 
                 case 'set_vertex_vertexSet' :
-                    verbosity && console.warn ( `SET,NOT SCRIPT` )
+                    verbosity && console.warn ( `SET, NOT SCRIPT` )
                     pushNodeButPreferUpdate ( index, nodeDatum)
                     break
 
@@ -466,7 +478,7 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet' :
-console.error(`RESUMEWORKHERE`)                    
+                                                   
                     verbosity && console.warn ( `SCRIPT hasSinks: set own PointerOut` )
                     pushLastLinkOut ( locatedInSink = false )
 
@@ -496,7 +508,7 @@ console.error(`RESUMEWORKHERE`)
             F ( 'd3 visualiser, updated' )
         } )
         
-        verbosity > 1 && console.log ( `START SIMULATION (ENDS)` )
+        verbosity && console.groupEnd ( `CONNECT GRAPH LOG TO SIMULATION` )
     },
 
     zoom =
@@ -1223,13 +1235,13 @@ stale flag?`,
   
         graphViewer ( S ) 
         
-//        S.abacus = 1 
+          S.abacus = 1 
         //S.donkey = 2
 
         S.blanket = new Script ( q => { 
           
           q.changeAVeryLongKeyName = Math.random()
-//          q.abacus
+            q.abacus
           //q.donkey
           
           return true 
@@ -1240,24 +1252,24 @@ stale flag?`,
 
 
         setTimeout ( () => {
-//            S.abacus
-//            S.d = {}
-//          S.blanket
-//          S.abacus = 3.142 
+              S.abacus
+              S.d = {}
+          S.blanket
+            S.abacus = 3.142 
         }, 2000 )
 
         setTimeout ( () => {
-//          S.e = null
-//          delete S.abacus
-//          S.abacus
-//          S.blanket
-        }, 4000 )
+            S.e = null
+            delete S.abacus
+            S.abacus
+          S.blanket
+        }, 3000 )
 
         setTimeout ( () => {
-//          S.f = 1
-//          S.donkey = 2
-//          S.blanket
-        }, 5000 )
+            S.f = 1
+            S.donkey = 2
+            S.blanket
+        }, 4000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {

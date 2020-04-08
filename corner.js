@@ -243,7 +243,7 @@ class Datum {
     }
 }
 
-//  Generally, when defining an Fun:
+//  Generally, when defining a Script:
 //  
 //  DEFAULT (UNSAFE_COMPUTED_SOURCE pattern):
 //
@@ -384,8 +384,8 @@ class Datum {
 //  - L ambda            : too close to native morpheme
 //  - A non
 //
-//  On one hand, Fun fits with the rule of naming brandy things with harsh
-//  syllables. On the other, Lambda and Fun are much more specific about what we're
+//  On one hand, Script fits with the rule of naming brandy things with harsh
+//  syllables. On the other, Lambda and Script are much more specific about what we're
 //  actually parking at those nodes. Script is cute, but seems a bit distracting.
 //  Will continue to ruminate on the shortlist for a bit.
 //
@@ -670,7 +670,7 @@ class Graph extends Datum {
             // !stale && cached
         
             result = datum.value        
-            // cache hit, scenario 1 of 3; an Fun
+            // cache hit, scenario 1 of 3; a Script
 
             datum.stale = false // for general coherence
 
@@ -762,11 +762,11 @@ class Graph extends Datum {
 
             
                     result = this.value[ datum.key ]  
-                    // cache hit, scenario 1 of 2; not an Fun, no cache 
+                    // cache hit, scenario 1 of 2; not a Script, no cache 
         }                                           
 
         else {      result  =  datum.value      
-                    // cache hit, scenario 2 of 2; not an Fun, no cache  
+                    // cache hit, scenario 2 of 2; not a Script, no cache  
         }                                           
 
         // LOGGING - 2 cache hit scenarios in vertexGetTyped; more scenarios in 
@@ -865,10 +865,10 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value IS an Fun, call it on a keySniffer to plant pointers.
+        // If datumToSet.value IS a Script, call it on a keySniffer to plant pointers.
         if ( datumToSet.value instanceof Script )
         {
-                //console.log (`graph.vertexSet/[n>1] : value instanceof Fun `)
+                //console.log (`graph.vertexSet/[n>1] : value instanceof Script `)
 
             // Assign all old Datum's own properties except (those listed below) to Fun.
             delete datumToSet.lambda
@@ -894,11 +894,11 @@ class Graph extends Datum {
             } )
 
             scriptToSet.stale = true
-                // Fun will not run until the next get (no gets here)
+                // Script will not run until the next get (no gets here)
                 //
                 // Whether Fun.traits.cached is true or not, the Fun.stale
                 // property will be defined. Because it is defined for all
-                // Datum, and Fun extends Datum.
+                // Datum, and Script extends Datum.
 
             this.value [ keyToSet ]
                 = new Proxy ( scriptToSet.proxyTarget, this.datumHandler )   
@@ -930,14 +930,14 @@ class Graph extends Datum {
                     timeStampBoxedValue.time
                 ) ) 
             }
-                  //console.log (`graph.vertexSet/>1 : Fun : BEFORE
+                  //console.log (`graph.vertexSet/>1 : Script : BEFORE
                   //scriptToSet.lambda(keySniffer), scriptToSet.lambda: `,
                   //scriptToSet.lambda,'traits:', scriptToSet.traits)
             
             // Detect dependencies and plant pointers.
             scriptToSet.lambda ( keySniffer )
 
-                  //console.log (`graph.vertexSet/>1 : Fun : AFTER
+                  //console.log (`graph.vertexSet/>1 : Script : AFTER
                   //value.lambda(keySniffer)`, scriptToSet.traits )
                     //console.log ( scriptToSet.toString() )
 
@@ -945,9 +945,9 @@ class Graph extends Datum {
         } 
 
         else 
-        {  // If datumToSet.value is NOT an Fun, then complete the assignment.
+        {  // If datumToSet.value is NOT a Script, then complete the assignment.
 
-            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Fun `)
+            //console.log (`graph.vertexSet/[n>1] : value NOT instanceof Script `)
 
 
             // If valuetoset is an object ...
@@ -1182,7 +1182,7 @@ class Graph extends Datum {
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Funs, when the Fun is set to the graph.
+    // Funs, when the Script is set to the graph.
     //
     // If you're pulling data into your Fun, you'll trigger getters
     // on the other Datums-
@@ -1218,8 +1218,8 @@ class Graph extends Datum {
             //  Configure dependencies to track (this) dependent:
                    
             if ( ! ( ksProp in this.value ) ) {
-                throw Error (`graph.vertexSet/n tried to set an Script, but the
-                        Fun referred to a source address which has not been
+                throw Error (`graph.vertexSet/n tried to set a Script, but the
+                        Script referred to a source address which has not been
                         set: (${ ksProp })`)
             } // Note the asymmetry with ---HandlerSet
 
@@ -1287,13 +1287,13 @@ class Graph extends Datum {
 
 //console.error (`WIP here -  insert tasks to dependencies.`)
 
-                    //console.log (`graph.scopedFunKeySnifferHandlerGet/>1 : Fun : keySnifferHandler.get: ended`)
+                    //console.log (`graph.scopedFunKeySnifferHandlerGet/>1 : Script : keySnifferHandler.get: ended`)
 
         }
     },
 
     // vertexSet is using a keysniffer to get the keys of functions called in
-    // Funs, when the Fun is set to the graph.
+    // Funs, when the Script is set to the graph.
     //
     // If you're pushing data from your Fun, you'll trigger setters
     // on the other Datums-
