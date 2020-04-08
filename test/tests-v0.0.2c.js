@@ -28,6 +28,16 @@ function graphViewer ( graphServer ) {
     //  (SELECTION.select / SELECTION.selectALL), before proceeding.
 
 
+    zoom 
+    = d3.zoom()
+        .scaleExtent([.1, 4])
+        .on( "zoom", () =>  svg_positionerG
+                            .transition ()
+                            .duration ( 400 )
+                            .ease ( d3.easeCubicOut ) 
+                            .attr ( "transform", d3.event.transform ) 
+        ),
+
     body_svg
     = d3.select ( 'body' )
         .append ( 'svg' )
@@ -38,7 +48,8 @@ function graphViewer ( graphServer ) {
                             font-family: Roboto, Helvetica, sans-serif;
                             font-weight: 300;
                             font-size: 16px;`
-        ),
+        )
+        .call ( zoom ),
 
     svg_defs
     = body_svg
@@ -95,8 +106,8 @@ function graphViewer ( graphServer ) {
             //  groups will be empty as <g>2s have not been appended.
 
 ////////////////////////////////////////////////////////////////////////////////
-    tickHandler
-    = function () {
+    tickHandler = () => 
+    {
 
         //console.log ( `NODES`, p ( nodeData ) )
         //console.log ( `LINKS`, p ( linkData ) )
@@ -107,18 +118,8 @@ function graphViewer ( graphServer ) {
         manyLinksG_oneLinkGs
             .selectAll ( 'path' )
             .attr ( 'd', d => { 
-
-        return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
-
-          //    Here is code for half-length shafts:
-          //    let pointerLocatedInSource = d.location == d.source.key 
-          //    let halfX   = ( d.source.x + d.target.x ) / 2
-          //    let halfY   = ( d.source.y + d.target.y ) / 2
-          //return  pointerLocatedInSource
-          //        ? `M${d.source.x},${d.source.y}L${halfX},${halfY}`
-          //        : `M${halfX},${halfY}L${d.target.x},${d.target.y}`
-
-        } )
+                return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
+            } )
     },
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,21 +131,14 @@ function graphViewer ( graphServer ) {
 
     simulation 
     = d3.forceSimulation ( nodeData )
-
-        //.force ( '?charge',     d3.forceManyBody () )
-        .force ( '?x',          d3.forceX (.05) )
-        .force ( '?y',          d3.forceY (.05) )
+        .force ( '?x',          d3.forceX (   ) )
+        .force ( '?y',          d3.forceY (   ) )
         .force ( '?collision',  d3.forceCollide (70) )
         .force ( '?links',      forceLink )
-
         .velocityDecay  ( .5 )
-        //.alphaTarget    ( 0.0001 )
-        //.alphaDecay     ( 0.01 ) 
-
         .on ( 'tick', tickHandler ),
                                                                   
-    updateSimulation 
-    = function ( latest ) 
+    updateSimulation = ( latest ) => 
     {
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `^(begins)`, p ( latest ) )
@@ -203,7 +197,8 @@ function graphViewer ( graphServer ) {
                         .append ( 'g' )
                         .call   ( d3.drag()
                                     .on( 'start',   d => { 
-                                        if ( ! d3.event.active ) { simulation.alphaTarget(0.3).restart() }
+                                        if ( ! d3.event.active ) {
+                                            simulation.alpha(0.2).restart() }
                                     } )
                                     .on( 'drag',    d => {
                                         d.x = d3.event.x
@@ -231,10 +226,10 @@ function graphViewer ( graphServer ) {
 
                     let foreignObject = oneNodeGs
                         .append( 'foreignObject' )
-                            .attr( 'x', '5')
-                            .attr( 'y', '5')
-                            .attr( 'height', '500')
-                            .attr( 'width', '100')
+                            .attr  ( 'x', '5')
+                            .attr  ( 'y', '5')
+                            .attr  ( 'width', '100')
+                            .style ( 'overflow', 'visible' )
 
                     let div = foreignObject
                         .append( 'xhtml:div' )
@@ -344,32 +339,8 @@ function graphViewer ( graphServer ) {
                                   )
                     return oneLinkGs 
                 },
-            //  updater =>
-            //  {
-            //          // Each (enterer) is a datum in the
-            //          // group,manyNodesG[graph-viewer-role=node-groups], which
-            //          // isn't already mapped to a oneLinkGs element.
-
-            //      let oneLinkGs = updater 
-            //          .append ( 'g' )
- 
-            //  //  let path = oneLinkGs 
-            //  //      .append ( 'path' )
-            //  //          .attr ( 'stroke-opacity',   '0.3' )
-            //  //          .attr ( 'stroke',           '#000') 
-            //  //          .attr ( 'marker-start', d => 
-            //  //                  d.location == d.source.key
-            //  //                  ? 'url(#arrowInSource)'
-            //  //                  : null 
-            //  //                )
-            //  //          .attr ( 'marker-end', d => 
-            //  //                  d.location == d.source.key
-            //  //                  ? null 
-            //  //                  : 'url(#arrowInSink)'
-            //  //                )
-            //      return updater//oneLinkGs 
-            //  }
             )
+
 ////////////////////////////////////////////////////////////////////////////////
         //simulation.stop()
         simulation.alpha (1).restart()
@@ -588,22 +559,10 @@ function graphViewer ( graphServer ) {
         } )
         
         verbosity && console.groupEnd ( `CONNECT GRAPH LOG TO SIMULATION` )
-    },
-
-    zoom =
-        d3
-        .zoom()
-        .scaleExtent([.1, 4])
-        .on( "zoom", () =>  svg_positionerG
-                            .transition ()
-                            .duration ( 400 )
-                            .ease ( d3.easeCubicOut ) 
-                            .attr ( "transform", d3.event.transform ) 
-        )
+    }
 
     // end of (let)s - continue imperatives:
 
-    zoom ( body_svg )
     zoom.translateBy (  body_svg
                             .transition ()
                             .duration ( 400 )
@@ -613,8 +572,6 @@ function graphViewer ( graphServer ) {
     )
 
     connectGraphLogToSimulation ( graphServer, nodeData, linkData )
-
-setTimeout( simulation.stop, 10000 )
 
     return {
         simulation  : simulation,
