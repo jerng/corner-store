@@ -8,7 +8,7 @@ function graphViewer ( graphServer ) {
 
     let 
 
-    verbosity       = 1,    // larger is noisier
+    verbosity       = 3,    // larger is noisier
     nodeData        = [],
     linkData        = [],
     width           = 500,
@@ -71,9 +71,9 @@ function graphViewer ( graphServer ) {
             //  This has one group for each <g>1 in svg_positionerG;
             //  groups will be empty as <g>2s have not been appended.
 
+////////////////////////////////////////////////////////////////////////////////
     tickHandler
     = function () {
-////////////////////////////////////////////////////////////////////////////////
 
         //console.log ( `NODES`, p ( nodeData ) )
         //console.log ( `LINKS`, p ( linkData ) )
@@ -88,12 +88,14 @@ function graphViewer ( graphServer ) {
             return `M ${ d.source.x }, ${ d.source.y } 
                     L ${ d.target.x }, ${ d.target.y }`
         } )
-////////////////////////////////////////////////////////////////////////////////
     },
+////////////////////////////////////////////////////////////////////////////////
 
     forceLink 
     = d3.forceLink ( linkData )
         .id ( d => d.key ),
+
+    // The Force Simulation IS STARTED Here:
 
     simulation 
     = d3.forceSimulation ( nodeData )
@@ -113,7 +115,7 @@ function graphViewer ( graphServer ) {
     updateSimulation 
     = function ( latest ) 
     {
-        verbosity && console.group ( `UPDATE SIMULATION`  )
+        verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `before`, p ( latest ) )
 
         // Ensure that SIMULATION knows (NODE Ontology),
@@ -266,47 +268,28 @@ function graphViewer ( graphServer ) {
 
                     let oneLinkGs = enterer
                         .append ( 'g' )
-//console.log(oneLinkGs)
+                        
                     let path = oneLinkGs 
                         .append ( 'path' )
-                            .attr ( 'stroke', '#000' )
-                            .attr ( 'stroke-width', '1' )
-                            .attr ( 'fill', 'none' )
-                            .attr ( 'd', d => {
-                                    //console.log ( p ( d ) )
-                                    return `M ${ d.source.x }, ${ d.source.y } 
-                                            L ${ d.target.x }, ${ d.target.y }`
-                                  } )
-                    //return path 
+                            .attr ( 'fill',             'none' )
+                            .attr ( 'stroke-opacity',   '0.6' )
+                            .attr ( 'stroke',           
+                                    d => d.location == d.source.key ? '#000': '#f00') 
+                            .attr ( 'stroke-dasharray',     
+                                    d => d.location == d.source.key ? 1     : 5     ) 
                     return oneLinkGs 
-                },
-             // updater => 
-             // {
-             //     let path = updater
-             //         .selectAll ( 'path' )
-             //             .attr ( 'd', d => {
-             //                     //console.log ( p ( d ) )
-             //                     return `M ${ d.source.x }, ${ d.source.y } 
-             //                             T ${ d.target.x }, ${ d.target.y }`
-             //                   } )
-             //             //console.log(path)
-             //     return updater
-             // }
+                }
             )
 ////////////////////////////////////////////////////////////////////////////////
-        //try {
-        //} catch ( e) {
-        //  console.error (e, `updateSimulation:`, latest)
-        //}
-
+        //simulation.stop()
         simulation  .alpha (1).restart()
-        
 ////////////////////////////////////////////////////////////////////////////////
+
         verbosity > 2 && console.warn ( `after`, p ( latest ) )
-        verbosity && console.groupEnd ( `UPDATE SIMULATION`  )
+        verbosity > 1 && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
-    startSimulation  = ( __server, __nodeData, __linkData ) => 
+    connectGraphLogToSimulation  = ( __server, __nodeData, __linkData ) => 
     {
         verbosity && console.log ( `START SIMULATION` )
 
@@ -315,13 +298,14 @@ function graphViewer ( graphServer ) {
         graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
 
-            verbosity && (  console.group ( `GraphViewer GRAPH.LOG.CANON.TASK` ),
-                            console.warn (  `type:`, boxedValue.type, "\n",  
-                                            `stale:`, boxedValue.datum.stale, "\n",
-                                            `key:`, boxedValue.datum.key, "\n",
-                                            `value:`, boxedValue.datum.value, "\n",
-                                            boxedValue
-                                         ) 
+            verbosity > 1 && (  
+                console.group ( `async GraphViewer GRAPH.LOG.CANON.TASK` ),
+                console.warn  ( `type:`, boxedValue.type, "\n",  
+                                `key:`, boxedValue.datum.key, "\n",
+                                `value:`, boxedValue.datum.value, "\n",
+                                `stale:`, boxedValue.datum.stale, "\n",
+                                boxedValue
+                              ) 
             )
 
             // Not all cases of the switch require all the following; separate
@@ -357,58 +341,67 @@ function graphViewer ( graphServer ) {
             let sinkKey
             let locatedInSink
 
-            let pushLink = ( __sourceKey, __sinkKey, __locationKey ) => {
-                __linkData.push ( {
-                    source  : __sourceKey, 
-                    target  : __sinkKey,
-                    type    : 'causal',
-                    
-                    location: __locationKey    
-                        //  'location' is The Datum whose record is being
-                        //  communiated to the forceSimulation; 
-                        //  both source and target/sink Datum instances will
-                        //  store a pointer; the pointers are redundant from the
-                        //  Graph's point of view.
+            let pushLink = 
+                ( __sourceKey, __sinkKey, __locationKey, __locationIndex ) => {
+                    __linkData.push ( {
+                        source  : __sourceKey, 
+                        target  : __sinkKey,
+                        type    : 'causal',
+                        
+                        location: __locationKey,
+                            //  'location' is The Datum whose record is being
+                            //  communiated to the forceSimulation; 
+                            //  both source and target/sink Datum instances will
+                            //  store a pointer; the pointers are redundant from the
+                            //  Graph's point of view.
+
+                        locationIndex : __locationIndex
+                            //  'locationIndex' is the location Datum's
+                            //  .pointers.in.causal[ index ] for this pointer.
                 } ) 
             }
             
             // argument is a boolean
-            let pushLastLinkIn = ( locatedInSink ) => {
-
-                sourceKey   = boxedValue.datum.pointers.in.causal[
-                        boxedValue.datum.pointers.in.causal.length - 1
-                    ].ikey
-                sinkKey     = boxedValue.datum.key
+            let pushLastLinkIn  = ( locatedInSink ) => {
+                let causalIndex 
+                    = boxedValue.datum.pointers.in.causal.length - 1
+                sourceKey       
+                    = boxedValue.datum.pointers.in.causal[ causalIndex ].ikey
+                sinkKey         
+                    = boxedValue.datum.key
                 pushLink (  sourceKey, 
                             sinkKey, 
-                            locatedInSink ? sinkKey : sourceKey
+                            locatedInSink ? sinkKey : sourceKey,
+                            causalIndex
                          )
             }
 
             // argument is a boolean
             let pushLastLinkOut = ( locatedInSink ) => {
-
-                sourceKey   = boxedValue.datum.key
-                sinkKey     = boxedValue.datum.pointers.out.causal[
-                        boxedValue.datum.pointers.out.causal.length - 1
-                    ].okey
+                let causalIndex
+                    = boxedValue.datum.pointers.out.causal.length - 1
+                sourceKey       
+                    = boxedValue.datum.key
+                sinkKey         
+                    = boxedValue.datum.pointers.out.causal[ causalIndex ].okey
                 pushLink (  sourceKey, 
                             sinkKey, 
-                            locatedInSink ? sinkKey : sourceKey
+                            locatedInSink ? sinkKey : sourceKey,
+                            causalIndex
                          )
             }
 
             switch ( boxedValue.type ) {
                 
                 case 'delete_vertex_vertexDelete' :
-                    verbosity && console.log ( `DELETE` )
+                    verbosity && console.warn ( `DELETE` )
                     __nodeData = __nodeData.filter (
                         vertex => vertex.key != boxedValue.datum.key
                     )
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
-                    verbosity && console.log ( `GET, HIT` )
+                    verbosity && console.warn ( `GET, HIT` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].hit = true
                     }
@@ -420,7 +413,7 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'get_vertex_miss_runScriptAndLog' :
-                    verbosity && console.log ( `GET, MISS` )
+                    verbosity && console.warn ( `GET, MISS` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].miss = true
                         __nodeData[ index ].stale = boxedValue.datum.stale
@@ -434,41 +427,37 @@ function graphViewer ( graphServer ) {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    verbosity && console.log ( `SET,NOT FUN` )
+                    verbosity && console.warn ( `SET,NOT SCRIPT` )
                     pushNodeButPreferUpdate ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Script_vertexSet' :
-                    verbosity && console.log ( `SET,FUN`, nodeDatum )
+                    verbosity && console.warn ( `SET,SCRIPT`, nodeDatum )
                     pushNodeButPreferUpdate ( index, nodeDatum)
 
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet' :
                    
-                    verbosity && console.log ( `FUN hasSources: own PointerIn` )
-                    //pushNodeButPreferUpdate ( index, nodeDatum)
+                    verbosity && console.warn ( `SCRIPT hasSources: own PointerIn` )
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerGet' :
                     
-                    verbosity && console.log ( `FUN hasSources: SOURCE's PointerOut` )
-                    //pushNodeButPreferUpdate ( index, nodeDatum)
+                    verbosity && console.warn ( `SCRIPT hasSources: SOURCE's PointerOut` )
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
                 case 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerSet' :
                     
-                    verbosity && console.log ( `FUN hasSinks: set SINK's PointerIn` )
-                    //pushNodeButPreferUpdate ( index, nodeDatum)
+                    verbosity && console.warn ( `SCRIPT hasSinks: set SINK's PointerIn` )
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
                 case 'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet' :
 console.error(`RESUMEWORKHERE`)                    
-                    verbosity && console.log ( `FUN hasSinks: set own PointerOut` )
-                    //pushNodeButPreferUpdate ( index, nodeDatum)
+                    verbosity && console.warn ( `SCRIPT hasSinks: set own PointerOut` )
                     pushLastLinkOut ( locatedInSink = false )
 
                         // If sink-Datum did not previously exist, then we need to
@@ -490,12 +479,14 @@ console.error(`RESUMEWORKHERE`)
                                     linkData: __linkData
                                 } ) 
 
-            verbosity && console.groupEnd ( `GraphViewer GRAPH.LOG.CANON.TASK` ) 
+            verbosity && console.groupEnd ( `async GraphViewer GRAPH.LOG.CANON.TASK` ) 
+
+            //new Promise ( (_F, _R) => console.error ( `test`, _F() ) )
 
             F ( 'd3 visualiser, updated' )
         } )
         
-        verbosity && console.log ( `START SIMULATION (ENDS)` )
+        verbosity > 1 && console.log ( `START SIMULATION (ENDS)` )
     },
 
     zoom =
@@ -520,7 +511,7 @@ console.error(`RESUMEWORKHERE`)
                         height / 2 
     )
 
-    startSimulation ( graphServer, nodeData, linkData )
+    connectGraphLogToSimulation ( graphServer, nodeData, linkData )
 
 setTimeout( simulation.stop, 10000 )
 
@@ -546,7 +537,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -1210,7 +1201,7 @@ stale flag?`,
 //  Checklist:
 //  - C : ok
 //  - R : ok (except Scripts with sinks)
-//  - U : FAIL
+//  - U : FAIL (includes overwritings)
 //  - D : FAIL
 //
 //
@@ -1222,13 +1213,13 @@ stale flag?`,
   
         graphViewer ( S ) 
         
-        S.abacus = 1 
+//        S.abacus = 1 
         //S.donkey = 2
 
         S.blanket = new Script ( q => { 
           
           q.changeAVeryLongKeyName = Math.random()
-          q.abacus
+//          q.abacus
           //q.donkey
           
           return true 
@@ -1239,23 +1230,23 @@ stale flag?`,
 
 
         setTimeout ( () => {
-            S.abacus
-            S.d = {}
-            S.blanket
-            S.abacus = 3.142 
+//            S.abacus
+//            S.d = {}
+//          S.blanket
+//          S.abacus = 3.142 
         }, 2000 )
 
         setTimeout ( () => {
-            S.e = null
-            delete S.abacus
-            S.abacus
-            S.blanket
+//          S.e = null
+//          delete S.abacus
+//          S.abacus
+//          S.blanket
         }, 4000 )
 
         setTimeout ( () => {
-            S.f = 1
-            S.donkey = 2
-            S.blanket
+//          S.f = 1
+//          S.donkey = 2
+//          S.blanket
         }, 5000 )
 
 

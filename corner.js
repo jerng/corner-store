@@ -402,7 +402,7 @@ class Datum {
 //  Further rumination brings us back to:
 //
 //  - S cript    : morphology is too common
-//  - A non      : easier to type
+//  - A non      : easier to type; but not actually anonymous!
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
