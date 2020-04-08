@@ -345,10 +345,10 @@ class Datum {
 //
 //  Some candidates for discussion:
 //
-//  -   "Proc"  "Procedure"
-//  -   "Fun"  "Prog"  "Program"
-//  -   "Sub"  "Routine"  "Subroutine"
-//  -   Probably too conflicty: "Service" "Exec" 
+//  -   "P roc"  "P rocedure"
+//  -   "F un"  "P rog"  "P rogram"
+//  -   "S ub"  "R outine"  "S ubroutine"
+//  -   Probably too conflicty: "S ervice" "E xec" 
 //
 //  Concluding:
 //
@@ -378,37 +378,37 @@ class Datum {
 //
 //  ... here's what's left:
 //
-//  - Op                : not an opcode by a long shot
-//  - Fun               : too close to native morpheme
-//  - Code - "a code"   : spoken clumsily
-//  - Lambda            : too close to native morpheme
-//  - Anon
+//  - O p                : not an opcode by a long shot
+//  - F un               : too close to native morpheme
+//  - C ode - "a code"   : spoken clumsily
+//  - L ambda            : too close to native morpheme
+//  - A non
 //
 //  On one hand, Fun fits with the rule of naming brandy things with harsh
 //  syllables. On the other, Lambda and Fun are much more specific about what we're
-//  actually parking at those nodes. Anon is cute, but seems a bit distracting.
+//  actually parking at those nodes. Script is cute, but seems a bit distracting.
 //  Will continue to ruminate on the shortlist for a bit.
 //
 //  ---
 //  Someone suggested NoFun for optimal confusion. Another wanted CoLaDa.
 //  I think we're down to a single-syllable shootout, sorted by minimalism:
 //
-//  - Op
-//  - Fun (typing F is leftier)
-//  - Lam (typing L is rightier)
-//  - Code (the only unabbreviated remainer)
+//  - O p
+//  - F un (typing F is leftier)
+//  - L am (typing L is rightier)
+//  - C ode (the only unabbreviated remainer)
 //
 //  ---
 //  Further rumination brings us back to:
 //
-//  - Script    : morphology is too common
-//  - Anon      : easier to type
+//  - S cript    : morphology is too common
+//  - A non      : easier to type
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
 // args[0] must be function
 // args[0] must be an object of traits
-class Anon extends Datum {
+class Script extends Datum {
 
     toString () {
         return  {   'Fun.toString/0 returned:' : 
@@ -630,7 +630,7 @@ class Graph extends Datum {
                 }
     }
 
-    runAnonAndLog ( datum ) {
+    runScriptAndLog ( datum ) {
                 //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
                 //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
           
@@ -660,7 +660,7 @@ class Graph extends Datum {
             let timeStampBoxedValue = EventLog.timeStampBox ( result )
             datum.log.gets.misses.note ( timeStampBoxedValue )
             this.log.canon.note ( this.logFormat (
-                'get_vertex_miss_runAnonAndLog',
+                'get_vertex_miss_runScriptAndLog',
                 datum,
                 timeStampBoxedValue.time
             ) )
@@ -679,7 +679,7 @@ class Graph extends Datum {
             let timeStampBoxedValue = EventLog.timeStampBox ( result )
             datum.log.gets.hits.note ( timeStampBoxedValue )
             this.log.canon.note ( this.logFormat (
-                'get_vertex_hit_runAnonAndLog',
+                'get_vertex_hit_runScriptAndLog',
                 datum,
                 timeStampBoxedValue.time
             ) )
@@ -746,8 +746,8 @@ class Graph extends Datum {
 
         let result 
 
-        if ( datum instanceof Anon && datum.traits.getHandler ) { 
-            return this.runAnonAndLog ( datum ) 
+        if ( datum instanceof Script && datum.traits.getHandler ) { 
+            return this.runScriptAndLog ( datum ) 
         }
 
         else
@@ -866,7 +866,7 @@ class Graph extends Datum {
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
         // If datumToSet.value IS an Fun, call it on a keySniffer to plant pointers.
-        if ( datumToSet.value instanceof Anon )
+        if ( datumToSet.value instanceof Script )
         {
                 //console.log (`graph.vertexSet/[n>1] : value instanceof Fun `)
 
@@ -884,12 +884,12 @@ class Graph extends Datum {
 
                 get :   funToSet.traits.hasSources
                         ? this.handlers
-                            .scopedAnonKeySnifferHandlerGet ( funToSet )
+                            .scopedScriptKeySnifferHandlerGet ( funToSet )
                         : undefined,
 
                 set : funToSet.traits.hasSinks
                         ? this.handlers
-                            .scopedAnonKeySnifferHandlerSet ( funToSet )
+                            .scopedScriptKeySnifferHandlerSet ( funToSet )
                         : undefined
             } )
 
@@ -918,14 +918,14 @@ class Graph extends Datum {
             
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
                 let timeStampBoxedValue =  EventLog.timeStampBox ( { 
-                    'Anon instance'  :   funToSet ,
+                    'Script instance'  :   funToSet ,
                     'FIXME'         :   `Placeholder log format for Fun, because
                                          Fun.toString/n doesn't handle circular
                                          objects yet.`                
                 } ) 
                 datumToSet.log.sets.note ( timeStampBoxedValue )
                 this.log.canon.note ( this.logFormat ( 
-                    'set_vertex_Anon_vertexSet',
+                    'set_vertex_Script_vertexSet',
                     funToSet,
                     timeStampBoxedValue.time
                 ) ) 
@@ -1186,7 +1186,7 @@ class Graph extends Datum {
     //
     // If you're pulling data into your Fun, you'll trigger getters
     // on the other Datums-
-    'scopedAnonKeySnifferHandlerGet': funToSet => {
+    'scopedScriptKeySnifferHandlerGet': funToSet => {
         return ( ksTarg, ksProp, ksRcvr ) => {
           
                 //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
@@ -1207,7 +1207,7 @@ class Graph extends Datum {
             funToSet.log.setsPointerIn
                 .note ( timeStampBoxedPointerIn )
             this.log.canon.note ( this.logFormat (
-                'set_pointer_in_CAUSAL_scopedAnonKeySnifferHandlerGet',
+                'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet',
                 funToSet,
                 timeStampBoxedPointerIn.time
             ) )
@@ -1218,7 +1218,7 @@ class Graph extends Datum {
             //  Configure dependencies to track (this) dependent:
                    
             if ( ! ( ksProp in this.value ) ) {
-                throw Error (`graph.vertexSet/n tried to set an Anon, but the
+                throw Error (`graph.vertexSet/n tried to set an Script, but the
                         Fun referred to a source address which has not been
                         set: (${ ksProp })`)
             } // Note the asymmetry with ---HandlerSet
@@ -1245,7 +1245,7 @@ class Graph extends Datum {
                 dependencyDatum.log.setsPointerOut
                     .note ( timeStampBoxedPointerOut )    
                 this.log.canon.note ( this.logFormat (
-                    'set_pointer_out_CAUSAL_scopedAnonKeySnifferHandlerGet',
+                    'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerGet',
                     dependencyDatum,
                     timeStampBoxedPointerOut.time
                 ) )
@@ -1279,7 +1279,7 @@ class Graph extends Datum {
                             
                             //console.log( `scopedFunKeySnifferHandlerGet` )
                             
-                            this.runAnonAndLog ( funToSet )
+                            this.runScriptAndLog ( funToSet )
                             fulfill( reactiveDependentHandlerKey )
                         } )
 
@@ -1297,7 +1297,7 @@ class Graph extends Datum {
     //
     // If you're pushing data from your Fun, you'll trigger setters
     // on the other Datums-
-    'scopedAnonKeySnifferHandlerSet': funToSet => {
+    'scopedScriptKeySnifferHandlerSet': funToSet => {
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
                 //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
@@ -1321,7 +1321,7 @@ class Graph extends Datum {
                 = EventLog.timeStampBox ( pointerOut )
             funToSet.log.setsPointerOut.note ( timeStampBoxedPointerOut )    
             this.log.canon.note ( this.logFormat (
-                'set_pointer_out_CAUSAL_scopedAnonKeySnifferHandlerSet',
+                'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet',
                 funToSet,
                 timeStampBoxedPointerOut.time
             ) )
@@ -1351,7 +1351,7 @@ class Graph extends Datum {
             dependentDatum.log.setsPointerIn
                 .note ( timeStampBoxedPointerIn )
             this.log.canon.note ( this.logFormat (
-                'set_pointer_in_CAUSAL_scopedAnonKeySnifferHandlerSet',
+                'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerSet',
                 dependentDatum,
                 timeStampBoxedPointerIn.time
             ) )
@@ -1423,6 +1423,6 @@ class Graph extends Datum {
     }
 }
 
-globalThis.Anon     = Anon
+globalThis.Script     = Script
 globalThis.Datum    = Datum
 globalThis.Graph    = Graph 
