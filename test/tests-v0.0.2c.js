@@ -40,6 +40,29 @@ function graphViewer ( graphServer ) {
                             font-size: 16px;`
         ),
 
+    svg_defs
+    = body_svg
+        .append ('defs')
+            // lifted from 
+            // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
+        .html(  
+            `<marker    id="arrowInSink"    viewBox="0 0 10 10"
+                        refX="23"           refY="5"
+                        markerWidth="4"     markerHeight="4"
+                        fill-opacity="0.7"
+                        orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+            <marker     id="arrowInSource"  viewBox="0 0 10 10"
+                        refX="-15"           refY="5"
+                        markerWidth="4"     markerHeight="4"
+                        fill-opacity="0.7"
+                        orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+            `
+        ),
+
     svg_positionerG 
     = body_svg
         .append ( 'g' )
@@ -84,9 +107,17 @@ function graphViewer ( graphServer ) {
         manyLinksG_oneLinkGs
             .selectAll ( 'path' )
             .attr ( 'd', d => { 
-                //console.log ( d )
-            return `M ${ d.source.x }, ${ d.source.y } 
-                    L ${ d.target.x }, ${ d.target.y }`
+
+        return `M${d.source.x},${d.source.y}L${d.target.x},${d.target.y}`
+
+          //    Here is code for half-length shafts:
+          //    let pointerLocatedInSource = d.location == d.source.key 
+          //    let halfX   = ( d.source.x + d.target.x ) / 2
+          //    let halfY   = ( d.source.y + d.target.y ) / 2
+          //return  pointerLocatedInSource
+          //        ? `M${d.source.x},${d.source.y}L${halfX},${halfY}`
+          //        : `M${halfX},${halfY}L${d.target.x},${d.target.y}`
+
         } )
     },
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,15 +310,21 @@ function graphViewer ( graphServer ) {
 
                     let oneLinkGs = enterer
                         .append ( 'g' )
-                        
+ 
                     let path = oneLinkGs 
                         .append ( 'path' )
-                            .attr ( 'fill',             'none' )
-                            .attr ( 'stroke-opacity',   '0.6' )
-                            .attr ( 'stroke',           
-                                    d => d.location == d.source.key ? '#000': '#f00') 
-                            .attr ( 'stroke-dasharray',     
-                                    d => d.location == d.source.key ? 1     : 5     ) 
+                            .attr ( 'stroke-opacity',   '0.3' )
+                            .attr ( 'stroke',           '#000') 
+                            .attr ( 'marker-start', d => 
+                                    d.location == d.source.key
+                                    ? 'url(#arrowInSource)'
+                                    : null 
+                                  )
+                            .attr ( 'marker-end', d => 
+                                    d.location == d.source.key
+                                    ? null 
+                                    : 'url(#arrowInSink)'
+                                  )
                     return oneLinkGs 
                 }
             )
@@ -1252,23 +1289,27 @@ stale flag?`,
 
 
         setTimeout ( () => {
-              S.abacus
               S.d = {}
+/*/
+              S.abacus
           S.blanket
             S.abacus = 3.142 
+//*/
         }, 2000 )
-
         setTimeout ( () => {
             S.e = null
+/*/
             delete S.abacus
             S.abacus
           S.blanket
+//*/
         }, 3000 )
-
         setTimeout ( () => {
+/*/
             S.f = 1
             S.donkey = 2
             S.blanket
+//*/
         }, 4000 )
 
 
