@@ -201,8 +201,18 @@ function graphViewer ( graphServer ) {
 
                     let oneNodeGs = enterer
                         .append ( 'g' )
-                    
-                    //console.log(oneNodeGs)
+                        .call   ( d3.drag()
+                                    .on( 'start',   d => { 
+                                        if ( ! d3.event.active ) { simulation.alphaTarget(0.3).restart() }
+                                    } )
+                                    .on( 'drag',    d => {
+                                        d.x = d3.event.x
+                                        d.y = d3.event.y
+                                    } )
+                        ) 
+                            // console.log ( Object.is(d, d3.event.subject),  d, d3.event ) 
+                            // https://bl.ocks.org/mapio/53fed7d84cd1812d6a6639ed7aa83868
+                            // CONSIDER THIS REFERENCE
                     
                     let circle = oneNodeGs
                         .append ( 'circle' )
@@ -1331,7 +1341,7 @@ stale flag?`,
         setTimeout ( () => {
             S.e = null
 //*/
-            delete S.abacus
+            //delete S.abacus
             S.abacus
           S.blanket
 //*/
