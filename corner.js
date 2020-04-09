@@ -1,3 +1,5 @@
+export { Datum, Graph, Script }
+
 // data type for use in Datum
 class PointerOut {
     constructor ( _okey ) {
@@ -1422,7 +1424,3 @@ class Graph extends Datum {
         }
     }
 }
-
-globalThis.Script     = Script
-globalThis.Datum    = Datum
-globalThis.Graph    = Graph 
