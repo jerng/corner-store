@@ -27,7 +27,7 @@ function seeServer ( graphServer ) {
 
     zoom 
     = d3.zoom()
-        .scaleExtent([.1, 4])
+        //.scaleExtent([.1, 4])
         .on( "zoom", () =>  svg_positionerG
                             .transition ()
                             .duration ( 400 )
@@ -122,7 +122,8 @@ function seeServer ( graphServer ) {
 
     forceLink 
     = d3.forceLink ( linkData )
-        .id ( d => d.key ),
+        .id ( d => d.key )
+        .distance ( 200 ) ,
 
     // The Force Simulation IS STARTED Here:
 
@@ -190,16 +191,44 @@ function seeServer ( graphServer ) {
                         // group,manyNodesG[graph-viewer-role=node-groups], which
                         // isn't already mapped to a oneNodeGs element.
 
+                    // manually hoist these utlity functions: FIXME
+                    let defaultBackgroundColor = 'rgba(255,255,255,0.3)'
+                    let makeBackgroundColorOpaque = function() {  
+                        d3.select(this)
+                            .select('div')
+                            .transition()
+                            .duration( 0 )
+                            .style('background-color','#fff')
+                    }
+                    let resetBackgroundColor = function() {  
+                        d3.select(this)
+                            .select('div')
+                            .transition()
+                            .duration( 500 )
+                             .style('background-color',defaultBackgroundColor)
+                    }
+
                     let oneNodeGs = enterer
                         .append ( 'g' )
+                        .on ( 'mouseover', makeBackgroundColorOpaque )
+                        .on ( 'mouseout', resetBackgroundColor )
                         .call   ( d3.drag()
                                     .on( 'start',   d => { 
+
+                                        //  Restarts simulation AFTER 
+                                        //  it has stopped; some heat needed.
+                                        
                                         if ( ! d3.event.active ) {
-                                            simulation.alpha(0.2).restart() }
+                                            simulation.alpha(0.1).restart() }
+                                        
                                     } )
                                     .on( 'drag',    d => {
                                         d.x = d3.event.x
                                         d.y = d3.event.y
+                                        
+                                        // Reheats simulation during drag.
+
+                                        simulation.alpha(0.1)
                                     } )
                         ) 
                             // console.log ( Object.is(d, d3.event.subject),  d, d3.event ) 
@@ -220,7 +249,7 @@ function seeServer ( graphServer ) {
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
                             )
-
+                    
                     let foreignObject = oneNodeGs
                         .append( 'foreignObject' )
                             .attr  ( 'x', '5')
@@ -228,17 +257,20 @@ function seeServer ( graphServer ) {
                             .attr  ( 'width', '100')
                             .style ( 'overflow', 'visible' )
 
+
                     let div = foreignObject
                         .append( 'xhtml:div' )
                             .attr( 'style',    
                                    `padding: 5px;
                                     overflow-wrap: break-word; 
-                                    border: 1px solid #999;
+                                    border: 1px solid rgba(100,100,100,0.1);
                                     border-radius: 5px;
-                                    background-color: rgba(255,255,255,0.7);
+                                    background-color: ${defaultBackgroundColor};
                                     ` 
                             )
                             .text ( d => d.key + ' : ' + d.value )
+
+                            //.on ( 'mouseout', () => )
   
                     return oneNodeGs 
                 },
@@ -270,7 +302,7 @@ function seeServer ( graphServer ) {
                             )
                     let div = updater 
                         .select( 'div' )
-                            .text ( d => d.key + ' : ' + d.value )
+                            .html ( d => d.key + ' : <b style="font-weight:600">' + d.value + '</b>' )
 
                     //  This seems insanely expensive; 
                     //  find a cheaper way later. FIXME
@@ -340,7 +372,7 @@ function seeServer ( graphServer ) {
 
 ////////////////////////////////////////////////////////////////////////////////
         //simulation.stop()
-        simulation.alpha (1).restart()
+        simulation.alpha(0.1).restart()
 ////////////////////////////////////////////////////////////////////////////////
 
         verbosity > 2 && console.warn ( `v(ends)`, p ( latest ) )
@@ -566,7 +598,7 @@ function seeServer ( graphServer ) {
                             .ease ( d3.easeCubicOut ), 
                         width / 2, 
                         height / 2 
-    )
+    ) // centering the viewport
 
     connectGraphLogToSimulation ( graphServer, nodeData, linkData )
 
