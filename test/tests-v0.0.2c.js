@@ -697,8 +697,7 @@ stale flag?`,
         let GRAPH       = S ( 'graph' )
         let VERTICES    = S ( 'vertices' )
   
-  console.log(CornerView.seeServer)
-        CornerView.seeServer ( S ) 
+          CornerView.seeServer ( S ) 
         
           S.abacus = 1 
           S.donkey = 2
@@ -724,21 +723,30 @@ stale flag?`,
             S.abacus = 3.142 
 //*/
         }, 2000 )
+
+
+
         setTimeout ( () => {
             S.e = null
 //*/
-            //delete S.abacus
+            delete S.abacus
             S.abacus
           S.blanket
 //*/
-        }, 3000 )
+        }, 4000 )
+
+
+
         setTimeout ( () => {
 //*/
             S.f = 1
             S.donkey = 2
             S.blanket
+            S.abacus = 3            
+
+            console.log ( VERTICES.abacus('datum').value )
 //*/
-        }, 4000 )
+        }, 6000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
@@ -764,12 +772,14 @@ stale flag?`,
 
     }
 },
-{   warning : `Increase transactionality of datum+pointer writes.'
+{   warning : `Deleted source vertices result in dangling pointers.`
 },
-{   warning : `Why are Datums reading on update?'
+{   warning : `Increase transactionality of datum+pointer writes.`
+},
+{   warning : `Why are Datums reading on update?`
 },
 {   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
-invalidated, unless Fun runs immediately.'
+invalidated, unless Fun runs immediately.`
 },
 {   warning : `Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
 },

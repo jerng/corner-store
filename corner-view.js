@@ -164,13 +164,45 @@ function seeServer ( graphServer ) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-        let nodeNotScript      = '#6af',
-            nodeScriptStale    = '#550',
-            nodeScriptFresh    = '#ee0',
+        let nodeNotScript       = '#6af',
+            nodeScriptStale     = '#550',
+            nodeScriptFresh     = '#ee0',
 
-            nodeHit         = '#6d8',
-            nodeMiss        = '',
-            nodeDeleted     = '#000'
+            nodeHit             = '#6d8',
+            nodeMiss            = '',
+            nodeDeleted         = '#000',
+
+            nodeRDefault        = 12,
+            labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
+
+
+            nodeBGDefault       = d =>  ( d.lambda 
+                                          ? nodeNotScript
+                                          : ( d.stale 
+                                              ? nodeScriptStale 
+                                              : nodeScriptFresh ) ),
+                                              
+            nodeBGStaleness     = d => ( ! d.lambda 
+                                         ? nodeNotScript
+                                         : ( d.stale 
+                                             ? nodeScriptStale 
+                                             : nodeScriptFresh ) ),
+
+            labelBGOpaque = function() {  
+                d3.select(this)
+                    .select('div')
+                    .transition()
+                    .duration( 0 )
+                    .style('background-color','#fff')
+            },
+
+            labelBGReset = function() {  
+                d3.select(this)
+                    .select('div')
+                    .transition()
+                    .duration( 500 )
+                    .style('background-color',labelBGDefaultCode)
+            }
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -185,72 +217,52 @@ function seeServer ( graphServer ) {
 
             .join 
             (
-                enterer =>
+                __manyNodesG_oneNodeGs =>   // enterer
                 {
                         // Each (enterer) is a datum in the
                         // group,manyNodesG[graph-viewer-role=node-groups], which
                         // isn't already mapped to a oneNodeGs element.
 
-                    // manually hoist these utlity functions: FIXME
-                    let defaultBackgroundColor = 'rgba(255,255,255,0.3)'
-                    let makeBackgroundColorOpaque = function() {  
-                        d3.select(this)
-                            .select('div')
-                            .transition()
-                            .duration( 0 )
-                            .style('background-color','#fff')
-                    }
-                    let resetBackgroundColor = function() {  
-                        d3.select(this)
-                            .select('div')
-                            .transition()
-                            .duration( 500 )
-                             .style('background-color',defaultBackgroundColor)
-                    }
-
-                    let oneNodeGs = enterer
+                    let oneNodeGs 
+                    = __manyNodesG_oneNodeGs 
+                        // Programmer does not understand what is going on here.
+                        // FIXME
                         .append ( 'g' )
-                        .on ( 'mouseover', makeBackgroundColorOpaque )
-                        .on ( 'mouseout', resetBackgroundColor )
-                        .call   ( d3.drag()
-                                    .on( 'start',   d => { 
+                        .on ( 'mouseover',  labelBGOpaque )
+                        .on ( 'mouseout',   labelBGReset )
+                        .call ( d3.drag()
+                                .on( 'start',   d => { 
 
-                                        //  Restarts simulation AFTER 
-                                        //  it has stopped; some heat needed.
-                                        
-                                        if ( ! d3.event.active ) {
-                                            simulation.alpha(0.1).restart() }
-                                        
-                                    } )
-                                    .on( 'drag',    d => {
-                                        d.x = d3.event.x
-                                        d.y = d3.event.y
-                                        
-                                        // Reheats simulation during drag.
+                                    //  Restarts simulation AFTER 
+                                    //  it has stopped; some heat needed.
+                                    
+                                    if ( ! d3.event.active ) {
+                                        simulation.alpha(0.1).restart() }
+                                } )
+                                .on( 'drag',    d => {
+                                    d.x = d3.event.x
+                                    d.y = d3.event.y
+                                    
+                                    // Reheats simulation during drag.
 
-                                        simulation.alpha(0.1)
-                                    } )
+                                    simulation.alpha(0.1)
+                                } )
                         ) 
                             // console.log ( Object.is(d, d3.event.subject),  d, d3.event ) 
                             // https://bl.ocks.org/mapio/53fed7d84cd1812d6a6639ed7aa83868
                             // CONSIDER THIS REFERENCE
                     
-                    let circle = oneNodeGs
+                    let circle 
+                    = oneNodeGs
                         .append ( 'circle' )
-                            .attr ( 'r', 12 )
-                            .attr ( 'fill', 
-                                    d =>    d.lambda 
-                                            ? ( d.stale 
-                                                ? nodeScriptStale 
-                                                : nodeScriptFresh
-                                              )
-                                            : nodeNotScript
-                            )
+                            .attr ( 'r', nodeRDefault )
+                            .attr ( 'fill', nodeBGDefault )
                             .attr ( 'stroke', 
                                     d => d.lambda ? '#000' : '#fff' 
                             )
                     
-                    let foreignObject = oneNodeGs
+                    let foreignObject
+                    = oneNodeGs
                         .append( 'foreignObject' )
                             .attr  ( 'x', '5')
                             .attr  ( 'y', '5')
@@ -258,14 +270,15 @@ function seeServer ( graphServer ) {
                             .style ( 'overflow', 'visible' )
 
 
-                    let div = foreignObject
+                    let div
+                    = foreignObject
                         .append( 'xhtml:div' )
                             .attr( 'style',    
                                    `padding: 5px;
                                     overflow-wrap: break-word; 
                                     border: 1px solid rgba(00,00,00,0.1);
                                     border-radius: 5px;
-                                    background-color: ${defaultBackgroundColor};
+                                    background-color: ${labelBGDefaultCode};
                                     ` 
                             )
                             .text ( d => d.key + ' : ' + d.value )
@@ -273,62 +286,71 @@ function seeServer ( graphServer ) {
                             //.on ( 'mouseout', () => )
   
                     return oneNodeGs 
+                        // Programmer does not understand what is going on here.
+                        // FIXME
                 },
-                updater => 
+                __oneNodeGs => // updater 
                 {
-                    let circle = updater
-                        .select ( 'circle' )
+
+                    // FIXME There should be a way to partition __oneNodeGs into
+                    // softDeleted and nonDeleted nodes in one loop instead of
+                    // two.
+
+                    let softDeletedNodeGs
+                    =   __oneNodeGs .filter( function( datum, index, elements ){
+                            return datum.deleted 
+                        } ) 
+
+                        let softDeletedCircles
+                        =   softDeletedNodeGs
+                            .select ( 'circle' )
+                            .transition ()
+                            .ease ( d3.easeCubicOut )
+                                .attr ( 'fill', nodeDeleted )
+                                .attr ('r', 20 )
+                    
+                        softDeletedCircles
                         .transition()
-                        .duration ( 300 ) 
-                            .attr ( 'fill', 
-                                d =>    d.hit 
-                                        ? nodeHit
-                                        : ( d.lambda
-                                            ? ( d.stale
-                                                ? nodeScriptStale
-                                                : nodeScriptFresh
-                                              ) 
-                                            : nodeNotScript 
-                                          )
-                            )
-                        .transition()
-                            .attr ( 'fill',                 
-                                d =>    d.lambda 
-                                        ? ( d.stale 
-                                            ? nodeScriptStale 
-                                            : nodeScriptFresh
-                                          )
-                                        : nodeNotScript
-                            )
-                    let div = updater 
-                        .select( 'div' )
+                        .duration ( 3000 ) 
+                            .ease ( d3.easeCubicOut )
+                            .attr ( 'fill', '#f8f8f8' )
+
+                    let nonDeletedNodeGs
+                    =   __oneNodeGs .filter( function( datum, index, elements ){
+                        if ( datum.deleted ) {
+                            //console.log ( datum.deleted, datum )
+                        }
+                            return ! datum.deleted 
+                        } ) 
+                    
+                        let circle 
+                        = nonDeletedNodeGs
+                            .select ( 'circle' )
+                            .transition()
+                            .duration ( 300 ) 
+                                .attr ( 'fill', d => 
+                                            ( d.hit 
+                                            ? nodeHit
+                                            : nodeBGStaleness ( d ) )
+                                )
+                                .attr ( 'r', nodeRDefault )
+                            .transition()
+                                .attr ( 'fill', nodeBGStaleness ) 
+
+                        let div 
+                        = nonDeletedNodeGs
+                            .select( 'div' )
                             .html ( d => d.key 
                             + ' : <b style="font-weight:600">' 
                             + d.value 
                             + '</b>' )
 
-                    //  This seems insanely expensive; 
-                    //  find a cheaper way later. FIXME
-                    return updater
+                    return __oneNodeGs
+                        // Programmer does not understand what is going on here.
+                        // FIXME
                 },
                 exiter => 
                 { 
-                    let circle = exiter
-                        .select ( 'circle' )
-                        .transition ()
-                        .ease ( d3.easeCubicOut )
-
-                            .transition () 
-                                .attr ( 'fill', nodeDeleted )
-                                .attr ('r', 20 )
-                    
-                    exiter
-                        .transition().delay ( 1000 ) 
-                        .transition().duration ( 3000 ) 
-                            .ease ( d3.easeCubicOut )
-                            .style ( 'opacity', 0 )
-                            .remove()
-                    
                 }
 
             )
@@ -346,19 +368,26 @@ function seeServer ( graphServer ) {
 
             .join 
             (
-                enterer =>
+                __manyLinksG_oneLinkGs =>
                 {
-                        // Each (enterer) is a datum in the
-                        // group,manyNodesG[graph-viewer-role=node-groups], which
-                        // isn't already mapped to a oneLinkGs element.
+                    // Each (enterer) is a datum in the
+                    // group,manyNodesG[graph-viewer-role=node-groups], which
+                    // isn't already mapped to a oneLinkGs element.
 
-                    let oneLinkGs = enterer
+                    let oneLinkGs
+                    = __manyLinksG_oneLinkGs 
                         .append ( 'g' )
+                        // Programmer does not understand what is going on here.
+                        // FIXME
  
-                    let path = oneLinkGs 
+                    let path 
+                    = oneLinkGs 
                         .append ( 'path' )
-                            .attr ( 'stroke-opacity',   '0.3' )
                             .attr ( 'stroke',           '#000') 
+                            .attr ( 'stroke-opacity',   '0.05' )
+
+                            //.attr ( 'stroke-opacity', d => d.deleted ? 0.1 : 0.3 )
+
                             .attr ( 'marker-start', d => 
                                     d.location == d.source.key
                                     ? 'url(#arrowInSource)'
@@ -369,8 +398,43 @@ function seeServer ( graphServer ) {
                                     ? null 
                                     : 'url(#arrowInSink)'
                                   )
+                            .attr ( 'location', d => d.location )
+                            .attr ( 'source', d => d.source.key )
+                            .attr ( 'target', d => d.target.key )
+
                     return oneLinkGs 
+                        // Programmer does not understand what is going on here.
+                        // FIXME
                 },
+                __oneLinkGs => // updater
+                {
+                    let paths
+                    = positionerG_manyLinksG
+                        .selectAll ( 'path' )
+
+                    let softDeletedPaths
+                    = paths
+                        .filter ( function( datum, index, elements ) {
+                            return datum.deleted
+                        } )
+                    
+                          //// FIXME There should be a way to partition __oneNodeGs into
+                          //// softDeleted and nonDeleted nodes in one loop instead of
+                          //// two.
+
+                          //let nonDeletedPaths
+                          //= paths
+                          //    .filter ( function( datum, index, elements ) {
+                          //        return !datum.deleted
+                          //    } )
+                    
+                     softDeletedPaths
+                        .attr   ( 'stroke', '#f00' )
+
+                    return __oneLinkGs
+                        // Programmer does not understand what is going on here.
+                        // FIXME
+                }
             )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,7 +486,13 @@ function seeServer ( graphServer ) {
             }
             let pushNodeButPreferAssign = ( __index, __nodeDatum) => {
                 if ( ~__index ) { // Found an index; replace element.
-                    Object.assign ( __nodeData[ index ], __nodeDatum )
+
+                    // undelete!
+                    if ( __nodeData[ __index ].deleted ) {
+                        __nodeData[ __index ].deleted = false
+                    }
+
+                    Object.assign ( __nodeData[ __index ], __nodeDatum )
                 }
                 else {          // Found no index; add element.
                     __nodeData.push ( __nodeDatum )
@@ -454,7 +524,7 @@ function seeServer ( graphServer ) {
             }
             
             // argument is a boolean
-            let pushLastLinkIn  = ( locatedInSink ) => {
+            let pushLastLinkIn  = ( __locatedInSink ) => {
                 let causalIndex 
                     = boxedValue.datum.pointers.in.causal.length - 1
                 sourceKey       
@@ -463,13 +533,13 @@ function seeServer ( graphServer ) {
                     = boxedValue.datum.key
                 pushLink (  sourceKey, 
                             sinkKey, 
-                            locatedInSink ? sinkKey : sourceKey,
+                            __locatedInSink ? sinkKey : sourceKey,
                             causalIndex
                          )
             }
 
             // argument is a boolean
-            let pushLastLinkOut = ( locatedInSink ) => {
+            let pushLastLinkOut = ( __locatedInSink ) => {
                 let causalIndex
                     = boxedValue.datum.pointers.out.causal.length - 1
                 sourceKey       
@@ -478,7 +548,7 @@ function seeServer ( graphServer ) {
                     = boxedValue.datum.pointers.out.causal[ causalIndex ].okey
                 pushLink (  sourceKey, 
                             sinkKey, 
-                            locatedInSink ? sinkKey : sourceKey,
+                            __locatedInSink ? sinkKey : sourceKey,
                             causalIndex
                          )
             }
@@ -487,9 +557,29 @@ function seeServer ( graphServer ) {
                 
                 case 'delete_vertex_vertexDelete' :
                     verbosity && console.warn ( `DELETE` )
-                    __nodeData = __nodeData.filter (
-                        vertex => vertex.key != boxedValue.datum.key
-                    )
+                    if ( ~index ) { // Found an index; report.
+                        __nodeData[ index ].deleted = true 
+                        __linkData.forEach ( e => {
+                            if ( e.location == boxedValue.datum.key ) {
+                                e.deleted = true
+                            }
+                            // We just modify the old array, we don't use the
+                            // new one, so we don't have to return anything.
+                        } )
+                    }
+                    else {          // Found no index; complain.
+                        R (`d3 visualiser (get_vertex_vertexDelete) :
+                            __nodeData has no node with the key : 
+                            ${ boxedValue.datum.key }; perhaps a major problem.` )
+                    }
+                          // Hard delete.
+                          //
+                          //__nodeData = __nodeData.filter (
+                          //    node => node.key != boxedValue.datum.key
+                          //)
+                          //__linkData = __linkData.filter (
+                          //    link => link.location != boxedValue.datum.key
+                          //)
                     break
 
                 case 'get_vertex_hit_vertexGetTyped' :
@@ -531,14 +621,13 @@ function seeServer ( graphServer ) {
                     break
 
                 case 'set_vertex_vertexSet' :
-                    verbosity && console.warn ( `SET, NOT SCRIPT` )
+                    verbosity && console.warn ( `SET,NOT SCRIPT` )
                     pushNodeButPreferAssign ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Script_vertexSet' :
-                    verbosity && console.warn ( `SET,SCRIPT`, nodeDatum )
+                    verbosity && console.warn ( `SET, SCRIPT`, nodeDatum )
                     pushNodeButPreferAssign ( index, nodeDatum)
-
                     break
 
                 case 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet' :
