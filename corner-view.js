@@ -41,7 +41,7 @@ function seeServer ( graphServer ) {
         .attr ( 'width', width )
         .attr ( 'height', height )
         .attr ( 'stroke-width', 3 )
-        .attr ( 'style',   `background-color: #eeeeee;
+        .attr ( 'style',   `background-color: #f8f8f8;
                             font-family: Roboto, Helvetica, sans-serif;
                             font-weight: 300;
                             font-size: 16px;`
@@ -57,14 +57,14 @@ function seeServer ( graphServer ) {
             `<marker    id="arrowInSink"    viewBox="0 0 10 10"
                         refX="23"           refY="5"
                         markerWidth="4"     markerHeight="4"
-                        fill="red"          fill-opacity="0.7"
+                        fill="#f00"         
                         orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
             <marker     id="arrowInSource"  viewBox="0 0 10 10"
                         refX="-15"          refY="5"
                         markerWidth="4"     markerHeight="4"
-                        fill-opacity="0.7"
+                        fill="black"        
                         orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
@@ -263,7 +263,7 @@ function seeServer ( graphServer ) {
                             .attr( 'style',    
                                    `padding: 5px;
                                     overflow-wrap: break-word; 
-                                    border: 1px solid rgba(100,100,100,0.1);
+                                    border: 1px solid rgba(00,00,00,0.1);
                                     border-radius: 5px;
                                     background-color: ${defaultBackgroundColor};
                                     ` 
@@ -302,7 +302,10 @@ function seeServer ( graphServer ) {
                             )
                     let div = updater 
                         .select( 'div' )
-                            .html ( d => d.key + ' : <b style="font-weight:600">' + d.value + '</b>' )
+                            .html ( d => d.key 
+                            + ' : <b style="font-weight:600">' 
+                            + d.value 
+                            + '</b>' )
 
                     //  This seems insanely expensive; 
                     //  find a cheaper way later. FIXME
