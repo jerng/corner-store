@@ -5,6 +5,8 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
 
+window.CornerView = CornerView
+
 let p = thing => JSON.stringify ( thing, null, 4 )
 
 globalThis.Script   = Corner.Script
@@ -23,7 +25,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -693,60 +695,42 @@ stale flag?`,
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-        let S           = new Graph ( 'server' )
-        let GRAPH       = S ( 'graph' )
-        let VERTICES    = S ( 'vertices' )
+    let S           = new Graph ( 'server' )
+    let GRAPH       = S ( 'graph' )
+    let VERTICES    = S ( 'vertices' )
   
-          CornerView.seeServer ( S ) 
-        
-          S.abacus = 1 
-          S.donkey = 2
+    CornerView.seeServer ( S ) 
 
-        S.blanket = new Script ( q => { 
-          
-            q.changeAVeryLongKeyName = Math.random()
-            q.abacus
-            q.donkey
-          
-          return true 
-        } )  
+    S.abacus = 1 
+//    S.donkey = 2
+    S.blanket = new Script ( q => { 
+        q.abacus
+        q.changeAVeryLongKeyName = Math.random()
+//        q.donkey
+      return true 
+    } )  
 
-        
-
-
-
-        setTimeout ( () => {
-          S.blanket
-//*/
-              S.d = {}
-              S.abacus
-            S.abacus = 3.142 
-//*/
-        }, 2000 )
-
-
-
-        setTimeout ( () => {
-            S.e = null
-//*/
-            delete S.abacus
-            S.abacus
-          S.blanket
-//*/
-        }, 4000 )
-
-
-
-        setTimeout ( () => {
-//*/
-            S.f = 1
-            S.donkey = 2
-            S.blanket
-            S.abacus = 3            
-
-            console.log ( VERTICES.abacus('datum').value )
-//*/
-        }, 6000 )
+    setTimeout ( () => {
+//      S.abacus
+//      S.abacus = 3.142 
+//      S.blanket
+      delete S.changeAVeryLongKeyName
+//      S.d = {}
+    }, 2000 )
+    setTimeout ( () => {
+//      delete S.abacus
+//      S.e = null
+//      S.abacus
+//      S.donkey = 2
+      S.blanket
+    }, 4000 )
+    setTimeout ( () => {
+//      S.abacus = 3            
+//      S.blanket
+//      delete S.donkey
+//      S.f = 1
+//      //console.log ( VERTICES.abacus('datum').value )
+    }, 6000 )
 
 
 //for ( const note of GRAPH.log.canon.book ) {
@@ -772,7 +756,7 @@ stale flag?`,
 
     }
 },
-{   warning : `Deleted source vertices result in dangling pointers.`
+{   warning : `Graph viewer has no mechanised tests :(.`
 },
 {   warning : `Increase transactionality of datum+pointer writes.`
 },

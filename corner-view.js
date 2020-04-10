@@ -5,7 +5,7 @@ function seeServer ( graphServer ) {
 
     let 
 
-    verbosity       = 0,    // larger is noisier
+    verbosity       = 2,    // larger is noisier
     nodeData        = [],
     linkData        = [],
     width           = window.innerWidth,
@@ -57,17 +57,34 @@ function seeServer ( graphServer ) {
             `<marker    id="arrowInSink"    viewBox="0 0 10 10"
                         refX="23"           refY="5"
                         markerWidth="4"     markerHeight="4"
-                        fill="#f00"         
+                        fill="#f00"         stroke-width="3" 
                         orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
             <marker     id="arrowInSource"  viewBox="0 0 10 10"
                         refX="-15"          refY="5"
                         markerWidth="4"     markerHeight="4"
-                        fill="black"        
+                        fill="black"        stroke-width="3" 
                         orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" />
             </marker>
+            <marker     id="arrowInSinkDeleted"    
+                        viewBox="0 0 10 10"
+                        refX="23"           refY="5"
+                        markerWidth="1"     markerHeight="1"
+                        fill="#f00"         stroke-width="3" 
+                        orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+            <marker     id="arrowInSourceDeleted"  
+                        viewBox="0 0 10 10"
+                        refX="-15"          refY="5"
+                        markerWidth="1"     markerHeight="1"
+                        fill="black"        stroke-width="3" 
+                        orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+
             `
         ),
 
@@ -136,7 +153,7 @@ function seeServer ( graphServer ) {
         .velocityDecay  ( .5 )
         .on ( 'tick', tickHandler ),
                                                                   
-    updateSimulation = ( latest ) => 
+    updateSimulationAndDOM = ( latest ) => 
     {
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `^(begins)`, p ( latest ) )
@@ -173,20 +190,13 @@ function seeServer ( graphServer ) {
             nodeDeleted         = '#000',
 
             nodeRDefault        = 12,
-            labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
-
-
-            nodeBGDefault       = d =>  ( d.lambda 
+            nodeBGDefault       = d =>  ( ! d.lambda 
                                           ? nodeNotScript
                                           : ( d.stale 
                                               ? nodeScriptStale 
                                               : nodeScriptFresh ) ),
                                               
-            nodeBGStaleness     = d => ( ! d.lambda 
-                                         ? nodeNotScript
-                                         : ( d.stale 
-                                             ? nodeScriptStale 
-                                             : nodeScriptFresh ) ),
+            labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
 
             labelBGOpaque = function() {  
                 d3.select(this)
@@ -202,7 +212,14 @@ function seeServer ( graphServer ) {
                     .transition()
                     .duration( 500 )
                     .style('background-color',labelBGDefaultCode)
-            }
+            },
+
+            labelHtml = d => d.key 
+                        + ' : <b style="font-weight:600">' 
+                        + d.value 
+                        + '</b>',
+
+            pathStrokeDefaultCode   = '#000'
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -217,7 +234,7 @@ function seeServer ( graphServer ) {
 
             .join 
             (
-                __manyNodesG_oneNodeGs =>   // enterer
+                __manyNodesG_oneNodeGs =>   // entering SELECTION
                 {
                         // Each (enterer) is a datum in the
                         // group,manyNodesG[graph-viewer-role=node-groups], which
@@ -281,7 +298,7 @@ function seeServer ( graphServer ) {
                                     background-color: ${labelBGDefaultCode};
                                     ` 
                             )
-                            .text ( d => d.key + ' : ' + d.value )
+                            .html ( labelHtml )
 
                             //.on ( 'mouseout', () => )
   
@@ -289,27 +306,37 @@ function seeServer ( graphServer ) {
                         // Programmer does not understand what is going on here.
                         // FIXME
                 },
-                __oneNodeGs => // updater 
+                __oneNodeGs => // updating SELECTION
                 {
 
                     // FIXME There should be a way to partition __oneNodeGs into
                     // softDeleted and nonDeleted nodes in one loop instead of
                     // two.
 
-                    let softDeletedNodeGs
+                    let recentlySoftDeletedNodeGs
                     =   __oneNodeGs .filter( function( datum, index, elements ){
-                            return datum.deleted 
+                        return  (   datum.deleted
+                                    &&  
+                                    (   elements[index]
+                                        .firstElementChild
+                                        .attributes
+                                        .r
+                                        .value == nodeRDefault
+                                    )   //  Uses the (r) attribute to check if
+                                        //  the soft-deletion animation has
+                                        //  already been set.
+                                )
                         } ) 
 
-                        let softDeletedCircles
-                        =   softDeletedNodeGs
+                        let recentlySoftDeletedCircles
+                        =   recentlySoftDeletedNodeGs
                             .select ( 'circle' )
                             .transition ()
                             .ease ( d3.easeCubicOut )
                                 .attr ( 'fill', nodeDeleted )
                                 .attr ('r', 20 )
                     
-                        softDeletedCircles
+                        recentlySoftDeletedCircles
                         .transition()
                         .duration ( 3000 ) 
                             .ease ( d3.easeCubicOut )
@@ -331,19 +358,16 @@ function seeServer ( graphServer ) {
                                 .attr ( 'fill', d => 
                                             ( d.hit 
                                             ? nodeHit
-                                            : nodeBGStaleness ( d ) )
+                                            : nodeBGDefault ( d ) )
                                 )
                                 .attr ( 'r', nodeRDefault )
                             .transition()
-                                .attr ( 'fill', nodeBGStaleness ) 
+                                .attr ( 'fill', nodeBGDefault ) 
 
                         let div 
                         = nonDeletedNodeGs
                             .select( 'div' )
-                            .html ( d => d.key 
-                            + ' : <b style="font-weight:600">' 
-                            + d.value 
-                            + '</b>' )
+                            .html ( labelHtml )
 
                     return __oneNodeGs
                         // Programmer does not understand what is going on here.
@@ -368,8 +392,13 @@ function seeServer ( graphServer ) {
 
             .join 
             (
-                __manyLinksG_oneLinkGs =>
+                __manyLinksG_oneLinkGs =>   // entering SELECTION
                 {
+
+
+console.log ( __manyLinksG_oneLinkGs )
+
+
                     // Each (enterer) is a datum in the
                     // group,manyNodesG[graph-viewer-role=node-groups], which
                     // isn't already mapped to a oneLinkGs element.
@@ -379,14 +408,14 @@ function seeServer ( graphServer ) {
                         .append ( 'g' )
                         // Programmer does not understand what is going on here.
                         // FIXME
+                            .attr ( 'stroke', pathStrokeDefaultCode ) 
+                            .attr ( 'stroke-opacity', '0.05' )
+                                // Child settings default to these parent
+                                // settings.
  
                     let path 
                     = oneLinkGs 
                         .append ( 'path' )
-                            .attr ( 'stroke',           '#000') 
-                            .attr ( 'stroke-opacity',   '0.05' )
-
-                            //.attr ( 'stroke-opacity', d => d.deleted ? 0.1 : 0.3 )
 
                             .attr ( 'marker-start', d => 
                                     d.location == d.source.key
@@ -400,22 +429,41 @@ function seeServer ( graphServer ) {
                                   )
                             .attr ( 'location', d => d.location )
                             .attr ( 'source', d => d.source.key )
-                            .attr ( 'target', d => d.target.key )
+                            .attr ( 'target', d => { 
+                                
+//console.log('entering path', performance.now(), JSON.stringify(d) )
+
+
+
+
+
+                                return d.target.key } )
 
                     return oneLinkGs 
                         // Programmer does not understand what is going on here.
                         // FIXME
                 },
-                __oneLinkGs => // updater
+                __oneLinkGs => // updating SELECTION
                 {
                     let paths
                     = positionerG_manyLinksG
                         .selectAll ( 'path' )
 
-                    let softDeletedPaths
+                    let recentlySoftDeletedPaths
                     = paths
                         .filter ( function( datum, index, elements ) {
-                            return datum.deleted
+                            return  (   datum.deleted   
+                                        &&
+                                        (   elements[index]
+                                            .parentNode
+                                            .attributes
+                                            .stroke
+                                            .value == pathStrokeDefaultCode
+                                            //.value != pathStrokeDefaultCode
+                                        )   //  Uses the (stroke) attribute to check if
+                                            //  the soft-deletion animation has
+                                            //  already been set.
+                                    )
                         } )
                     
                           //// FIXME There should be a way to partition __oneNodeGs into
@@ -428,8 +476,19 @@ function seeServer ( graphServer ) {
                           //        return !datum.deleted
                           //    } )
                     
-                     softDeletedPaths
-                        .attr   ( 'stroke', '#f00' )
+                    recentlySoftDeletedPaths
+                        .attr ( 'stroke', '#f00' )
+                        .attr ( 'stroke-width', 12 )
+                        .attr ( 'marker-start', d => 
+                                d.location == d.source.key
+                                ? 'url(#arrowInSourceDeleted)'
+                                : null 
+                              )
+                        .attr ( 'marker-end', d => 
+                                d.location == d.source.key
+                                ? null 
+                                : 'url(#arrowInSinkDeleted)'
+                              )
 
                     return __oneLinkGs
                         // Programmer does not understand what is going on here.
@@ -489,7 +548,14 @@ function seeServer ( graphServer ) {
 
                     // undelete!
                     if ( __nodeData[ __index ].deleted ) {
-                        __nodeData[ __index ].deleted = false
+                        delete __nodeData[ __index ].deleted
+                        __linkData.forEach ( e => {
+                            if ( e.location == __nodeDatum.key ) {
+                                delete e.deleted
+                            }
+                            // We just modify the old array, we don't use the
+                            // new one, so we don't have to return anything.
+                        } )
                     }
 
                     Object.assign ( __nodeData[ __index ], __nodeDatum )
@@ -506,6 +572,7 @@ function seeServer ( graphServer ) {
             let pushLink = 
                 ( __sourceKey, __sinkKey, __locationKey, __locationIndex ) => {
                     __linkData.push ( {
+                        debug   : performance.now(),
                         source  : __sourceKey, 
                         target  : __sinkKey,
                         type    : 'causal',
@@ -668,7 +735,7 @@ function seeServer ( graphServer ) {
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-            updateSimulation    ( { nodeData: __nodeData,
+            updateSimulationAndDOM    ( { nodeData: __nodeData,
                                     linkData: __linkData
                                 } ) 
 
@@ -696,7 +763,7 @@ function seeServer ( graphServer ) {
 
     return {
         simulation  : simulation,
-        update      : updateSimulation,
+        update      : updateSimulationAndDOM,
         nodeData    : nodeData,
         linkData    : linkData
     }
