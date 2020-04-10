@@ -599,11 +599,11 @@ class Graph extends Datum {
             case 0:
                 return  {   //serlNode    : node, 
                             graph       : this,
-                            server      : this.proxy  }
+                            store      : this.proxy  }
 
             case 1:
                 switch ( args[0] ) {
-                    case 'server':
+                    case 'store':
                         return this.proxy
 
                     case 'proxyTarget':
@@ -1169,7 +1169,7 @@ class Graph extends Datum {
                         return targ.graph.value 
                     
                     // DIFFERENT FROM Datum 
-                    case 'server' :
+                    case 'store' :
                         return targ.graph.proxy 
                     
                     default:

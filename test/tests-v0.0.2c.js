@@ -25,10 +25,10 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
-{   test : `Graph class constructor can return a graph server.`,
+//*
+{   test : `Graph class constructor can return a graph store.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         //console.log( SERVER )
         //console.log( SERVER ( 'graph' ) )
         return {    graphInstance   : SERVER ( 'graph' ),
@@ -39,17 +39,17 @@ new Exam.Exam ( {
                     &&
                     r.literalTree.constructor == Object 
 },
-{   test : `Query graph server for key, where key has not been set.`,
+{   test : `Query graph store for key, where key has not been set.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         return SERVER.location 
     },
     want : undefined
 },
-{   test : `Assign value to key in server; does assignment statement return a
+{   test : `Assign value to key in store; does assignment statement return a
             normal value? Is the assigned value at Graph.value.key?`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.location = 'France'
         //console.log (SERVER( 'graph' ).value.location( 'datum' ).value)
         return  JSON.stringify ( [   SERVER.location = 'Malaysia' ,
@@ -58,49 +58,49 @@ new Exam.Exam ( {
     },
     want : JSON.stringify ( [ 'Malaysia', 'Malaysia' ] )
 },
-{   test : `Query graph server for key, where key has been assigned.`,
+{   test : `Query graph store for key, where key has been assigned.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.location = 'Malaysia'
         return SERVER.location  
     },
     want : 'Malaysia' 
 },
-{   test : `Assign (undefined) to key in server; does assignment statement return a normal value?`,
+{   test : `Assign (undefined) to key in store; does assignment statement return a normal value?`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         return ( SERVER.testundefined = undefined )     
     },
     want : undefined 
 },
-{   test : `Try to set a property value, on a server key which is undefined.`,
+{   test : `Try to set a property value, on a store key which is undefined.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         return ( SERVER.location.sublocation = 'Puchong' )
             // where SERVER.location has not been set
     },
     expectError : true
 },
-{   test : `Assign subkey to key in server; does assignment statement return a normal value?`,
+{   test : `Assign subkey to key in store; does assignment statement return a normal value?`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.address = {}
         return ( SERVER.address.street = 'Jalan 1' )
     },
     want : 'Jalan 1'
 },
-{   test : `Query server for a subkey, which has been assigned.`,
+{   test : `Query store for a subkey, which has been assigned.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.address = {}
         SERVER.address.street = 'Jalan 1' 
         return ( SERVER.address.street )
     },
     want : 'Jalan 1'
 },
-{   test : `Assign and query a sub-sub-key in server`,
+{   test : `Assign and query a sub-sub-key in store`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.address = {}
         SERVER.address.unit = {}
         SERVER.address.unit.part1 = 'The'
@@ -109,9 +109,9 @@ new Exam.Exam ( {
     want : 'The'
 },
 {   test : `Assign, and query, lambdas and other values, at key, sub-key, and
-                sub-sub-key, in the server.`,
+                sub-sub-key, in the store.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.address = {}
         SERVER.address.unit = {}
         SERVER.address.unit.part2 = {}
@@ -142,9 +142,9 @@ new Exam.Exam ( {
             }, null, 2)
 },
   
-{   test : `Tree insertion to, and extraction from, graph server.`,
+{   test : `Tree insertion to, and extraction from, graph store.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.tree = { "address": {
                         "unit": {
                             "part2": {
@@ -184,7 +184,7 @@ new Exam.Exam ( {
 },
 {   test : `Vertex deletion.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.deletable = 'hi'
         SERVER.tree = {
             a : 1,
@@ -237,7 +237,7 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
@@ -259,7 +259,7 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller - also check pointers on dependents and dependencies.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
@@ -301,7 +301,7 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         //SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
@@ -313,7 +313,7 @@ new Exam.Exam ( {
 - pushed computation should not be written until the the Fun is run; 
 - the Fun is run when the Fun's Datum is read (gotten/get);`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
@@ -351,7 +351,7 @@ new Exam.Exam ( {
 - the Fun is run when the Fun's Datum is read (gotten/get); 
 - also check pointers on dependents and dependencies`, 
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.source1 = 'theFIRSTpart;' 
         SERVER.source2 = 'theSECONDpart;' 
 
@@ -408,8 +408,8 @@ new Exam.Exam ( {
 {   test : `graph() and datum() should eject the same thing`,
     code : function () {
 
-        let g = new Graph( 'server' )
-        let h = new Graph( 'server' )
+        let g = new Graph( 'store' )
+        let h = new Graph( 'store' )
 
     //console.warn ( 'Prepare DATUM', g.a = {}, g.a.i = 4, g.a.j = 5, g)
     //console.warn ( 'Apply DATUM', g.a() )
@@ -444,7 +444,7 @@ new Exam.Exam ( {
 {   test : `Sourcing subkeys in Scripts`,
     code : function () {
 
-        let g = new Graph( 'server' )
+        let g = new Graph( 'store' )
         g.h = new Script ( e => e.h.i + e.h.j )
 
         return JSON.stringify( g() ) 
@@ -455,7 +455,7 @@ new Exam.Exam ( {
 smoothly by tree extraction; caching works? Lazy reads?`,
     code : function () {
 
-        let G = new Graph( 'server' )
+        let G = new Graph( 'store' )
 
         G.a = 1
         G.b = 2
@@ -483,7 +483,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Script.trait: getHandler`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.a = 1
 
         SERVER.b = new Script ( s => ( s.a + 1 ) )
@@ -498,7 +498,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Script.trait: cached - do getters check staleness?`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.a = 1
 
         SERVER.b = new Script ( s => ( s.a + 1 ) )
@@ -559,7 +559,7 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 {   test : `Script.trait: cached - do sources invalidate dependent caches via
 stale flag?`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
 
         SERVER.a = 1
         SERVER.b = new Script (  s => s.a + 2 )
@@ -580,7 +580,7 @@ stale flag?`,
 },
 {   test : `Script.trait: hasSinks`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         SERVER.a1 = new Script (  s => { s.a2 = 2; return true } )
         SERVER.b1 = new Script (  s => { s.b2 = 2; return true }, 
                                 { hasSinks: false } )
@@ -598,7 +598,7 @@ stale flag?`,
 
 {   test : `Script.trait: hasSources`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
 
         SERVER.a = 1
         SERVER.b = new Script (  s => s.a + 2 )
@@ -615,7 +615,7 @@ stale flag?`,
 },
 {   test : `Script.trait: reactive`,
     code : function () {
-        let SERVER = new Graph ( 'server' )
+        let SERVER = new Graph ( 'store' )
         let sideEffected
 
         SERVER.a = 1
@@ -645,7 +645,7 @@ stale flag?`,
 /*
 {   test : `Graph Logger (canon) ( works, but test has yet to be written completely)`,
     code : function () {
-        let S  = new Graph ( 'server' )
+        let S  = new Graph ( 'store' )
         let GRAPH   = S ( 'graph' )
 
         S.a = 1 
@@ -695,7 +695,7 @@ stale flag?`,
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-    let S           = new Graph ( 'server' )
+    let S           = new Graph ( 'store' )
     let GRAPH       = S ( 'graph' )
     let VERTICES    = S ( 'vertices' )
   
@@ -740,7 +740,7 @@ stale flag?`,
 {   test : 'Pointer logging.',
     code : function () {
     
-        let S  = new Graph ( 'server' )
+        let S  = new Graph ( 'store' )
         let GRAPH   = S ( 'graph' )
 
     }
@@ -803,7 +803,7 @@ not sure if it is feasible.`
 
 /* Testing conveniences for the browser:
 
-g = new Graph( 'server' )
+g = new Graph( 'store' )
 
 //g.d = new Fun ( e => e.a + e.b )
 

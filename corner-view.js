@@ -3,7 +3,7 @@ export { seeServer }
 // D3 visualisation experiment:
 function seeServer ( graphServer ) {
 
-    let 
+    const 
 
     verbosity       = 0,    // larger is noisier
     nodeData        = [],
@@ -86,7 +86,9 @@ function seeServer ( graphServer ) {
             </marker>
 
             `
-        ),
+        )
+
+    let
 
     svg_positionerG 
     = body_svg
@@ -115,13 +117,16 @@ function seeServer ( graphServer ) {
 
             manyNodesG_oneNodeGs    
             = positionerG_manyNodesG
-                .selectAll (),
+                .selectAll ()
         
             //  The SELECTION (manyNodesG_oneNodeGs)'s FIRST reference.
             //  This has one group for each <g>1 in svg_positionerG;
             //  groups will be empty as <g>2s have not been appended.
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+    const
+    
     tickHandler = () => 
     {
 
@@ -149,7 +154,7 @@ function seeServer ( graphServer ) {
     simulation 
     = d3.forceSimulation ( nodeData )
         .force ( '?x',          d3.forceX (   ) )
-        .force ( '?y',          d3.forceY (   ) )
+        .force ( '?y',          d3.forceY (   ).strength(0.5) )
         .force ( '?collision',  d3.forceCollide (70) )
         .force ( '?links',      forceLink )
         .velocityDecay  ( .5 )
@@ -185,48 +190,50 @@ function seeServer ( graphServer ) {
         }
 ////////////////////////////////////////////////////////////////////////////////
 
-        let nodeNotScript       = '#6af',
-            nodeScriptStale     = '#550',
-            nodeScriptFresh     = '#f90',
+        const   
 
-            nodeHit             = '#6d8',
-            nodeMiss            = '',
-            nodeDeleted         = '#000',
+        nodeNotScript       = '#6af',
+        nodeScriptStale     = '#550',
+        nodeScriptFresh     = '#f90',
 
-            nodeRDefault        = 12,
-            nodeRDeleted        = 20,
+        nodeHit             = '#6d8',
+        nodeMiss            = '',
+        nodeDeleted         = '#000',
 
-            nodeBGDefault       = d =>  ( ! d.lambda 
-                                          ? nodeNotScript
-                                          : ( d.stale 
-                                              ? nodeScriptStale 
-                                              : nodeScriptFresh ) ),
-                                              
-            labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
+        nodeRDefault        = 12,
+        nodeRDeleted        = 20,
 
-            labelBGOpaque = function() {  
-                d3.select(this)
-                    .select('div')
-                    .transition()
-                    .duration( 0 )
-                    .style('background-color','#fff')
-            },
+        nodeBGDefault       = d =>  ( ! d.lambda 
+                                      ? nodeNotScript
+                                      : ( d.stale 
+                                          ? nodeScriptStale 
+                                          : nodeScriptFresh ) ),
+                                          
+        labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
 
-            labelBGReset = function() {  
-                d3.select(this)
-                    .select('div')
-                    .transition()
-                    .duration( 500 )
-                    .style('background-color',labelBGDefaultCode)
-            },
+        labelBGOpaque = function() {  
+            d3.select(this)
+                .select('div')
+                .transition()
+                .duration( 0 )
+                .style('background-color','#fff')
+        },
 
-            labelHtml = d => d.key 
-                        + ' : <b style="font-weight:600">' 
-                        + d.value 
-                        + '</b>',
+        labelBGReset = function() {  
+            d3.select(this)
+                .select('div')
+                .transition()
+                .duration( 500 )
+                .style('background-color',labelBGDefaultCode)
+        },
 
-            pathStrokeDefault   = '#000',
-            pathStrokeDeleted   = '#f00'
+        labelHtml = d => d.key 
+                    + ' : <b style="font-weight:600">' 
+                    + d.value 
+                    + '</b>',
+
+        pathStrokeDefault   = '#000',
+        pathStrokeDeleted   = '#f00'
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -320,6 +327,7 @@ function seeServer ( graphServer ) {
                     // softDeleted and nonDeleted nodes in one loop instead of
                     // two.
 
+                    // FIXME Replace this with Array.prototype.reduce for neatness:
                     let unSoftDeletedDOMNodes = []
                     let hitDOMNodes = []
                     let softDeletedNodeGs
@@ -528,6 +536,7 @@ function seeServer ( graphServer ) {
                     = positionerG_manyLinksG
                         .selectAll ( 'path' )
 
+                    // FIXME Replace this with Array.prototype.reduce for neatness:
                     let unSoftDeletedDOMPaths = []
                     let softDeletedPaths
                     =   paths.filter ( function( datum, index, elements ) 
@@ -614,11 +623,11 @@ function seeServer ( graphServer ) {
         verbosity > 1 && console.groupEnd ( `UPDATE SIMULATION`  )
     },
 
-    connectGraphLogToSimulation  = ( __server, __nodeData, __linkData ) => 
+    connectGraphLogToSimulation  = ( __store, __nodeData, __linkData ) => 
     {
         verbosity && console.group ( `CONNECT GRAPH LOG TO SIMULATION` )
 
-        let graph       = __server ( 'graph' )
+        let graph       = __store ( 'graph' )
 
         graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
