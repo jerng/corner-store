@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -700,42 +700,40 @@ stale flag?`,
   
     CornerView.chart ( S ) 
 
-      S.abacus = 1 
-      S.donkey = 2
-    S.blanket = new Script ( q => { 
-          q.abacus
-          q.donkey
-          q.changeAVeryLongKeyName = Math.random()
-          q.zack = Math.random()
-      return true 
-    } )  
+    S.abacus = 1 
+//    S.donkey = 2
+  S.blanket = new Script ( q => { 
+        q.abacus
+//        q.donkey
+//        q.changeAVeryLongKeyName = Math.random()
+//        q.zack = Math.random()
+    return true 
+  } )  
 
-    setTimeout ( () => {
-        S.abacus
-        S.abacus = 3.142 
-        S.blanket
-        delete S.changeAVeryLongKeyName
-        S.d = {}
-    }, 2000 )
-    setTimeout ( () => {
-        delete S.abacus
-        S.e = null
-        S.abacus
-        S.donkey = 2
-        S.blanket
-    }, 4000 )
-    setTimeout ( () => {
-        S.abacus = 3            
-        S.blanket
-        delete S.donkey
-        S.f = 1
-        //console.log ( VERTICES.abacus('datum').value )
-    }, 6000 )
+  setTimeout ( () => {
+      S.abacus
+//      S.abacus = 3.142 
+//      S.blanket
+//      delete S.changeAVeryLongKeyName
+//      S.d = {}
+  }, 2000 )
+  setTimeout ( () => {
+//      delete S.abacus
+//      S.e = null
+      S.abacus
+//      S.donkey = 2
+//      S.blanket
+  }, 4000 )
+//  setTimeout ( () => {
+//      S.abacus = 3            
+//      S.blanket
+//      delete S.donkey
+//      S.f = 1
+//      //console.log ( VERTICES.abacus('datum').value )
+//  }, 6000 )
 
     },
     want : 'legible'
-},
-{   warning : `Viewer: updates do not modify the node label.`
 },
 {   warning : `Viewer: Scripts with Sources, do not animate properly on first read.`
 },

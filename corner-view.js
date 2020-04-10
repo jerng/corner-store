@@ -330,6 +330,7 @@ function chart ( graphServer ) {
                     // FIXME Replace this with Array.prototype.reduce for neatness:
                     let unSoftDeletedDOMNodes = []
                     let hitDOMNodes = []
+                    let updatedDOMNodes = []
                     let softDeletedNodeGs
                     =   __oneNodeGs.filter( function( datum, index, elements ){
 
@@ -369,14 +370,29 @@ function chart ( graphServer ) {
                                     // Currently not in a deleted state;
                                     // need to add styling. Address. 
                             }
+                            else 
+                            if ( datum.updated ) {
+                                updatedDOMNodes.push ( this ) 
+                                return false
+                                    // Currently not in a deleted state;
+                                    // need to add styling. Address. 
+                            }
                             else { return false } // further specification? 
                         } ) 
 
-                    let hitDOMNodeGs
+                    let updatedNodeGs
+                    = d3.selectAll ( updatedDOMNodes )
+
+                        let updatedDivs
+                        = updatedNodeGs
+                            .select ('div')
+                            .html ( labelHtml )
+
+                    let hitNodeGs
                     = d3.selectAll ( hitDOMNodes )
 
                         let hitCircles 
-                        = hitDOMNodeGs 
+                        = hitNodeGs 
                             .select ( 'circle' )
                             .transition()
                             .duration ( 300 ) 
@@ -419,7 +435,6 @@ function chart ( graphServer ) {
                                 .attr ( 'r', nodeRDefault )
                             .transition()
                                 .attr ( 'fill', nodeBGDefault ) 
-
 
                     return __oneNodeGs
                         // Programmer does not understand what is going on here.
@@ -650,6 +665,7 @@ function chart ( graphServer ) {
             if ( ~index ) { // Found an index; remove ephemeral signals.
                 delete __nodeData[ index ].hit
                 delete __nodeData[ index ].miss
+                delete __nodeData[ index ].updated
             }
 
             let nodeDatum = {
@@ -808,11 +824,17 @@ function chart ( graphServer ) {
 
                 case 'set_vertex_vertexSet' :
                     verbosity && console.warn ( `SET,NOT SCRIPT` )
+                    if ( ~index ) { // Found an index; report.
+                        __nodeData[ index ].updated = true
+                    }
                     pushNodeButPreferAssign ( index, nodeDatum)
                     break
 
                 case 'set_vertex_Script_vertexSet' :
                     verbosity && console.warn ( `SET, SCRIPT`, nodeDatum )
+                    if ( ~index ) { // Found an index; report.
+                        __nodeData[ index ].updated = true
+                    }
                     pushNodeButPreferAssign ( index, nodeDatum)
                     break
 
