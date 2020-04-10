@@ -5,7 +5,7 @@ function seeServer ( graphServer ) {
 
     let 
 
-    verbosity       = 2,    // larger is noisier
+    verbosity       = 0,    // larger is noisier
     nodeData        = [],
     linkData        = [],
     width           = window.innerWidth,
@@ -390,7 +390,7 @@ function seeServer ( graphServer ) {
         manyLinksG_oneLinkGs   // The SELECTION (manyLinksG_oneLinkGs)'s SECOND reference. 
         = manyLinksG_oneLinkGs
 
-            .data ( latest.linkData, d => d.key )
+            .data ( latest.linkData, d => d.index )
                 
                 //  This DATA GROUP is then JOINED to ELEMENT GROUP,
                 //  manyLinksG[graph-viewer-role=link-groups], 
@@ -401,29 +401,29 @@ function seeServer ( graphServer ) {
                 __manyLinksG_oneLinkGs =>   // entering SELECTION
                 {
 
-console.error(`LINKS, enter selection`)
-__manyLinksG_oneLinkGs._groups.forEach( e => {
+                      //console.error(`LINKS, enter selection`)
+                      //__manyLinksG_oneLinkGs._groups.forEach( e => {
 
-    for ( const f of e ) {
-        if ( f ) {
-            console.log ( 
-                ( f.__data__.deleted ? 'deleted' : '' )
-                + ' '
-                + f.__data__.source.key 
-                + ' > ' 
-                + f.__data__.target.key
-                + ' in '
-                + f.__data__.location
-                + ' '
-                + f.__data__.debug
-            )
-        } else {
-            console.log ('( null )')
-        } 
-        
-    }
+                      //    for ( const f of e ) {
+                      //        if ( f ) {
+                      //            console.log ( 
+                      //                ( f.__data__.deleted ? 'deleted' : '' )
+                      //                + ' '
+                      //                + f.__data__.source.key 
+                      //                + ' > ' 
+                      //                + f.__data__.target.key
+                      //                + ' in '
+                      //                + f.__data__.location
+                      //                + ' '
+                      //                + f.__data__.debug
+                      //            )
+                      //        } else {
+                      //            console.log ('( null )')
+                      //        } 
+                      //        
+                      //    }
 
-} )
+                      //} )
 
 
                     // Each (enterer) is a datum in the
@@ -456,15 +456,7 @@ __manyLinksG_oneLinkGs._groups.forEach( e => {
                                   )
                             .attr ( 'location', d => d.location )
                             .attr ( 'source', d => d.source.key )
-                            .attr ( 'target', d => { 
-                                
-    //console.log('entering path', performance.now(), JSON.stringify(d) )
-
-
-
-
-
-                                return d.target.key } )
+                            .attr ( 'target', d => d.target.key )
 
                     return oneLinkGs 
                         // Programmer does not understand what is going on here.
@@ -472,32 +464,28 @@ __manyLinksG_oneLinkGs._groups.forEach( e => {
                 },
                 __oneLinkGs => // updating SELECTION
                 {
+                      //console.error(`LINKS, update selection`)
+                      //__oneLinkGs._groups.forEach( e => {
+                      //    for ( const f of e ) {
+                      //        if ( f ) {
+                      //            console.log ( 
+                      //                ( f.__data__.deleted ? 'deleted' : '' )
+                      //                + ' '
+                      //                + f.__data__.source.key 
+                      //                + ' > ' 
+                      //                + f.__data__.target.key
+                      //                + ' in '
+                      //                + f.__data__.location
+                      //                + ' '
+                      //                + f.__data__.debug
+                      //            )
+                      //        } else {
+                      //            console.log ('( null )')
+                      //        } 
+                      //        
+                      //    }
+                      //} )
 
-
-
-console.error(`LINKS, update selection`)
-__oneLinkGs._groups.forEach( e => {
-
-    for ( const f of e ) {
-        if ( f ) {
-            console.log ( 
-                ( f.__data__.deleted ? 'deleted' : '' )
-                + ' '
-                + f.__data__.source.key 
-                + ' > ' 
-                + f.__data__.target.key
-                + ' in '
-                + f.__data__.location
-                + ' '
-                + f.__data__.debug
-            )
-        } else {
-            console.log ('( null )')
-        } 
-        
-    }
-
-} )
                     let paths
                     = positionerG_manyLinksG
                         .selectAll ( 'path' )
