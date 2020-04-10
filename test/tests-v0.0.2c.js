@@ -25,7 +25,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph server.`,
     code : function () {
         let SERVER = new Graph ( 'server' )
@@ -701,12 +701,13 @@ stale flag?`,
   
     CornerView.seeServer ( S ) 
 
-    S.abacus = 1 
-//    S.donkey = 2
+      S.abacus = 1 
+      S.donkey = 2
     S.blanket = new Script ( q => { 
-        q.abacus
-        q.changeAVeryLongKeyName = Math.random()
-//        q.donkey
+          q.abacus
+          q.donkey
+//        q.changeAVeryLongKeyName = Math.random()
+//        q.zack = Math.random()
       return true 
     } )  
 
@@ -714,7 +715,7 @@ stale flag?`,
 //      S.abacus
 //      S.abacus = 3.142 
 //      S.blanket
-      delete S.changeAVeryLongKeyName
+//      delete S.changeAVeryLongKeyName
 //      S.d = {}
     }, 2000 )
     setTimeout ( () => {
@@ -722,7 +723,7 @@ stale flag?`,
 //      S.e = null
 //      S.abacus
 //      S.donkey = 2
-      S.blanket
+//      S.blanket
     }, 4000 )
     setTimeout ( () => {
 //      S.abacus = 3            

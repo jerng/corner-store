@@ -98,9 +98,11 @@ function seeServer ( graphServer ) {
             .append ( 'g' )
             .attr ('graph-viewer-role','link-groups'),
 
+////////////////////////////////////////////////////////////////////////////////
             manyLinksG_oneLinkGs    
             = positionerG_manyLinksG
                 .selectAll (),
+////////////////////////////////////////////////////////////////////////////////
         
             //  The SELECTION (manyLinksG_oneLinkGs)'s FIRST reference.
             //  This has one group for each <g>1 in svg_positionerG;
@@ -155,6 +157,9 @@ function seeServer ( graphServer ) {
                                                                   
     updateSimulationAndDOM = ( latest ) => 
     {
+
+                let p = thing => JSON.stringify ( thing, null, 4 )
+
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `^(begins)`, p ( latest ) )
 
@@ -178,7 +183,6 @@ function seeServer ( graphServer ) {
         } catch (e) {
             console.error (`.links() data updated`, e)
         }
-
 ////////////////////////////////////////////////////////////////////////////////
 
         let nodeNotScript       = '#6af',
@@ -379,6 +383,8 @@ function seeServer ( graphServer ) {
 
             )
 
+//console.log(manyLinksG_oneLinkGs._groups)
+
         // Ensure that (element ontology) has a 1-1 mapping to (LINK Ontology)
 
         manyLinksG_oneLinkGs   // The SELECTION (manyLinksG_oneLinkGs)'s SECOND reference. 
@@ -395,8 +401,29 @@ function seeServer ( graphServer ) {
                 __manyLinksG_oneLinkGs =>   // entering SELECTION
                 {
 
+console.error(`LINKS, enter selection`)
+__manyLinksG_oneLinkGs._groups.forEach( e => {
 
-console.log ( __manyLinksG_oneLinkGs )
+    for ( const f of e ) {
+        if ( f ) {
+            console.log ( 
+                ( f.__data__.deleted ? 'deleted' : '' )
+                + ' '
+                + f.__data__.source.key 
+                + ' > ' 
+                + f.__data__.target.key
+                + ' in '
+                + f.__data__.location
+                + ' '
+                + f.__data__.debug
+            )
+        } else {
+            console.log ('( null )')
+        } 
+        
+    }
+
+} )
 
 
                     // Each (enterer) is a datum in the
@@ -431,7 +458,7 @@ console.log ( __manyLinksG_oneLinkGs )
                             .attr ( 'source', d => d.source.key )
                             .attr ( 'target', d => { 
                                 
-//console.log('entering path', performance.now(), JSON.stringify(d) )
+    //console.log('entering path', performance.now(), JSON.stringify(d) )
 
 
 
@@ -445,6 +472,32 @@ console.log ( __manyLinksG_oneLinkGs )
                 },
                 __oneLinkGs => // updating SELECTION
                 {
+
+
+
+console.error(`LINKS, update selection`)
+__oneLinkGs._groups.forEach( e => {
+
+    for ( const f of e ) {
+        if ( f ) {
+            console.log ( 
+                ( f.__data__.deleted ? 'deleted' : '' )
+                + ' '
+                + f.__data__.source.key 
+                + ' > ' 
+                + f.__data__.target.key
+                + ' in '
+                + f.__data__.location
+                + ' '
+                + f.__data__.debug
+            )
+        } else {
+            console.log ('( null )')
+        } 
+        
+    }
+
+} )
                     let paths
                     = positionerG_manyLinksG
                         .selectAll ( 'path' )
@@ -514,8 +567,7 @@ console.log ( __manyLinksG_oneLinkGs )
         graph.log.canon.tasks.graphViewer 
         = boxedValue => new Promise ( ( F, R ) => {
 
-            verbosity > 1 && (  
-                console.group ( `async GraphViewer GRAPH.LOG.CANON.TASK`, boxedValue.type),
+            verbosity > 1 && (  console.group ( boxedValue.type, `async GraphViewer GRAPH.LOG.CANON.TASK` ),
                 console.warn  ( `key:`, boxedValue.datum.key, "\n",
                                 `value:`, boxedValue.datum.value, "\n",
                                 `stale:`, boxedValue.datum.stale, "\n",
@@ -548,7 +600,9 @@ console.log ( __manyLinksG_oneLinkGs )
 
                     // undelete!
                     if ( __nodeData[ __index ].deleted ) {
+
                         delete __nodeData[ __index ].deleted
+                        
                         __linkData.forEach ( e => {
                             if ( e.location == __nodeDatum.key ) {
                                 delete e.deleted
@@ -735,11 +789,11 @@ console.log ( __manyLinksG_oneLinkGs )
                 R ( `d3 visualiser : unknown (log) boxedValue.type: ${boxedValue.type}` )
             }
 
-            updateSimulationAndDOM    ( { nodeData: __nodeData,
-                                    linkData: __linkData
-                                } ) 
+            updateSimulationAndDOM  ( { nodeData: __nodeData,
+                                        linkData: __linkData
+                                    } ) 
 
-            verbosity && console.groupEnd ( `async GraphViewer GRAPH.LOG.CANON.TASK`, boxedValue.type) 
+            verbosity > 1 && console.groupEnd ( boxedValue.type, `async GraphViewer GRAPH.LOG.CANON.TASK` )
 
             //new Promise ( (_F, _R) => console.error ( `test`, _F() ) )
 
