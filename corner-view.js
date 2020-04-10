@@ -187,13 +187,15 @@ function seeServer ( graphServer ) {
 
         let nodeNotScript       = '#6af',
             nodeScriptStale     = '#550',
-            nodeScriptFresh     = '#ee0',
+            nodeScriptFresh     = '#f90',
 
             nodeHit             = '#6d8',
             nodeMiss            = '',
             nodeDeleted         = '#000',
 
             nodeRDefault        = 12,
+            nodeRDeleted        = 20,
+
             nodeBGDefault       = d =>  ( ! d.lambda 
                                           ? nodeNotScript
                                           : ( d.stale 
@@ -223,7 +225,8 @@ function seeServer ( graphServer ) {
                         + d.value 
                         + '</b>',
 
-            pathStrokeDefaultCode   = '#000'
+            pathStrokeDefault   = '#000',
+            pathStrokeDeleted   = '#f00'
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -317,45 +320,86 @@ function seeServer ( graphServer ) {
                     // softDeleted and nonDeleted nodes in one loop instead of
                     // two.
 
-                    let recentlySoftDeletedNodeGs
-                    =   __oneNodeGs .filter( function( datum, index, elements ){
-                        return  (   datum.deleted
-                                    &&  
-                                    (   elements[index]
+                    let unSoftDeletedDOMNodes = []
+                    let hitDOMNodes = []
+                    let softDeletedNodeGs
+                    =   __oneNodeGs.filter( function( datum, index, elements ){
+
+                            if ( datum.deleted ) 
+                            {
+                                if (    elements[index]
                                         .firstElementChild
                                         .attributes
                                         .r
-                                        .value == nodeRDefault
-                                    )   //  Uses the (r) attribute to check if
-                                        //  the soft-deletion animation has
-                                        //  already been set.
-                                )
+                                        .value != nodeRDeleted )
+                                {
+                                    return true
+                                        // Currently in a deleted state;
+                                        // but still the wrong style. Address.
+                                } else {
+                                    return false
+                                        // Currently in a deleted state;
+                                        // already properly styled. Ignore.
+                                }
+                            }
+                            else 
+                            if (    elements[index]
+                                    .firstElementChild
+                                    .attributes
+                                    .r
+                                    .value != nodeRDefault )
+                            {
+                                unSoftDeletedDOMNodes.push ( this )
+                                return false
+                                    // Currently not in a deleted state;
+                                    // but styled wrongly. Address.
+                            }
+                            else 
+                            if ( datum.hit ) {
+                                hitDOMNodes.push ( this ) 
+                                return false
+                                    // Currently not in a deleted state;
+                                    // need to add styling. Address. 
+                            }
+                            else { return false } // further specification? 
                         } ) 
 
-                        let recentlySoftDeletedCircles
-                        =   recentlySoftDeletedNodeGs
+                    let hitDOMNodeGs
+                    = d3.selectAll ( hitDOMNodes )
+
+                        let hitCircles 
+                        = hitDOMNodeGs 
                             .select ( 'circle' )
-                            .transition ()
-                            .ease ( d3.easeCubicOut )
-                                .attr ( 'fill', nodeDeleted )
-                                .attr ('r', 20 )
+                            .transition()
+                            .duration ( 300 ) 
+                                .attr ( 'fill',  nodeHit )
+                            .transition()
+                                .attr ( 'fill', nodeBGDefault ) 
+
+                    let softDeletedCircles
+                    =   softDeletedNodeGs
+                        .select ( 'circle' )
+                        .transition ()
+                        .ease ( d3.easeCubicOut )
+                            .attr ( 'fill', nodeDeleted )
+                            .attr ('r', nodeRDeleted )
                     
-                        recentlySoftDeletedCircles
+                        softDeletedCircles
                         .transition()
                         .duration ( 3000 ) 
                             .ease ( d3.easeCubicOut )
                             .attr ( 'fill', '#f8f8f8' )
 
-                    let nonDeletedNodeGs
-                    =   __oneNodeGs .filter( function( datum, index, elements ){
-                        if ( datum.deleted ) {
-                            //console.log ( datum.deleted, datum )
-                        }
-                            return ! datum.deleted 
-                        } ) 
-                    
-                        let circle 
-                        = nonDeletedNodeGs
+                    let unSoftDeletedNodeGs 
+                    = d3.selectAll ( unSoftDeletedDOMNodes )
+
+                        let unSoftDeletedDiv 
+                        = unSoftDeletedNodeGs
+                            .select( 'div' )
+                            .html ( labelHtml )
+
+                        let unSoftDeletedCircles
+                        = unSoftDeletedNodeGs
                             .select ( 'circle' )
                             .transition()
                             .duration ( 300 ) 
@@ -368,10 +412,6 @@ function seeServer ( graphServer ) {
                             .transition()
                                 .attr ( 'fill', nodeBGDefault ) 
 
-                        let div 
-                        = nonDeletedNodeGs
-                            .select( 'div' )
-                            .html ( labelHtml )
 
                     return __oneNodeGs
                         // Programmer does not understand what is going on here.
@@ -382,8 +422,6 @@ function seeServer ( graphServer ) {
                 }
 
             )
-
-//console.log(manyLinksG_oneLinkGs._groups)
 
         // Ensure that (element ontology) has a 1-1 mapping to (LINK Ontology)
 
@@ -435,7 +473,7 @@ function seeServer ( graphServer ) {
                         .append ( 'g' )
                         // Programmer does not understand what is going on here.
                         // FIXME
-                            .attr ( 'stroke', pathStrokeDefaultCode ) 
+                            .attr ( 'stroke', pathStrokeDefault ) 
                             .attr ( 'stroke-opacity', '0.05' )
                                 // Child settings default to these parent
                                 // settings.
@@ -490,36 +528,47 @@ function seeServer ( graphServer ) {
                     = positionerG_manyLinksG
                         .selectAll ( 'path' )
 
-                    let recentlySoftDeletedPaths
-                    = paths
-                        .filter ( function( datum, index, elements ) {
-                            return  (   datum.deleted   
-                                        &&
-                                        (   elements[index]
-                                            .parentNode
-                                            .attributes
-                                            .stroke
-                                            .value == pathStrokeDefaultCode
-                                            //.value != pathStrokeDefaultCode
-                                        )   //  Uses the (stroke) attribute to check if
-                                            //  the soft-deletion animation has
-                                            //  already been set.
-                                    )
+                    let unSoftDeletedDOMPaths = []
+                    let softDeletedPaths
+                    =   paths.filter ( function( datum, index, elements ) 
+                        {
+                            if ( datum.deleted ) 
+                            {
+                                if (    elements[index]
+                                        .parentNode
+                                        .attributes
+                                        .stroke
+                                        .value != pathStrokeDeleted )
+                                {
+                                    return true
+                                        // Currently in a deleted state;
+                                        // but still the wrong style. Address.
+                                } else {
+                                    return false
+                                        // Currently in a deleted state;
+                                        // already properly styled. Ignore.
+                                }
+                            }
+                            else 
+                            if (    elements[index]
+                                    .parentNode
+                                    .attributes
+                                    .stroke
+                                    .value != pathStrokeDeleted )
+                            {
+                                unSoftDeletedDOMPaths.push ( this )
+                                return false
+                                    // Currently not in a deleted state;
+                                    // but styled wrongly. Address.
+                            }
+                            else { return false } // further specification? 
                         } )
                     
-                          //// FIXME There should be a way to partition __oneNodeGs into
-                          //// softDeleted and nonDeleted nodes in one loop instead of
-                          //// two.
-
-                          //let nonDeletedPaths
-                          //= paths
-                          //    .filter ( function( datum, index, elements ) {
-                          //        return !datum.deleted
-                          //    } )
-                    
-                    recentlySoftDeletedPaths
-                        .attr ( 'stroke', '#f00' )
+                    softDeletedPaths
+                        .attr ( 'stroke', pathStrokeDeleted )
                         .attr ( 'stroke-width', 12 )
+                            // these now override parent settings
+
                         .attr ( 'marker-start', d => 
                                 d.location == d.source.key
                                 ? 'url(#arrowInSourceDeleted)'
@@ -529,6 +578,25 @@ function seeServer ( graphServer ) {
                                 d.location == d.source.key
                                 ? null 
                                 : 'url(#arrowInSinkDeleted)'
+                              )
+
+                    let unSoftDeletedPaths 
+                    = d3.selectAll ( unSoftDeletedDOMPaths )
+
+                    unSoftDeletedPaths
+                        .attr ( 'stroke', null )
+                        .attr ( 'stroke-width', null )
+                            // these will now default to parent's settings
+
+                        .attr ( 'marker-start', d => 
+                                d.location == d.source.key
+                                ? 'url(#arrowInSource)'
+                                : null 
+                              )
+                        .attr ( 'marker-end', d => 
+                                d.location == d.source.key
+                                ? null 
+                                : 'url(#arrowInSink)'
                               )
 
                     return __oneLinkGs
