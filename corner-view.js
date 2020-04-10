@@ -1,7 +1,7 @@
-export { seeServer }
+export { chart }
 
 // D3 visualisation experiment:
-function seeServer ( graphServer ) {
+function chart ( graphServer ) {
 
     const 
 

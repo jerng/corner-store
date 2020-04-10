@@ -4,7 +4,6 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
 
-
 window.CornerView = CornerView
 
 let p = thing => JSON.stringify ( thing, null, 4 )
@@ -28,11 +27,11 @@ new Exam.Exam ( {
 //*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        //console.log( SERVER )
-        //console.log( SERVER ( 'graph' ) )
-        return {    graphInstance   : SERVER ( 'graph' ),
-                    literalTree     : SERVER ()             }
+        let STORE = new Graph ( 'store' )
+        //console.log( STORE )
+        //console.log( STORE ( 'graph' ) )
+        return {    graphInstance   : STORE ( 'graph' ),
+                    literalTree     : STORE ()             }
     },
     want : 'vfun',
     vfun : (r) =>   r.graphInstance instanceof Graph
@@ -41,95 +40,95 @@ new Exam.Exam ( {
 },
 {   test : `Query graph store for key, where key has not been set.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        return SERVER.location 
+        let STORE = new Graph ( 'store' )
+        return STORE.location 
     },
     want : undefined
 },
 {   test : `Assign value to key in store; does assignment statement return a
             normal value? Is the assigned value at Graph.value.key?`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.location = 'France'
-        //console.log (SERVER( 'graph' ).value.location( 'datum' ).value)
-        return  JSON.stringify ( [   SERVER.location = 'Malaysia' ,
-                    SERVER( 'graph' ).value.location( 'datum' ).value
+        let STORE = new Graph ( 'store' )
+        STORE.location = 'France'
+        //console.log (STORE( 'graph' ).value.location( 'datum' ).value)
+        return  JSON.stringify ( [   STORE.location = 'Malaysia' ,
+                    STORE( 'graph' ).value.location( 'datum' ).value
                 ] )
     },
     want : JSON.stringify ( [ 'Malaysia', 'Malaysia' ] )
 },
 {   test : `Query graph store for key, where key has been assigned.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.location = 'Malaysia'
-        return SERVER.location  
+        let STORE = new Graph ( 'store' )
+        STORE.location = 'Malaysia'
+        return STORE.location  
     },
     want : 'Malaysia' 
 },
 {   test : `Assign (undefined) to key in store; does assignment statement return a normal value?`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        return ( SERVER.testundefined = undefined )     
+        let STORE = new Graph ( 'store' )
+        return ( STORE.testundefined = undefined )     
     },
     want : undefined 
 },
 {   test : `Try to set a property value, on a store key which is undefined.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        return ( SERVER.location.sublocation = 'Puchong' )
-            // where SERVER.location has not been set
+        let STORE = new Graph ( 'store' )
+        return ( STORE.location.sublocation = 'Puchong' )
+            // where STORE.location has not been set
     },
     expectError : true
 },
 {   test : `Assign subkey to key in store; does assignment statement return a normal value?`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.address = {}
-        return ( SERVER.address.street = 'Jalan 1' )
+        let STORE = new Graph ( 'store' )
+        STORE.address = {}
+        return ( STORE.address.street = 'Jalan 1' )
     },
     want : 'Jalan 1'
 },
 {   test : `Query store for a subkey, which has been assigned.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.address = {}
-        SERVER.address.street = 'Jalan 1' 
-        return ( SERVER.address.street )
+        let STORE = new Graph ( 'store' )
+        STORE.address = {}
+        STORE.address.street = 'Jalan 1' 
+        return ( STORE.address.street )
     },
     want : 'Jalan 1'
 },
 {   test : `Assign and query a sub-sub-key in store`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.address = {}
-        SERVER.address.unit = {}
-        SERVER.address.unit.part1 = 'The'
-        return ( SERVER.address.unit.part1 )
+        let STORE = new Graph ( 'store' )
+        STORE.address = {}
+        STORE.address.unit = {}
+        STORE.address.unit.part1 = 'The'
+        return ( STORE.address.unit.part1 )
     },
     want : 'The'
 },
 {   test : `Assign, and query, lambdas and other values, at key, sub-key, and
                 sub-sub-key, in the store.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.address = {}
-        SERVER.address.unit = {}
-        SERVER.address.unit.part2 = {}
-        SERVER.address.unit.part2.part2a = {}
-            SERVER.location = 'Malaysia'
-            SERVER.testundefined = undefined
-            SERVER.address.street = 'Jalan 1' 
-            SERVER.function0 = () => 'function0 has returned'
-            SERVER.address.function1 = () => 'function1 has returned'
-            SERVER.address.unit.function2 = () => 'function2 has returned'
-            SERVER.address.unit.part2.somethingElse = 'Home'
-            SERVER.address.unit.part2.part2a.deeperKey = '1,2,3 here is a deeper key'
+        let STORE = new Graph ( 'store' )
+        STORE.address = {}
+        STORE.address.unit = {}
+        STORE.address.unit.part2 = {}
+        STORE.address.unit.part2.part2a = {}
+            STORE.location = 'Malaysia'
+            STORE.testundefined = undefined
+            STORE.address.street = 'Jalan 1' 
+            STORE.function0 = () => 'function0 has returned'
+            STORE.address.function1 = () => 'function1 has returned'
+            STORE.address.unit.function2 = () => 'function2 has returned'
+            STORE.address.unit.part2.somethingElse = 'Home'
+            STORE.address.unit.part2.part2a.deeperKey = '1,2,3 here is a deeper key'
         return JSON.stringify ({
-                0: SERVER.function0(),
-                1: SERVER.address.function1(),
-                2: SERVER.address.unit.function2(),
-                3: SERVER.address.unit.part2.somethingElse,
-                4: SERVER.address.unit.part2.part2a.deeperKey 
+                0: STORE.function0(),
+                1: STORE.address.function1(),
+                2: STORE.address.unit.function2(),
+                3: STORE.address.unit.part2.somethingElse,
+                4: STORE.address.unit.part2.part2a.deeperKey 
             }, null, 2) 
             
     },
@@ -144,8 +143,8 @@ new Exam.Exam ( {
   
 {   test : `Tree insertion to, and extraction from, graph store.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.tree = { "address": {
+        let STORE = new Graph ( 'store' )
+        STORE.tree = { "address": {
                         "unit": {
                             "part2": {
                                 "part2a": {
@@ -160,8 +159,8 @@ new Exam.Exam ( {
                 }
 
         return JSON.stringify ( { 
-            aDatum  : SERVER.tree( 'datum' ) instanceof Datum,
-            aPOJO   : SERVER.tree() 
+            aDatum  : STORE.tree( 'datum' ) instanceof Datum,
+            aPOJO   : STORE.tree() 
         }, null, 2 )
     },
     want : JSON.stringify (  
@@ -184,9 +183,9 @@ new Exam.Exam ( {
 },
 {   test : `Vertex deletion.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.deletable = 'hi'
-        SERVER.tree = {
+        let STORE = new Graph ( 'store' )
+        STORE.deletable = 'hi'
+        STORE.tree = {
             a : 1,
             b : {
                 c : 2,
@@ -196,18 +195,18 @@ new Exam.Exam ( {
 
         return JSON.stringify ( [
 
-            SERVER.deletable ,
-            delete SERVER.deletable ,
-            SERVER.deletable,
+            STORE.deletable ,
+            delete STORE.deletable ,
+            STORE.deletable,
 
-            SERVER.tree.b.d = 1,
-            JSON.parse( JSON.stringify( SERVER.tree() )) , // spread operator makes a shallow copy
+            STORE.tree.b.d = 1,
+            JSON.parse( JSON.stringify( STORE.tree() )) , // spread operator makes a shallow copy
 
-            SERVER.tree.b.d = [11,22,,44,,,77],
-            JSON.parse( JSON.stringify( SERVER.tree() )),
+            STORE.tree.b.d = [11,22,,44,,,77],
+            JSON.parse( JSON.stringify( STORE.tree() )),
 
-            SERVER.tree.b.d = {z:1, y:2, x: {m:1, n:2} },
-            JSON.parse( JSON.stringify( SERVER.tree() )),
+            STORE.tree.b.d = {z:1, y:2, x: {m:1, n:2} },
+            JSON.parse( JSON.stringify( STORE.tree() )),
 
         ] )
     },
@@ -237,20 +236,20 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.source1 = 'theFIRSTpart;' 
-        SERVER.source2 = 'theSECONDpart;' 
+        let STORE = new Graph ( 'store' )
+        STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
 
-        //console.log (`Before setting SERVER.computed2a`)
+        //console.log (`Before setting STORE.computed2a`)
 
-        SERVER.computed2a       = new Script ( s => s.source1 + s.source2 )
+        STORE.computed2a       = new Script ( s => s.source1 + s.source2 )
         
-        //console.log (`After setting SERVER.computed2a`)
+        //console.log (`After setting STORE.computed2a`)
 
-        //console.log (SERVER.computed2a)
+        //console.log (STORE.computed2a)
 
         return JSON.stringify ( {
-            computedValue   :   SERVER.computed2a,
+            computedValue   :   STORE.computed2a,
         } )
     },
     want : JSON.stringify ( {
@@ -259,35 +258,35 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller - also check pointers on dependents and dependencies.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.source1 = 'theFIRSTpart;' 
-        SERVER.source2 = 'theSECONDpart;' 
+        let STORE = new Graph ( 'store' )
+        STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Script ( s => s.source1 + s.source2 )
+        STORE.computed2a       = new Script ( s => s.source1 + s.source2 )
 
         //console.log(`Before getting pointers.`)
 
-        //console.log(SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey
+        //console.log(STORE( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey
         //)
 
         let computed2apointers    = [
-            SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey,
-            SERVER( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[1].ikey 
+            STORE( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[0].ikey,
+            STORE( 'datum' ).value.computed2a( 'datum' ).pointers.in.causal[1].ikey 
         ]
           //console.log(`After getting pointers.`)
 
-          //console.log (SERVER( 'datum' ).value
+          //console.log (STORE( 'datum' ).value
           //                            .source1( 'datum' )
           //                            .pointers.out.causal[0].okey
           //)
 
         return JSON.stringify ( {
-            computedValue   :   SERVER.computed2a,
+            computedValue   :   STORE.computed2a,
             computed2apointers:   computed2apointers,
-            source1Pointer    :   SERVER( 'datum' ).value
+            source1Pointer    :   STORE( 'datum' ).value
                                     .source1( 'datum' )
                                     .pointers.out.causal[0].okey,
-            source2Pointer    :   SERVER( 'vertices' )
+            source2Pointer    :   STORE( 'vertices' )
                                     .source2( 'datum' )
                                     .pointers.out.causal[0].okey,
         } )
@@ -301,11 +300,11 @@ new Exam.Exam ( {
 },
 {   test : `Computed properties; dependency getter / puller - system should complain if dependencies are not yet defined.`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        //SERVER.source1 = 'theFIRSTpart;' 
-        SERVER.source2 = 'theSECONDpart;' 
+        let STORE = new Graph ( 'store' )
+        //STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
 
-        SERVER.computed2a       = new Script ( s => s.source1 + s.source2 )
+        STORE.computed2a       = new Script ( s => s.source1 + s.source2 )
     },
     expectError: true
 },
@@ -313,11 +312,11 @@ new Exam.Exam ( {
 - pushed computation should not be written until the the Fun is run; 
 - the Fun is run when the Fun's Datum is read (gotten/get);`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.source1 = 'theFIRSTpart;' 
-        SERVER.source2 = 'theSECONDpart;' 
+        let STORE = new Graph ( 'store' )
+        STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Script ( s => { 
+        STORE.computed3 = new Script ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
@@ -332,12 +331,12 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER( 'vertices' ).sink4( 'unproxy' ).pointers.in )
+        //console.log( STORE( 'vertices' ).sink4( 'unproxy' ).pointers.in )
 
         return JSON.stringify ( {
-            sink4Before     : SERVER.sink4,
-            computed3       : SERVER.computed3,
-            sink4After      : SERVER.sink4,
+            sink4Before     : STORE.sink4,
+            computed3       : STORE.computed3,
+            sink4After      : STORE.sink4,
         } )
     },
     want : JSON.stringify ( {
@@ -351,11 +350,11 @@ new Exam.Exam ( {
 - the Fun is run when the Fun's Datum is read (gotten/get); 
 - also check pointers on dependents and dependencies`, 
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.source1 = 'theFIRSTpart;' 
-        SERVER.source2 = 'theSECONDpart;' 
+        let STORE = new Graph ( 'store' )
+        STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
 
-        SERVER.computed3 = new Script ( s => { 
+        STORE.computed3 = new Script ( s => { 
 
             // pull
             let computed = s.source1 + s.source2
@@ -370,26 +369,26 @@ new Exam.Exam ( {
             return computed
         } ) 
         
-        //console.log( SERVER( 'vertices' ).sink4( 'unproxy' ).pointers.in )
-        //console.log( SERVER( 'graph').log.canon.book )
-        //console.log( JSON.stringify ( SERVER( 'graph').log.canon.book, null, 4 ) )
+        //console.log( STORE( 'vertices' ).sink4( 'unproxy' ).pointers.in )
+        //console.log( STORE( 'graph').log.canon.book )
+        //console.log( JSON.stringify ( STORE( 'graph').log.canon.book, null, 4 ) )
 
         return JSON.stringify ( {
-            sink4Before     : SERVER.sink4,
-            computed3       : SERVER.computed3,
-            sink4After      : SERVER.sink4,
-            computed3pointers :   [   SERVER( 'datum' ).value
+            sink4Before     : STORE.sink4,
+            computed3       : STORE.computed3,
+            sink4After      : STORE.sink4,
+            computed3pointers :   [   STORE( 'datum' ).value
                                         .computed3( 'datum' ).pointers.in.causal[0].ikey,
-                                    SERVER( 'datum' ).value
+                                    STORE( 'datum' ).value
                                         .computed3( 'datum' ).pointers.in.causal[1].ikey 
             ],
-            source1Pointer    :   SERVER( 'datum' ).value
+            source1Pointer    :   STORE( 'datum' ).value
                                     .source1( 'datum' )
                                     .pointers.out.causal[0].okey,
-            source2Pointer    :   SERVER( 'vertices' )
+            source2Pointer    :   STORE( 'vertices' )
                                     .source2( 'datum' )
                                     .pointers.out.causal[0].okey,
-            sink4Pointer      :   SERVER( 'vertices' )
+            sink4Pointer      :   STORE( 'vertices' )
                                     .sink4( 'datum' )
                                     .pointers.in.causal[0].ikey
         } )
@@ -414,8 +413,8 @@ new Exam.Exam ( {
     //console.warn ( 'Prepare DATUM', g.a = {}, g.a.i = 4, g.a.j = 5, g)
     //console.warn ( 'Apply DATUM', g.a() )
     //
-    //console.warn ( 'Prepare SERVER', h.i = 4, h.j = 5, h)
-    //console.warn ( 'Apply SERVER', h())
+    //console.warn ( 'Prepare STORE', h.i = 4, h.j = 5, h)
+    //console.warn ( 'Apply STORE', h())
 
         g.a = {}, g.a.i = 4, g.a.j = 5, g
 
@@ -483,61 +482,61 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 },
 {   test : `Script.trait: getHandler`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.a = 1
+        let STORE = new Graph ( 'store' )
+        STORE.a = 1
 
-        SERVER.b = new Script ( s => ( s.a + 1 ) )
-        //console.warn (SERVER.b)
+        STORE.b = new Script ( s => ( s.a + 1 ) )
+        //console.warn (STORE.b)
 
-        SERVER.c = new Script ( s => ( s.a + 1 ), { getHandler: false } )
-        //console.warn (SERVER.c)
+        STORE.c = new Script ( s => ( s.a + 1 ), { getHandler: false } )
+        //console.warn (STORE.c)
 
-        return JSON.stringify ( [ SERVER.b, SERVER.c ] )
+        return JSON.stringify ( [ STORE.b, STORE.c ] )
     },
     want : JSON.stringify ( [ 2, undefined ] ) 
 },
 {   test : `Script.trait: cached - do getters check staleness?`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.a = 1
+        let STORE = new Graph ( 'store' )
+        STORE.a = 1
 
-        SERVER.b = new Script ( s => ( s.a + 1 ) )
-        SERVER( 'vertices' ).b( 'datum' ).stale = false
+        STORE.b = new Script ( s => ( s.a + 1 ) )
+        STORE( 'vertices' ).b( 'datum' ).stale = false
 
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).value)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).lambda)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).traits.cached)
-      //console.warn (SERVER.b)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).value)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).value)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).lambda)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).traits.cached)
+      //console.warn (STORE.b)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).value)
 
-        SERVER.c = new Script ( s => ( s.a + 1 ), { cached : false } )
-        SERVER( 'vertices' ).c( 'datum' ).stale = false
+        STORE.c = new Script ( s => ( s.a + 1 ), { cached : false } )
+        STORE( 'vertices' ).c( 'datum' ).stale = false
       
-      //console.warn (SERVER( 'vertices' ).c( 'datum' ).stale)
-      //console.warn (SERVER( 'vertices' ).c( 'datum' ).value)
-      //console.warn (SERVER( 'vertices' ).c( 'datum' ).lambda)
-      //console.warn (SERVER( 'vertices' ).c( 'datum' ).traits.cached)
-      //console.warn (SERVER.c)
-      //console.warn (SERVER( 'vertices' ).b( 'datum' ).stale)
-      //console.warn (SERVER( 'vertices' ).c( 'datum' ).value)
+      //console.warn (STORE( 'vertices' ).c( 'datum' ).stale)
+      //console.warn (STORE( 'vertices' ).c( 'datum' ).value)
+      //console.warn (STORE( 'vertices' ).c( 'datum' ).lambda)
+      //console.warn (STORE( 'vertices' ).c( 'datum' ).traits.cached)
+      //console.warn (STORE.c)
+      //console.warn (STORE( 'vertices' ).b( 'datum' ).stale)
+      //console.warn (STORE( 'vertices' ).c( 'datum' ).value)
 
-        let datumB = SERVER( 'vertices' ).b( 'datum' )
-        let datumC = SERVER( 'vertices' ).c( 'datum' )
+        let datumB = STORE( 'vertices' ).b( 'datum' )
+        let datumC = STORE( 'vertices' ).c( 'datum' )
 
         return JSON.stringify ( {
             defaultCachedStaleFlagBefore    : datumB.stale  == false,
             defaultCachedValueBefore        : datumB.value  == undefined,
 
-                defaultCachedGetResult          : SERVER.b      == undefined,
+                defaultCachedGetResult          : STORE.b      == undefined,
                 defaultCachedStaleFlagAfter     : datumB.stale  == false,
                 defaultCachedValueAfter         : datumB.value  == undefined,
 
             notCachedStaleFlagBefore    : datumC.stale  == false,
             notCachedValueBefore        : datumC.value  == undefined,
 
-                notCachedGetResult          : SERVER.c      == 2,
+                notCachedGetResult          : STORE.c      == 2,
                 notCachedStaleFlagAfter     : datumC.stale  == false,
                 notCachedValueAfter         : datumC.value  == 2,
         },null,2 )
@@ -559,38 +558,38 @@ smoothly by tree extraction; caching works? Lazy reads?`,
 {   test : `Script.trait: cached - do sources invalidate dependent caches via
 stale flag?`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
+        let STORE = new Graph ( 'store' )
 
-        SERVER.a = 1
-        SERVER.b = new Script (  s => s.a + 2 )
+        STORE.a = 1
+        STORE.b = new Script (  s => s.a + 2 )
 
-        let vertices = SERVER( 'vertices' )
+        let vertices = STORE( 'vertices' )
         let b = vertices.b( 'datum' )
 
 
       //console.warn ( b.stale, b.value, b.pointers, b.lambda )
-      //console.warn ( SERVER.b )
+      //console.warn ( STORE.b )
       //console.warn ( b.stale, b.value, b.pointers, b.lambda )
     
         return JSON.stringify ( 
-            [ b.stale, b.value, SERVER.b, b.stale, b.value ]
+            [ b.stale, b.value, STORE.b, b.stale, b.value ]
         )
     },
     want : JSON.stringify ( [ true, undefined, 3, false, 3 ] )
 },
 {   test : `Script.trait: hasSinks`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
-        SERVER.a1 = new Script (  s => { s.a2 = 2; return true } )
-        SERVER.b1 = new Script (  s => { s.b2 = 2; return true }, 
+        let STORE = new Graph ( 'store' )
+        STORE.a1 = new Script (  s => { s.a2 = 2; return true } )
+        STORE.b1 = new Script (  s => { s.b2 = 2; return true }, 
                                 { hasSinks: false } )
 
-        //console.log ( SERVER.a1, SERVER.a2 )
-        //console.log ( SERVER.b1, SERVER.b2 )
-        //console.log ( SERVER( 'vertices' ) )
+        //console.log ( STORE.a1, STORE.a2 )
+        //console.log ( STORE.b1, STORE.b2 )
+        //console.log ( STORE( 'vertices' ) )
     
         return JSON.stringify ( 
-            [ SERVER.a1, SERVER.a2, SERVER.b1, SERVER.b2 ]
+            [ STORE.a1, STORE.a2, STORE.b1, STORE.b2 ]
         )
     },
     want : JSON.stringify ( [ true, 2, true, undefined ] )
@@ -598,28 +597,28 @@ stale flag?`,
 
 {   test : `Script.trait: hasSources`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
+        let STORE = new Graph ( 'store' )
 
-        SERVER.a = 1
-        SERVER.b = new Script (  s => s.a + 2 )
+        STORE.a = 1
+        STORE.b = new Script (  s => s.a + 2 )
 
-      //console.warn ( SERVER.b )
-      //console.warn ( SERVER.c )
-      //console.log ( SERVER( 'vertices' ) )
+      //console.warn ( STORE.b )
+      //console.warn ( STORE.c )
+      //console.log ( STORE( 'vertices' ) )
     
         return JSON.stringify ( 
-            [ SERVER.b, SERVER.c ]
+            [ STORE.b, STORE.c ]
         )
     },
     want : JSON.stringify ( [ 3, NaN ] )
 },
 {   test : `Script.trait: reactive`,
     code : function () {
-        let SERVER = new Graph ( 'store' )
+        let STORE = new Graph ( 'store' )
         let sideEffected
 
-        SERVER.a = 1
-        SERVER.b = new Script ( 
+        STORE.a = 1
+        STORE.b = new Script ( 
             s => sideEffected = s.a + 2, 
             {   reactive    : true,
                 getHandler  : false
@@ -628,15 +627,15 @@ stale flag?`,
 
       //console.log (   sideEffected,
       //                
-      //                SERVER.a = 1, 
+      //                STORE.a = 1, 
       //                sideEffected,
-      //                SERVER.a = 2, 
+      //                STORE.a = 2, 
       //                sideEffected,
       //            ) 
         return JSON.stringify ( [  
             sideEffected,
-            SERVER.a = 1, sideEffected,
-            SERVER.a = 2, sideEffected,
+            STORE.a = 1, sideEffected,
+            STORE.a = 2, sideEffected,
         ] )
     },
     want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
@@ -699,7 +698,7 @@ stale flag?`,
     let GRAPH       = S ( 'graph' )
     let VERTICES    = S ( 'vertices' )
   
-    CornerView.seeServer ( S ) 
+    CornerView.chart ( S ) 
 
       S.abacus = 1 
       S.donkey = 2
@@ -736,6 +735,14 @@ stale flag?`,
     },
     want : 'legible'
 },
+{   warning : `Viewer: updates do not modify the node label.`
+},
+{   warning : `Viewer: Scripts with Sources, do not animate properly on first read.`
+},
+{   warning : `Corner: Scripts KeySniffers may not handle Sink and Source keys which are deep.`
+},
+{   warning : ` viewer has no mechanised tests :(.`
+},
 /*/
 {   test : 'Pointer logging.',
     code : function () {
@@ -744,8 +751,6 @@ stale flag?`,
         let GRAPH   = S ( 'graph' )
 
     }
-},
-{   warning : `Graph viewer has no mechanised tests :(.`
 },
 {   warning : `Increase transactionality of datum+pointer writes.`
 },
