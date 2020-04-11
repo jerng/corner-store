@@ -1336,23 +1336,23 @@ class Graph extends Datum {
 
             let __sourceNthKeySniffer = new Proxy ( {}, {
                 get : ( __targ, __prop, __rcvr ) => {
+console.error(`wip`)
+//                  // Step 2, Branch A
+//                  // (We found a depth>1 key, but we do not know if its
+//                  // subkeys will be read, or not.)
 
-                    // Step 2, Branch A
-                    // (We found a depth>1 key, but we do not know if its
-                    // subkeys will be read, or not.)
-
-                    __keys[ __keys.length - 1 ].push ( __prop )
+//                  __keys[ __keys.length - 1 ].push ( __prop )
                     return __sourceNthKeySniffer
                 
                     // Repeat Step 2. until there are no more keys.
                 },
                 set : ( __targ, __prop, __val, __rcvr ) => {
 
-                    // Step 2, Branch B
-                    // We found a sink, so the entire key-chain does not
-                    // terminate in a Datum which is a source. Discard it.
+//                  // Step 2, Branch B
+//                  // We found a sink, so the entire key-chain does not
+//                  // terminate in a Datum which is a source. Discard it.
 
-                    __keys.pop()
+//                  __keys.pop()
                     return true 
                 }
             } )
@@ -1380,7 +1380,7 @@ class Graph extends Datum {
             } )
             
             // Step 0. Initiate algorithm.
-            __lambda ( __sourceFirstKeySniffer )
+            __lambda( __sourceFirstKeySniffer )
 
             // Step 3. Reduce key chains to deep keeps
             let     __deepKeys = __keys.map ( group => group.join ( '.' ) )
@@ -1452,7 +1452,7 @@ class Graph extends Datum {
             } )
 
             // Step 0. Initiate algorithm.
-            __lambda ( __sinkFirstKeySniffer )
+//            __lambda ( __sinkFirstKeySniffer )
 
             // Step 3. Reduce key chains to deep keeps
             let     __deepKeys = __keys.map ( group => group.join ( '.' ) )

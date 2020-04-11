@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
