@@ -681,6 +681,31 @@ stale flag?`,
     want : ''
 },
 //*/
+{   test : `Deep keys in Sinks and Sources`,
+    code : function () {
+
+    let S       = new Graph ( 'store' )
+  
+    S.abacus    = { pieces: 'several', rods: 0, beads: { red: 1 } }
+    S.donkey    = { parts: 'many', legs: { hooves: 0 } }
+    S.blanket   = new Script ( q => { 
+
+        q.abacus = 7
+        q.abacus.rods = 5
+        q.donkey.legs.hooves = 4
+
+        return [    q.abacus.pieces, 
+                    q.abacus.beads.red,
+                    q.donkey.parts          ]
+    } )  
+
+    //console.log ( S.blanket ) 
+
+
+    },
+    //want : 'legible'
+},
+/*/
 {   test : `D3 graph visualiser`,
     code : function () {
 
@@ -700,7 +725,7 @@ stale flag?`,
   
 //    CornerView.chart ( S ) 
 
-//    S.abacus = 1 
+    S.abacus = { pieces: 'several', beads: { red: 1 } }
     S.donkey = { parts: 'many' }
 
     S.blanket = new Script ( q => { 
@@ -711,7 +736,10 @@ stale flag?`,
 //          q.zack = Math.random()
 //          return true 
 
-        return q.donkey.parts
+        return [    q.abacus.pieces, 
+                    q.abacus.beads.red,
+                    q.donkey.parts 
+               ]
 
     } )  
 

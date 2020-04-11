@@ -887,12 +887,12 @@ class Graph extends Datum {
 
                 get :   scriptToSet.traits.hasSources
                         ? this.handlers
-                            .scopedScriptKeySnifferHandlerGet ( scriptToSet )
+                            .setSourcePointers ( scriptToSet )
                         : undefined,
 
                 set : scriptToSet.traits.hasSinks
                         ? this.handlers
-                            .scopedScriptKeySnifferHandlerSet ( scriptToSet )
+                            .setSinkPointers ( scriptToSet )
                         : undefined
             } )
 
@@ -914,8 +914,8 @@ class Graph extends Datum {
 
             let result = this.value [ keyToSet ]('datum') == args[1] 
             
-            //console.log (`graph.vertexSet/[n>1], Fun, result obtained: result`)
-            //console.log (this.value [ keyToSet ]('datum').traits)
+            //  console.log (`graph.vertexSet/[n>1], Fun, result obtained: result`)
+            //  console.log (this.value [ keyToSet ]('datum').traits)
 
             if ( result ) {
             
@@ -933,16 +933,107 @@ class Graph extends Datum {
                     timeStampBoxedValue.time
                 ) ) 
             }
-                  //console.log (`graph.vertexSet/>1 : Script : BEFORE
-                  //scriptToSet.lambda(keySniffer), scriptToSet.lambda: `,
-                  //scriptToSet.lambda,'traits:', scriptToSet.traits)
-            
-            // Detect dependencies and plant pointers.
-            scriptToSet.lambda ( keySniffer )
 
-                  //console.log (`graph.vertexSet/>1 : Script : AFTER
-                  //value.lambda(keySniffer)`, scriptToSet.traits )
-                    //console.log ( scriptToSet.toString() )
+////////////////////////////////////////////////////////////////////////////////
+            
+            let sniffSourceKeys =  __lambda => {
+            
+                let keys = []
+
+                let sourceNthKeySniffer = new Proxy ( {}, {
+                    get : ( __targ, __prop, __rcvr ) => {
+
+                        keys[ keys.length - 1 ].push ( __prop )
+                        return sourceNthKeySniffer
+                    },
+                    set : ( __targ, __prop, __val, __rcvr ) => {
+
+                        keys.pop()
+                        return true 
+                    }
+                } )
+
+                let sourceFirstKeySniffer = new Proxy ( {}, {
+                    get : ( __targ, __prop, __rcvr ) => {
+
+                        let __fragmentGroup = [ __prop ]
+                        keys.push ( __fragmentGroup )
+                        return sourceNthKeySniffer
+                    },
+                    set : ( __targ, __prop, __val, __rcvr ) => {
+
+                        return true 
+                    }
+                } )
+
+                __lambda ( sourceFirstKeySniffer )
+                let     deepKeys = keys.map ( group => group.join ( '.' ) )
+                return  deepKeys 
+            }
+            console.error ( `source`, sniffSourceKeys ( scriptToSet.lambda )  )
+////////////////////////////////////////////////////////////////////////////////
+
+            let sniffSinkKeys =  __lambda => {
+            
+                let temp = []
+                let keys = []
+
+                let sinkNthKeySniffer = new Proxy ( {}, {
+                    get : ( __targ, __prop, __rcvr ) => {
+
+                        temp.push ( __prop )
+                        return sinkNthKeySniffer
+                    },
+                    set : ( __targ, __prop, __val, __rcvr ) => {
+
+                        temp.push ( __prop )
+                        keys.push ( temp )
+
+                        // Discarding temp here is unnecessary as temp will
+                        // be discarded in sinkFirstKeySniffer.
+
+                        return true 
+                    }
+                } )
+
+                let sinkFirstKeySniffer = new Proxy ( {}, {
+                    get : ( __targ, __prop, __rcvr ) => {
+
+                        temp = []
+
+                        // Any previous source deep-keys which did not
+                        // teminate in a sink key, are discarded.
+
+                        temp.push ( __prop )
+                        return sinkNthKeySniffer
+                    },
+                    set : ( __targ, __prop, __val, __rcvr ) => {
+
+                        temp = []
+
+                        // Any previous source deep-keys which did not
+                        // teminate in a sink key, are discarded.
+
+                        let __fragmentGroup = [ __prop ]
+                        keys.push ( __fragmentGroup )
+                        return true 
+                    }
+                } )
+
+                __lambda ( sinkFirstKeySniffer )
+                let     deepKeys = keys.map ( group => group.join ( '.' ) )
+                return  deepKeys 
+            }
+            console.error ( `sink`, sniffSinkKeys ( scriptToSet.lambda )  )
+////////////////////////////////////////////////////////////////////////////////
+            // Detect sinks and sources, and plant pointers.
+
+            scriptToSet.lambda ( keySniffer )
+////////////////////////////////////////////////////////////////////////////////
+
+            //  console.log (`graph.vertexSet/>1 : Script : AFTER
+            //      value.lambda(keySniffer)`, scriptToSet.traits )
+            //  console.log ( scriptToSet.toString() )
 
             return result
         } 
@@ -1189,11 +1280,55 @@ class Graph extends Datum {
     //
     // If you're pulling data into your Fun, you'll trigger getters
     // on the other Datums-
-    'scopedScriptKeySnifferHandlerGet': scriptToSet => {
+    'setSourcePointers': scriptToSet => {
         return ( ksTarg, ksProp, ksRcvr ) => {
           
-                //console.log (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
-                //: keySnifferHandler.get: `, ksProp)
+            console.error (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
+            : keySnifferHandler.get: `, ksProp)
+
+            // Deny creation if: SOURCE not yet exists.
+            // Note the asymmetry with ---HandlerSet
+
+            if ( ! ( ksProp in this.value ) ) {
+                throw Error (`graph.vertexSet/n tried to set a Script, but the
+                        Script referred to a source address which has not been
+                        set: (${ ksProp })`)
+            } 
+////////////////////////////////////////////////////////////////////////////////
+//  Compound key sniffer needs to be in this block:
+////////////////////////////////////////////////////////////////////////////////
+
+        //  Remember that __targ has the form and arity 
+        //
+        //      ( E => E.some.source.key.we.want.to.sniff )
+        //
+        //  0.  HERE begins control.
+        //          __targ may be called.
+        //
+        //  1.  __targ is given SNIFFER1 for 'E'. 
+        //          SNIFFER1.getHandler is called.
+        //          getHandler obtains 'some'.
+        //          getHandler returns SNIFFER2.
+        //
+        //  2.  __targ is given SNIFFER2 for 'E.some'
+        //          SNIFFER2.getHandler is called.
+        //          getHandler obtains 'some'.
+        //          getHandler returns SNIFFER3.
+        //  ...
+        //
+        //  8.  __targ is given SNIFFER8 for 'E...sniff'.
+        //          SNIFFER8.getHandler is never called.
+        //  
+        //  9.  __targ returns.
+        //
+        //  10. as ( __targ returned && ! SNIFFER8.getHandler/applied )
+        //          we now have sufficient information to close the loop.
+          
+          
+
+////////////////////////////////////////////////////////////////////////////////
+//  Compound key must be determined by this point.
+////////////////////////////////////////////////////////////////////////////////
 
 //  Configure (this) dependent to track dependencies:
 
@@ -1210,21 +1345,10 @@ class Graph extends Datum {
             scriptToSet.log.setsPointerIn
                 .note ( timeStampBoxedPointerIn )
             this.log.canon.note ( this.logFormat (
-                'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet',
+                'set_pointer_in_CAUSAL_setSourcePointers',
                 scriptToSet,
                 timeStampBoxedPointerIn.time
             ) )
-
-            // WARNING: does not require dependency keys to be in the graph
-            // before dependents are set FIXME
-            //
-            //  Configure dependencies to track (this) dependent:
-                   
-            if ( ! ( ksProp in this.value ) ) {
-                throw Error (`graph.vertexSet/n tried to set a Script, but the
-                        Script referred to a source address which has not been
-                        set: (${ ksProp })`)
-            } // Note the asymmetry with ---HandlerSet
 
 //  Configure dependencies to track (this) dependent:
 
@@ -1248,7 +1372,7 @@ class Graph extends Datum {
                 dependencyDatum.log.setsPointerOut
                     .note ( timeStampBoxedPointerOut )    
                 this.log.canon.note ( this.logFormat (
-                    'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerGet',
+                    'set_pointer_out_CAUSAL_setSourcePointers',
                     dependencyDatum,
                     timeStampBoxedPointerOut.time
                 ) )
@@ -1300,19 +1424,22 @@ class Graph extends Datum {
     //
     // If you're pushing data from your Fun, you'll trigger setters
     // on the other Datums-
-    'scopedScriptKeySnifferHandlerSet': scriptToSet => {
+    'setSinkPointers': scriptToSet => {
         return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
 
-                //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
-                //: keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal )
+            //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
+            //: keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal )
+
+            // Allow creation if: SOURCE not yet exists.
+            // Note the asymmetry with ---HandlerGet
+
+            if ( ! ( ksProp in this.value ) ) {
+                this.vertexSet ( ksProp, undefined ) 
+            } 
 
 //  Configure dependents to track (this) dependency:
 
 //  RECORD pointers IN, FROM script TO sink; pointer is located in SINK
-
-            if ( ! ( ksProp in this.value ) ) {
-                this.vertexSet ( ksProp, undefined ) 
-            } // Note the asymmetry with ---HandlerGet
 
             let dependentDatum = this.value[ ksProp ]('datum')
 
@@ -1331,7 +1458,7 @@ class Graph extends Datum {
             dependentDatum.log.setsPointerIn
                 .note ( timeStampBoxedPointerIn )
             this.log.canon.note ( this.logFormat (
-                'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerSet',
+                'set_pointer_in_CAUSAL_setSinkPointers',
                 dependentDatum,
                 timeStampBoxedPointerIn.time
             ) )
@@ -1354,7 +1481,7 @@ class Graph extends Datum {
                 = EventLog.timeStampBox ( pointerOut )
             scriptToSet.log.setsPointerOut.note ( timeStampBoxedPointerOut )    
             this.log.canon.note ( this.logFormat (
-                'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet',
+                'set_pointer_out_CAUSAL_setSinkPointers',
                 scriptToSet,
                 timeStampBoxedPointerOut.time
             ) )
