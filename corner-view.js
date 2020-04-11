@@ -197,7 +197,7 @@ function chart ( graphServer ) {
         nodeScriptFresh     = '#f90',
 
         nodeHit             = '#6d8',
-        nodeMiss            = '',
+        nodeMiss            = '#f00',
         nodeDeleted         = '#000',
 
         nodeRDefault        = 12,
@@ -330,6 +330,7 @@ function chart ( graphServer ) {
                     // FIXME Replace this with Array.prototype.reduce for neatness:
                     let unSoftDeletedDOMNodes = []
                     let hitDOMNodes = []
+                    let missedDOMNodes = []
                     let updatedDOMNodes = []
                     let softDeletedNodeGs
                     =   __oneNodeGs.filter( function( datum, index, elements ){
@@ -371,6 +372,13 @@ function chart ( graphServer ) {
                                     // need to add styling. Address. 
                             }
                             else 
+                            if ( datum.miss ) {
+                                missedDOMNodes.push ( this ) 
+                                return false
+                                    // Currently not in a deleted state;
+                                    // need to add styling. Address. 
+                            }
+                            else 
                             if ( datum.updated ) {
                                 updatedDOMNodes.push ( this ) 
                                 return false
@@ -399,6 +407,23 @@ function chart ( graphServer ) {
                                 .attr ( 'fill',  nodeHit )
                             .transition()
                                 .attr ( 'fill', nodeBGDefault ) 
+
+                    let missedNodeGs
+                    = d3.selectAll ( missedDOMNodes )
+
+                        let missedCircles 
+                        = missedNodeGs 
+                            .select ( 'circle' )
+                            .transition()
+                            .duration ( 300 ) 
+                                .attr ( 'fill',  nodeMiss )
+                            .transition()
+                                .attr ( 'fill', nodeBGDefault ) 
+
+                        let missedDivs
+                        = missedNodeGs
+                            .select ('div')
+                            .html ( labelHtml )
 
                     let softDeletedCircles
                     =   softDeletedNodeGs
