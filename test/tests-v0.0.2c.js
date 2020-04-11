@@ -234,6 +234,7 @@ new Exam.Exam ( {
                                     "n":2}}}}
     ] )
 },
+//*/
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -256,6 +257,7 @@ new Exam.Exam ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;'
     } )
 },
+/*
 {   test : `Computed properties; dependency getter / puller - also check pointers on dependents and dependencies.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -680,7 +682,6 @@ stale flag?`,
     },
     want : ''
 },
-//*/
 {   test : `Deep keys in Sinks and Sources`,
     code : function () {
 
@@ -705,7 +706,6 @@ stale flag?`,
     },
     //want : 'legible'
 },
-/*/
 {   test : `D3 graph visualiser`,
     code : function () {
 
@@ -779,7 +779,6 @@ stale flag?`,
 },
 {   warning : ` viewer has no mechanised tests :(.`
 },
-/*/
 {   test : 'Pointer logging.',
     code : function () {
     

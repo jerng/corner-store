@@ -63,7 +63,7 @@ class AsyncDispatcher extends EventLog {
             // .push() to add on the right
             // .shift() to remove on the left
 
-//console.error (`WIP here - get reactive Funs running.`)
+//console.error (`WIP here - get reactive Scripts running.`)
 
             // Task class?
         this.tasks = { } 
@@ -161,7 +161,7 @@ class Datum {
             },
 
             // This is used both by Datum and its subclass Fun. 
-            // In Fun, it is used to store the return value of Funs.
+            // In Fun, it is used to store the return value of Scripts.
             value   : {
                 configurable: true,
                 enumerable  : false,
@@ -562,29 +562,6 @@ class Graph extends Datum {
                                           get : this.handlers.datumHandlerGet } )        
         } )
 
-//      // Here we've overriding Datum.log
-//      Object.defineProperty ( this, 'log', {
-//          configurable: true,
-//          enumerable  : false,
-//          value       : new AsyncDispatcher, 
-//              //  EventLog.actuallyNote/1 stores [ performance.now(), value ],
-//              //  so what should we pass as (value) ? Discussion:
-//              //
-//              //  [
-//              //      delete: [ 'd', Datum ] 
-//              //          ... Datum's own log should contain history of values
-//              //
-//              //      set:    [ 's', Datum ]
-//              //          ... Datum's own log should contain history of values
-//              //
-//              //      get:    [ 'g', (gotten value), Datum ]
-//              //          ... Datum's own log should contain history of values
-//              //
-//              //
-//              //  ]
-
-//          writable    : true
-//      } )
 
         /*
         if ( ! ( node instanceof Serl.Node ) ) {
@@ -789,7 +766,8 @@ class Graph extends Datum {
 
     //  Deletes all child vertices.
     //  Prune is to Sprout, what Delete is to Update.
-    vertexPrune ( key ) {
+    vertexPrune ( key ) 
+    {
 
         for ( const loopKey in this.value ) {
 
@@ -801,7 +779,8 @@ class Graph extends Datum {
         return true
     }
 
-    vertexSet ( ... args ) {
+    vertexSet ( ... args ) 
+    {
 
         //console.log(`graph.vertexSet/n START`)
 
@@ -883,19 +862,6 @@ class Graph extends Datum {
                             valueToSet, 
                             Object.getOwnPropertyDescriptors ( datumToSet ) )
     
-            let keySniffer = new Proxy ( {}, {
-
-                get :   scriptToSet.traits.hasSources
-                        ? this.handlers
-                            .setSourcePointers ( scriptToSet )
-                        : undefined,
-
-                set : scriptToSet.traits.hasSinks
-                        ? this.handlers
-                            .setSinkPointers ( scriptToSet )
-                        : undefined
-            } )
-
             scriptToSet.stale = true
                 // Script will not run until the next get (no gets here)
                 //
@@ -935,100 +901,22 @@ class Graph extends Datum {
             }
 
 ////////////////////////////////////////////////////////////////////////////////
-            
-            let sniffSourceKeys =  __lambda => {
-            
-                let keys = []
-
-                let sourceNthKeySniffer = new Proxy ( {}, {
-                    get : ( __targ, __prop, __rcvr ) => {
-
-                        keys[ keys.length - 1 ].push ( __prop )
-                        return sourceNthKeySniffer
-                    },
-                    set : ( __targ, __prop, __val, __rcvr ) => {
-
-                        keys.pop()
-                        return true 
-                    }
-                } )
-
-                let sourceFirstKeySniffer = new Proxy ( {}, {
-                    get : ( __targ, __prop, __rcvr ) => {
-
-                        let __fragmentGroup = [ __prop ]
-                        keys.push ( __fragmentGroup )
-                        return sourceNthKeySniffer
-                    },
-                    set : ( __targ, __prop, __val, __rcvr ) => {
-
-                        return true 
-                    }
-                } )
-
-                __lambda ( sourceFirstKeySniffer )
-                let     deepKeys = keys.map ( group => group.join ( '.' ) )
-                return  deepKeys 
-            }
-            console.error ( `source`, sniffSourceKeys ( scriptToSet.lambda )  )
-////////////////////////////////////////////////////////////////////////////////
-
-            let sniffSinkKeys =  __lambda => {
-            
-                let temp = []
-                let keys = []
-
-                let sinkNthKeySniffer = new Proxy ( {}, {
-                    get : ( __targ, __prop, __rcvr ) => {
-
-                        temp.push ( __prop )
-                        return sinkNthKeySniffer
-                    },
-                    set : ( __targ, __prop, __val, __rcvr ) => {
-
-                        temp.push ( __prop )
-                        keys.push ( temp )
-
-                        // Discarding temp here is unnecessary as temp will
-                        // be discarded in sinkFirstKeySniffer.
-
-                        return true 
-                    }
-                } )
-
-                let sinkFirstKeySniffer = new Proxy ( {}, {
-                    get : ( __targ, __prop, __rcvr ) => {
-
-                        temp = []
-
-                        // Any previous source deep-keys which did not
-                        // teminate in a sink key, are discarded.
-
-                        temp.push ( __prop )
-                        return sinkNthKeySniffer
-                    },
-                    set : ( __targ, __prop, __val, __rcvr ) => {
-
-                        temp = []
-
-                        // Any previous source deep-keys which did not
-                        // teminate in a sink key, are discarded.
-
-                        let __fragmentGroup = [ __prop ]
-                        keys.push ( __fragmentGroup )
-                        return true 
-                    }
-                } )
-
-                __lambda ( sinkFirstKeySniffer )
-                let     deepKeys = keys.map ( group => group.join ( '.' ) )
-                return  deepKeys 
-            }
-            console.error ( `sink`, sniffSinkKeys ( scriptToSet.lambda )  )
-////////////////////////////////////////////////////////////////////////////////
             // Detect sinks and sources, and plant pointers.
+            
+            let sourceKeys  =   scriptToSet.traits.hasSources
+                                ? this.handlers.sniffSourceKeys ( scriptToSet.lambda )
+                                : []
+            let sinkKeys    =   scriptToSet.traits.hasSinks
+                                ? this.handlers.sniffSinkKeys   ( scriptToSet.lambda )
+                                : []
+                                
+            sourceKeys.forEach ( key => {
+                this.handlers.setSourcePointer ( scriptToSet, key )
+            } )
+            sinkKeys.forEach ( key => {
+                this.handlers.setSinkPointer   ( scriptToSet, key )
+            } )
 
-            scriptToSet.lambda ( keySniffer )
 ////////////////////////////////////////////////////////////////////////////////
 
             //  console.log (`graph.vertexSet/>1 : Script : AFTER
@@ -1085,7 +973,8 @@ class Graph extends Datum {
   
     //  Updates all child vertices.
     //  Prune is to Sprout, what Delete is to Update.
-    vertexSprout ( key, value ) {
+    vertexSprout ( key, value ) 
+    {
 
         for ( const subKey in value ) {
 
@@ -1098,246 +987,209 @@ class Graph extends Datum {
     }
 
     handlers () { return {
-    'datumHandlerDeleteProperty': ( targ, prop ) => {
-        //  (targ) is a (datum instance).proxytarget.
-        //
-        //  because (datum instance).proxytarget.datum refers to the
-        //  instance's (this), therefore, (targ.datum) refers to the underlying
-        //  instance.
-        //
-        //  because this is an aef in a method on graph, (this) here refers to
-        //  the instance of graph.
-      
-        return this.vertexDelete ( prop )    
-    },
-    'datumHandlerGet':  ( targ, prop, rcvr ) => {
-        //  (targ) is a (datum instance).proxytarget.
-        //
-        //  because (datum instance).proxytarget.datum refers to the
-        //  instance's (this), therefore, (targ.datum) refers to the underlying
-        //  instance.
-        //
-        //  because this is an aef in a method on graph, (this) here refers to
-        //  the instance of graph.
-      
-
-        //console.log (`datumHandler.get : graph.value['${prop}'].`)
-        let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-
-        //console.log ( compoundKey )
-        //console.log ( graph.value )
-        return this.vertexGet ( compoundKey )
-    },
-    'datumHandlerSet' : ( targ, prop, val, rcvr) => {
-        //  (targ) is a (datum instance).proxytarget.
-        //
-        //  because (datum instance).proxytarget.datum refers to the
-        //  instance's (this), therefore, (targ.datum) refers to the underlying
-        //  instance.
-        //
-        //  because this is an aef in a method on graph, (this) here refers to
-        //  the instance of graph.
-      
-        //console.log ( `datumHandler.set : Try to set graph.value['${prop}'] to (${val}).` ) 
-
-        let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
-            // performance optimisation opportunity? resplit datumHandler and
-            // graphHandler
-
-        //console.log ( compoundKey,  this.value )
-        return  this.vertexSet ( compoundKey, val )
-    },
-    'datumHandlerApply' : ( targ, thisArg, args ) => { 
-        //  (targ) is a (datum instance).proxytarget.
-        //
-        //  because (datum instance).proxytarget.datum refers to the
-        //  instance's (this), therefore, (targ.datum) refers to the underlying
-        //  instance.
-        //
-        //  because this is an aef in a method on graph, (this) here refers to
-        //  the instance of graph.
-      
-        //console.log( `datumHandlerApply`, args, targ.key, targ)           
-                 
-        switch ( args.length ) {
-
-            case 0:
-
-                //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
-                //    thisArg, args) `, targ().key,
-                //    targ().value, thisArg, args )
-
-                    //console.log (datum instanceof Graph)
-                    //console.log(  datum.value )
-
-                    //console.error (`datum.value; algo not being checked; refer to vset and vget for done code`)
-                
-
-                //  this.recoverEnumerableProperties recursively calls
-                //  datum() (this block of code)
-
-                return typeof targ.datum.value == 'object'
-                    ? this.recoverEnumerableProperties ( targ.datum )
-                    : this.vertexGetTyped ( targ.datum ) 
-
-            case 1:
-
-                //console.log (`graph.datumHandler.apply/1 : `)
-
-                switch (args[0]) {
-
-                    case 'unproxy':
-                        return targ 
-
-                    case 'gopds' :
-                        return Object.getOwnPropertyDescriptors ( targ.datum )
-                    
-                    case 'datum':
-                        return targ.datum 
-
-                    default:
-                        throw Error (`graph.datumHandleApply/1 : the argument was
-                        not understood`)
-                }
-
-            default:
-                throw Error (`graph.datumHandlerApply/n, where arity-n has no defined branch`)
-        }
-    },
-    'graphHandlerApply': ( targ, thisArg, args ) => { 
-        //  (targ) is a (Graph instance).proxyTarget, which means it is also a
-        //  (Datum instance).proxyTarget.
-        //
-        //  Because (Datum/Graph instance).proxyTarget.datum refers to the
-        //  instance's (this), therefore, (targ.datum) refers to the underlying
-        //  instance.
-        //
-        //  Because this is an AEF in a method on Graph, (this) here refers to
-        //  the instance of Graph.
-
-
-
-        //console.log(`graphHandlerApply`,args, targ.key, targ)           
-
-        switch ( args.length ) {
-
-            case 0:
-
-                    //console.log (datum instanceof Graph)
-                    //console.log( datum.value )
-
-                return typeof targ.datum.value == 'object'
-                    ? this.recoverEnumerableProperties ( {} )
-                    : this.vertexGetTyped ( datum ) 
-
-            case 1:
-
-                switch ( args[0] ) {
-
-                    /*
-                    case 'node' :
-                        // Serl Node, TODO
-                        break
-                    */
-
-                    case 'unproxy':
-                        return targ 
-
-                    case 'gopds' :
-                        return Object.getOwnPropertyDescriptors ( targ.graph )
-                    
-                    case 'datum':
-                        return targ.datum 
-
-                    // just an ALIAS 
-                    case 'graph' :
-                        return targ.graph 
-                    
-                    // DIFFERENT FROM Datum 
-                    case 'vertices' :
-                        return targ.graph.value 
-                    
-                    // DIFFERENT FROM Datum 
-                    case 'store' :
-                        return targ.graph.proxy 
-                    
-                    default:
-                        throw Error (`graph.graphHandlerApply/1 called;
-                        the argument was not understood`)
-                }    
-            
-            default:
-                throw Error (`graph.graphHandlerApply/n called, where no
-                branch is defined for arity-n`)
-        }
-    
-    },
-
-    // vertexSet is using a keysniffer to get the keys of functions called in
-    // Funs, when the Script is set to the graph.
-    //
-    // If you're pulling data into your Fun, you'll trigger getters
-    // on the other Datums-
-    'setSourcePointers': scriptToSet => {
-        return ( ksTarg, ksProp, ksRcvr ) => {
+        'datumHandlerDeleteProperty': ( targ, prop ) => 
+        {
+            //  (targ) is a (datum instance).proxytarget.
+            //
+            //  because (datum instance).proxytarget.datum refers to the
+            //  instance's (this), therefore, (targ.datum) refers to the underlying
+            //  instance.
+            //
+            //  because this is an aef in a method on graph, (this) here refers to
+            //  the instance of graph.
           
-            console.error (`graph.scopedFunKeySnifferHandlerGet/[n>1] : Fun
-            : keySnifferHandler.get: `, ksProp)
+            return this.vertexDelete ( prop )    
+        },
+        'datumHandlerGet':  ( targ, prop, rcvr ) => 
+        {
+            //  (targ) is a (datum instance).proxytarget.
+            //
+            //  because (datum instance).proxytarget.datum refers to the
+            //  instance's (this), therefore, (targ.datum) refers to the underlying
+            //  instance.
+            //
+            //  because this is an aef in a method on graph, (this) here refers to
+            //  the instance of graph.
+          
+
+            //console.log (`datumHandler.get : graph.value['${prop}'].`)
+            let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
+                // performance optimisation opportunity? resplit datumHandler and
+                // graphHandler
+
+            //console.log ( compoundKey )
+            //console.log ( graph.value )
+            return this.vertexGet ( compoundKey )
+        },
+        'datumHandlerSet' : ( targ, prop, val, rcvr) => 
+        {
+            //  (targ) is a (datum instance).proxytarget.
+            //
+            //  because (datum instance).proxytarget.datum refers to the
+            //  instance's (this), therefore, (targ.datum) refers to the underlying
+            //  instance.
+            //
+            //  because this is an aef in a method on graph, (this) here refers to
+            //  the instance of graph.
+          
+            //console.log ( `datumHandler.set : Try to set graph.value['${prop}'] to (${val}).` ) 
+
+            let compoundKey = ( targ.datum.key ? targ.datum.key + '.' : '' ) + prop
+                // performance optimisation opportunity? resplit datumHandler and
+                // graphHandler
+
+            //console.log ( compoundKey,  this.value )
+            return  this.vertexSet ( compoundKey, val )
+        },
+        'datumHandlerApply' : ( targ, thisArg, args ) => 
+        { 
+            //  (targ) is a (datum instance).proxytarget.
+            //
+            //  because (datum instance).proxytarget.datum refers to the
+            //  instance's (this), therefore, (targ.datum) refers to the underlying
+            //  instance.
+            //
+            //  because this is an aef in a method on graph, (this) here refers to
+            //  the instance of graph.
+          
+            //console.log( `datumHandlerApply`, args, targ.key, targ)           
+                     
+            switch ( args.length ) {
+
+                case 0:
+
+                    //console.log (`graph.datumHandler.apply/0 : (DATUMKEY, DATUMVALUE,
+                    //    thisArg, args) `, targ().key,
+                    //    targ().value, thisArg, args )
+
+                        //console.log (datum instanceof Graph)
+                        //console.log(  datum.value )
+
+                        //console.error (`datum.value; algo not being checked; refer to vset and vget for done code`)
+                    
+
+                    //  this.recoverEnumerableProperties recursively calls
+                    //  datum() (this block of code)
+
+                    return typeof targ.datum.value == 'object'
+                        ? this.recoverEnumerableProperties ( targ.datum )
+                        : this.vertexGetTyped ( targ.datum ) 
+
+                case 1:
+
+                    //console.log (`graph.datumHandler.apply/1 : `)
+
+                    switch (args[0]) {
+
+                        case 'unproxy':
+                            return targ 
+
+                        case 'gopds' :
+                            return Object.getOwnPropertyDescriptors ( targ.datum )
+                        
+                        case 'datum':
+                            return targ.datum 
+
+                        default:
+                            throw Error (`graph.datumHandleApply/1 : the argument was
+                            not understood`)
+                    }
+
+                default:
+                    throw Error (`graph.datumHandlerApply/n, where arity-n has no defined branch`)
+            }
+        },
+        'graphHandlerApply': ( targ, thisArg, args ) => 
+        { 
+            //  (targ) is a (Graph instance).proxyTarget, which means it is also a
+            //  (Datum instance).proxyTarget.
+            //
+            //  Because (Datum/Graph instance).proxyTarget.datum refers to the
+            //  instance's (this), therefore, (targ.datum) refers to the underlying
+            //  instance.
+            //
+            //  Because this is an AEF in a method on Graph, (this) here refers to
+            //  the instance of Graph.
+
+
+
+            //console.log(`graphHandlerApply`,args, targ.key, targ)           
+
+            switch ( args.length ) {
+
+                case 0:
+
+                        //console.log (datum instanceof Graph)
+                        //console.log( datum.value )
+
+                    return typeof targ.datum.value == 'object'
+                        ? this.recoverEnumerableProperties ( {} )
+                        : this.vertexGetTyped ( datum ) 
+
+                case 1:
+
+                    switch ( args[0] ) {
+
+                      //case 'node' :
+                      //    // Serl Node, TODO
+                      //    break
+
+                        case 'unproxy':
+                            return targ 
+
+                        case 'gopds' :
+                            return Object.getOwnPropertyDescriptors ( targ.graph )
+                        
+                        case 'datum':
+                            return targ.datum 
+
+                        // just an ALIAS 
+                        case 'graph' :
+                            return targ.graph 
+                        
+                        // DIFFERENT FROM Datum 
+                        case 'vertices' :
+                            return targ.graph.value 
+                        
+                        // DIFFERENT FROM Datum 
+                        case 'store' :
+                            return targ.graph.proxy 
+                        
+                        default:
+                            throw Error (`graph.graphHandlerApply/1 called;
+                            the argument was not understood`)
+                    }    
+                
+                default:
+                    throw Error (`graph.graphHandlerApply/n called, where no
+                    branch is defined for arity-n`)
+            }
+        
+        },
+        'setSourcePointer': ( scriptToSet, sourceKey ) => 
+        {
+            // vertexSet is using a keysniffer to get the keys of functions called in
+            // Scripts, when the Script is set to the graph.
+            //
+            // If you're pulling data into your Fun, you'll trigger getters
+            // on the other Datums-
 
             // Deny creation if: SOURCE not yet exists.
             // Note the asymmetry with ---HandlerSet
 
-            if ( ! ( ksProp in this.value ) ) {
+            if ( ! ( sourceKey in this.value ) ) {
                 throw Error (`graph.vertexSet/n tried to set a Script, but the
                         Script referred to a source address which has not been
-                        set: (${ ksProp })`)
-            } 
-////////////////////////////////////////////////////////////////////////////////
-//  Compound key sniffer needs to be in this block:
-////////////////////////////////////////////////////////////////////////////////
+                        set: (${ sourceKey })`)
+            }
 
-        //  Remember that __targ has the form and arity 
-        //
-        //      ( E => E.some.source.key.we.want.to.sniff )
-        //
-        //  0.  HERE begins control.
-        //          __targ may be called.
-        //
-        //  1.  __targ is given SNIFFER1 for 'E'. 
-        //          SNIFFER1.getHandler is called.
-        //          getHandler obtains 'some'.
-        //          getHandler returns SNIFFER2.
-        //
-        //  2.  __targ is given SNIFFER2 for 'E.some'
-        //          SNIFFER2.getHandler is called.
-        //          getHandler obtains 'some'.
-        //          getHandler returns SNIFFER3.
-        //  ...
-        //
-        //  8.  __targ is given SNIFFER8 for 'E...sniff'.
-        //          SNIFFER8.getHandler is never called.
-        //  
-        //  9.  __targ returns.
-        //
-        //  10. as ( __targ returned && ! SNIFFER8.getHandler/applied )
-        //          we now have sufficient information to close the loop.
-          
-          
-
-////////////////////////////////////////////////////////////////////////////////
-//  Compound key must be determined by this point.
-////////////////////////////////////////////////////////////////////////////////
-
-//  Configure (this) dependent to track dependencies:
-
-//  RECORD POINTERS IN
+            //  Configure (this) dependent to track dependencies:
+            //  RECORD POINTERS IN
 
             if ( ! ( 'causal' in scriptToSet.pointers.in ) ) {
                 scriptToSet.pointers.in.causal = []
             }
-            let pointerIn = new PointerIn ( ksProp)
+            let pointerIn = new PointerIn ( sourceKey)
             scriptToSet.pointers.in.causal.push ( pointerIn )
 
             // LOGGING
@@ -1350,98 +1202,87 @@ class Graph extends Datum {
                 timeStampBoxedPointerIn.time
             ) )
 
-//  Configure dependencies to track (this) dependent:
+            //  Configure dependencies to track (this) dependent:
 
-            let dependencyDatum = this.value[ ksProp ]('datum')
+            let dependencyDatum = this.value[ sourceKey ]('datum')
 
-//  RECORD POINTERS OUT 
+            //  RECORD POINTERS OUT 
 
-                if ( ! ( 'causal' in dependencyDatum.pointers.out ) ) {
-                    dependencyDatum.pointers.out.causal = []
-                }
+            if ( ! ( 'causal' in dependencyDatum.pointers.out ) ) {
+                dependencyDatum.pointers.out.causal = []
+            }
 
-                    //console.log (  scriptToSet.key )
+            //console.log (  scriptToSet.key )
 
-                let pointerOut = new PointerOut ( scriptToSet.key )
-                dependencyDatum
-                    .pointers.out.causal.push ( pointerOut )
+            let pointerOut = new PointerOut ( scriptToSet.key )
+            dependencyDatum
+                .pointers.out.causal.push ( pointerOut )
 
-                // LOGGING
-                let timeStampBoxedPointerOut 
-                    = EventLog.timeStampBox ( pointerOut )
-                dependencyDatum.log.setsPointerOut
-                    .note ( timeStampBoxedPointerOut )    
-                this.log.canon.note ( this.logFormat (
-                    'set_pointer_out_CAUSAL_setSourcePointers',
-                    dependencyDatum,
-                    timeStampBoxedPointerOut.time
-                ) )
+            // LOGGING
+            let timeStampBoxedPointerOut 
+                = EventLog.timeStampBox ( pointerOut )
+            dependencyDatum.log.setsPointerOut
+                .note ( timeStampBoxedPointerOut )    
+            this.log.canon.note ( this.logFormat (
+                'set_pointer_out_CAUSAL_setSourcePointers',
+                dependencyDatum,
+                timeStampBoxedPointerOut.time
+            ) )
 
-                //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
+            //dependencyDatum.log.sets.tasks  [   'reactiveDependentHandler:' 
 
-                // When the dependency's value is set, the
-                // dependency's EventLog->AsyncDispatcher should invalidate the
-                // cache of the (this) dependent.
+            // When the dependency's value is set, the
+            // dependency's EventLog->AsyncDispatcher should invalidate the
+            // cache of the (this) dependent.
+            
+
+            // .cached and .reactive: FIXME - should use pointers instead?
+            if ( scriptToSet.traits.cached ) {
+
+                let cachedDependentHandlerKey 
+                    = 'cachedDependentHandler:' + scriptToSet.key
+
+                dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
+                =   args => new Promise ( ( fulfill, reject ) => {
+                        scriptToSet.stale = true
+                        fulfill( cachedDependentHandlerKey )
+                    } )
+            }
+            if ( scriptToSet.traits.reactive ) {
                 
+                let reactiveDependentHandlerKey 
+                    = 'reactiveDependentHandler:' + scriptToSet.key
 
-                // .cached and .reactive: FIXME - should use pointers instead?
-                if ( scriptToSet.traits.cached ) {
+                dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
+                =   args => new Promise ( ( fulfill, reject ) => {
+                        
+                        //console.log( `scopedFunKeySnifferHandlerGet` )
+                        
+                        this.runScriptAndLog ( scriptToSet )
+                        fulfill( reactiveDependentHandlerKey )
+                    } )
+            }
+        },
+        
+        // vertexSet is using a keysniffer to get the keys of functions called in
+        // Scripts, when the Script is set to the graph.
+        //
+        // If you're pushing data from your Fun, you'll trigger setters
+        // on the other Datums-
+        'setSinkPointer': ( scriptToSet, sinkKey ) => 
+        {
 
-                    let cachedDependentHandlerKey 
-                        = 'cachedDependentHandler:' + scriptToSet.key
-
-                    dependencyDatum.log.sets.tasks [ cachedDependentHandlerKey ]
-                    =   args => new Promise ( ( fulfill, reject ) => {
-                            scriptToSet.stale = true
-                            fulfill( cachedDependentHandlerKey )
-                        } )
-                }
-                if ( scriptToSet.traits.reactive ) {
-                    
-                    let reactiveDependentHandlerKey 
-                        = 'reactiveDependentHandler:' + scriptToSet.key
-
-                    dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
-                    =   args => new Promise ( ( fulfill, reject ) => {
-                            
-                            //console.log( `scopedFunKeySnifferHandlerGet` )
-                            
-                            this.runScriptAndLog ( scriptToSet )
-                            fulfill( reactiveDependentHandlerKey )
-                        } )
-
-                }
-
-//console.error (`WIP here -  insert tasks to dependencies.`)
-
-                    //console.log (`graph.scopedFunKeySnifferHandlerGet/>1 : Script : keySnifferHandler.get: ended`)
-
-        }
-    },
-
-    // vertexSet is using a keysniffer to get the keys of functions called in
-    // Funs, when the Script is set to the graph.
-    //
-    // If you're pushing data from your Fun, you'll trigger setters
-    // on the other Datums-
-    'setSinkPointers': scriptToSet => {
-        return ( ksTarg, ksProp, ksVal, ksRcvr ) => {
-
-            //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
-            //: keySnifferHandler.set, ksProp:`, ksProp, 'ksVal:', ksVal )
-
-            // Allow creation if: SOURCE not yet exists.
+            // Allow creation if: SOURCE not yet exists FIXME.
             // Note the asymmetry with ---HandlerGet
 
-            if ( ! ( ksProp in this.value ) ) {
-                this.vertexSet ( ksProp, undefined ) 
+            if ( ! ( sinkKey in this.value ) ) {
+                this.vertexSet ( sinkKey, undefined ) 
             } 
 
-//  Configure dependents to track (this) dependency:
+            //  Configure dependents to track (this) dependency:
+            //  RECORD pointers IN, FROM script TO sink; pointer is located in SINK
 
-//  RECORD pointers IN, FROM script TO sink; pointer is located in SINK
-
-            let dependentDatum = this.value[ ksProp ]('datum')
+            let dependentDatum = this.value[ sinkKey ]('datum')
 
             if ( ! ( 'causal' in dependentDatum.pointers.in ) ) {
                 dependentDatum.pointers.in.causal = []
@@ -1451,7 +1292,7 @@ class Graph extends Datum {
                 .pointers.in.causal.push ( pointerIn )
 
                 //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
-                //: keySnifferHandler.set: PointerIn-s inserted at:`, ksProp )
+                //: keySnifferHandler.set: PointerIn-s inserted at:`, sinkKey )
             
             // LOGGING
             let timeStampBoxedPointerIn = EventLog.timeStampBox ( pointerIn )
@@ -1463,14 +1304,13 @@ class Graph extends Datum {
                 timeStampBoxedPointerIn.time
             ) )
 
-//  Configure (this) dependency to track dependents:
-
-//  RECORD pointers OUT, FROM script TO sink; pointer is located in SCRIPT
+            //  Configure (this) dependency to track dependents:
+            //  RECORD pointers OUT, FROM script TO sink; pointer is located in SCRIPT
 
             if ( ! ( 'causal' in scriptToSet.pointers.out ) ) {
                 scriptToSet.pointers.out.causal = []
             }
-            let pointerOut = new PointerOut ( ksProp )
+            let pointerOut = new PointerOut ( sinkKey )
             scriptToSet.pointers.out.causal.push ( pointerOut )
 
                 //console.log (`graph.scopedFunKeySnifferHandlerSet/[n>1] : Fun
@@ -1487,15 +1327,142 @@ class Graph extends Datum {
             ) )
 
             return true // FIXME: pointers unchecked?
-        }
-    }
+        },
 
-    //  keys : values 
-    //                  end here
+        sniffSourceKeys :  __lambda => 
+        {
+            
+            let __keys = []
+
+            let __sourceNthKeySniffer = new Proxy ( {}, {
+                get : ( __targ, __prop, __rcvr ) => {
+
+                    // Step 2, Branch A
+                    // (We found a depth>1 key, but we do not know if its
+                    // subkeys will be read, or not.)
+
+                    __keys[ __keys.length - 1 ].push ( __prop )
+                    return __sourceNthKeySniffer
+                
+                    // Repeat Step 2. until there are no more keys.
+                },
+                set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    // Step 2, Branch B
+                    // We found a sink, so the entire key-chain does not
+                    // terminate in a Datum which is a source. Discard it.
+
+                    __keys.pop()
+                    return true 
+                }
+            } )
+
+            let __sourceFirstKeySniffer = new Proxy ( {}, {
+                get : ( __targ, __prop, __rcvr ) => {
+                    
+                    //  Step 1, Branch A
+                    //  (We found a depth=1 key, but we do not know if its
+                    //  subkeys will be read, or not.)
+
+                    let __keyGroup = [ __prop ]
+                    __keys.push ( __keyGroup )
+                    return __sourceNthKeySniffer
+                    
+                    //  Proceed to Step 2.
+                },
+                set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    //  Step 1, Branch B
+                    //  (We don't care about sinks.)
+
+                    return true 
+                }
+            } )
+            
+            // Step 0. Initiate algorithm.
+            __lambda ( __sourceFirstKeySniffer )
+
+            // Step 3. Reduce key chains to deep keeps
+            let     __deepKeys = __keys.map ( group => group.join ( '.' ) )
+            return  __deepKeys 
+        },
+
+        sniffSinkKeys :  __lambda => 
+        {
+            
+//*/
+            let __temp = []
+            let __keys = []
+
+            let __sinkNthKeySniffer = new Proxy ( {}, {
+                get : ( __targ, __prop, __rcvr ) => {
+
+                    //  Step 2, Branch A
+                    //  (We found a depth>1 key, but we do not know if its
+                    //  key-chain will terminate in a sink, or not.
+
+                    __temp.push ( __prop )
+                    return __sinkNthKeySniffer
+                },
+                set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    // Step 2, Branch B
+                    // We found a sink, terminating the entire key-chain.
+
+                    __temp.push ( __prop )
+                    __keys.push ( __temp )
+                    //  Discarding temp here is unnecessary as temp will
+                    //  be discarded in sinkFirstKeySniffer.
+
+                    return true 
+                }
+            } )
+
+//*/
+            let __sinkFirstKeySniffer = new Proxy ( {}, {
+                get : ( __targ, __prop, __rcvr ) => {
+
+                    //  Step 1, Branch A
+                    //  Any previous source deep-keys which did not
+                    //  teminate in a sink key, are discarded.
+
+                    __temp = []
+
+                    //  (We found a depth=1 key, but we do not know if its
+                    //  key-chain will terminate in a sink, or not.
+
+                    __temp.push ( __prop )
+                    return __sinkNthKeySniffer
+                },
+                set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    //  Step 1, Branch B, task 1
+                    //  Any previous source deep-keys which did not
+                    //  teminate in a sink key, are discarded.
+                    
+                    __temp = []
+                    
+                    //  Step 1, Branch B, task 2
+                    // (We found a depth=1 key.)
+
+                    let __keyGroup = [ __prop ]
+                    __keys.push ( __keyGroup )
+                    return true 
+                }
+            } )
+
+            // Step 0. Initiate algorithm.
+            __lambda ( __sinkFirstKeySniffer )
+
+            // Step 3. Reduce key chains to deep keeps
+            let     __deepKeys = __keys.map ( group => group.join ( '.' ) )
+            return  __deepKeys 
+
+            //console.error ( `sink`, sniffSinkKeys ( scriptToSet.lambda )  )
+        }
 
     }   } // graph.handlers()
-    
-    
+
     ///////////////////////////////////////////////////////////////////////////
     //  
     //  This is recursively called by datumHandlerApply.
@@ -1551,4 +1518,5 @@ class Graph extends Datum {
             return object
         }
     }
+//*/    
 }
