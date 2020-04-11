@@ -732,16 +732,17 @@ function chart ( graphServer ) {
 
             // Not all cases of the switch require all the following; separate
             // to two switches? FIXME
+            
+            // remove ephemeral signals.
+            __nodeData.forEach( e => { 
+                delete e.hit
+                delete e.miss
+                delete e.updated
+            } )
 
             let index = __nodeData.findIndex ( 
                 e => e.key == boxedValue.datum.key
             )
-
-            if ( ~index ) { // Found an index; remove ephemeral signals.
-                delete __nodeData[ index ].hit
-                delete __nodeData[ index ].miss
-                delete __nodeData[ index ].updated
-            }
 
             let nodeDatum = {
                 key     : boxedValue.datum.key,
@@ -751,6 +752,7 @@ function chart ( graphServer ) {
                     // field if .lambda no longer exists here.
                 stale   : boxedValue.datum.stale
             }
+
             let pushNodeButPreferAssign = ( __index, __nodeDatum) => {
                 if ( ~__index ) { // Found an index; replace element.
 
@@ -956,8 +958,6 @@ function chart ( graphServer ) {
                                     } ) 
 
             verbosity > 1 && console.groupEnd ( boxedValue.type, `async GraphViewer GRAPH.LOG.CANON.TASK` )
-
-            //new Promise ( (_F, _R) => console.error ( `test`, _F() ) )
 
             F ( 'd3 visualiser, updated' )
         } )

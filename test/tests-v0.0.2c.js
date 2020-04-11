@@ -20,7 +20,7 @@ new Exam.Exam ( {
           //    legible : true,
           //    verifiable : true
           //},
-          //unexpectedFun : false
+          //unexpectedScript : false
         }
     },
     concerns : [ 
@@ -309,8 +309,8 @@ new Exam.Exam ( {
     expectError: true
 },
 {   test : `Computed properties; dependent setter / pusher : 
-- pushed computation should not be written until the the Fun is run; 
-- the Fun is run when the Fun's Datum is read (gotten/get);`,
+- pushed computation should not be written until the the Script is run; 
+- the Script is run when the Fun's Datum is read (gotten/get);`,
     code : function () {
         let STORE = new Graph ( 'store' )
         STORE.source1 = 'theFIRSTpart;' 
@@ -346,8 +346,8 @@ new Exam.Exam ( {
     } )
 },
 {   test : `Computed properties; dependent setter / pusher : 
-- pushed computation should not be written until the the Fun is run; 
-- the Fun is run when the Fun's Datum is read (gotten/get); 
+- pushed computation should not be written until the the Script is run; 
+- the Script is run when the Fun's Datum is read (gotten/get); 
 - also check pointers on dependents and dependencies`, 
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -698,47 +698,54 @@ stale flag?`,
     let GRAPH       = S ( 'graph' )
     let VERTICES    = S ( 'vertices' )
   
-    CornerView.chart ( S ) 
+//    CornerView.chart ( S ) 
 
-    S.abacus = 1 
-    S.donkey = 2
+//    S.abacus = 1 
+    S.donkey = { parts: 'many' }
+
     S.blanket = new Script ( q => { 
-    q.abacus
-    q.donkey
-    q.changeAVeryLongKeyName = Math.random()
-    q.zack = Math.random()
-    return true 
-  } )  
+
+//          q.abacus
+//          q.donkey
+//          q.changeAVeryLongKeyName = Math.random()
+//          q.zack = Math.random()
+//          return true 
+
+        return q.donkey.parts
+
+    } )  
+
+    console.log ( S.blanket ) 
 
   setTimeout ( () => {
-       S.abacus
-        S.abacus = 3.142 
-        S.blanket
-        delete S.changeAVeryLongKeyName
-        S.d = {}
+//     S.abacus
+//      S.abacus = 3.142 
+//      S.blanket
+//      delete S.changeAVeryLongKeyName
+//      S.d = {}
+//      S.donkey
   }, 2000 )
   setTimeout ( () => {
-        delete S.abacus
-        S.e = null
-        S.abacus
-        S.donkey = 2
-        S.blanket
-  }, 4000 )
+//      delete S.abacus
+//      S.e = null
+//      S.blanket
+//      S.abacus
+//      S.donkey
+  }, 3000 )
   setTimeout ( () => {
-        S.abacus = 3            
-        S.blanket
-        delete S.donkey
-        S.f = 1
-        //console.log ( VERTICES.abacus('datum').value )
-  }, 6000 )
+//      S.blanket
+//      delete S.donkey
+//      S.f = 1
+//      //console.log ( VERTICES.abacus('datum').value )
+//      S.donkey
+//      S.abacus             
+  }, 4000 )
   setTimeout ( () => {
         //delete S.donkey
   }, 8000 )
 
     },
-    want : 'legible'
-},
-{   warning : `Chart: transition()s are not yet interruptable.`
+    //want : 'legible'
 },
 {   warning : `Corner: Scripts KeySniffers may not handle Sink and Source keys which are deep.`
 },
@@ -758,7 +765,7 @@ stale flag?`,
 {   warning : `Why are Datums reading on update?`
 },
 {   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
-invalidated, unless Fun runs immediately.`
+invalidated, unless Script runs immediately.`
 },
 {   warning : `Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
 },
@@ -797,7 +804,7 @@ initially known to the Datum?.`,
     reach its top' which is the graph.`,
 },
 {   warning: `MAYBE in the future: Graph is not a class.. rather graph behaviour
-is an Fun that you can load into a Datum... this sounds a bit lispy, and I am
+is an Script that you can load into a Datum... this sounds a bit lispy, and I am
 not sure if it is feasible.`
 },
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
@@ -809,21 +816,20 @@ not sure if it is feasible.`
 
 /* Testing conveniences for the browser:
 
-g = new Graph( 'store' )
+s = new Graph( 'store' )
+CornerView.chart ( s )
 
-//g.d = new Fun ( e => e.a + e.b )
+s.e = 1
+s.f = 2
+s.s = new Script ( e => e.e + e.f )
 
-g.e = 1
-g.f = 2
-g.g = new Fun ( e => e.e + e.f )
+s.h = {}
+s.h.i = 4
+s.h.j = 5
+s.h.k = new Script ( e => e.h.i + e.h.j )
 
-g.h = {}
-g.h.i = 4
-g.h.j = 5
-g.h.k = new Fun ( e => e.h.i + e.h.j )
-
-g( 'vertices' )
-
+s( 'vertices' )
+s('vertices').x('unproxy').datum.lambda
 */
 
 
