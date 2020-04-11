@@ -1,5 +1,7 @@
 export { chart }
 
+let p = thing => JSON.stringify ( thing, null, 4 )
+
 // D3 visualisation experiment:
 function chart ( graphServer ) {
 
@@ -46,47 +48,7 @@ function chart ( graphServer ) {
                             font-weight: 300;
                             font-size: 16px;`
         )
-        .call ( zoom ),
-
-    svg_defs
-    = body_svg
-        .append ('defs')
-            // lifted from 
-            // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
-        .html(  
-            `<marker    id="arrowInSink"    viewBox="0 0 10 10"
-                        refX="23"           refY="5"
-                        markerWidth="4"     markerHeight="4"
-                        fill="#f00"         stroke-width="3" 
-                        orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
-            <marker     id="arrowInSource"  viewBox="0 0 10 10"
-                        refX="-15"          refY="5"
-                        markerWidth="4"     markerHeight="4"
-                        fill="black"        stroke-width="3" 
-                        orient="auto">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
-            <marker     id="arrowInSinkDeleted"    
-                        viewBox="0 0 10 10"
-                        refX="23"           refY="5"
-                        markerWidth="1"     markerHeight="1"
-                        fill="#f00"         stroke-width="3" 
-                        orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
-            <marker     id="arrowInSourceDeleted"  
-                        viewBox="0 0 10 10"
-                        refX="-15"          refY="5"
-                        markerWidth="1"     markerHeight="1"
-                        fill="black"        stroke-width="3" 
-                        orient="auto">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
-
-            `
-        )
+        .call ( zoom )
 
     let
 
@@ -163,7 +125,6 @@ function chart ( graphServer ) {
     updateSimulationAndDOM = ( latest ) => 
     {
 
-                let p = thing => JSON.stringify ( thing, null, 4 )
 
         verbosity > 1 && console.group ( `UPDATE SIMULATION`  )
         verbosity > 2 && console.warn ( `^(begins)`, p ( latest ) )
@@ -232,8 +193,77 @@ function chart ( graphServer ) {
                     + d.value 
                     + '</b>',
 
-        pathStrokeDefault   = '#000',
-        pathStrokeDeleted   = '#f00'
+        pathStrokeWidthDefault      = 3,
+        pathStrokeWidthDeleted      = 12,
+        pathStrokeWidthTraversed    = 12,
+
+        pathStrokeDefault           = '#000',
+        pathStrokeTraversed         = nodeScriptFresh,
+        pathStrokeDeleted           = '#f00',
+
+        pathStrokeOpacityDefault    = 0.05,
+        pathStrokeOpacityTraversed  = 1,
+
+        pathMarkerStartDefault  = d => 
+                                    d.location == d.source.key
+                                    ? 'url(#arrowInSource)'
+                                    : null, 
+        pathMarkerEndDefault    = d => 
+                                    d.location == d.source.key
+                                    ? null 
+                                    : 'url(#arrowInSink)',
+        pathMarkerStartDeleted  = d => 
+                                    d.location == d.source.key
+                                    ? 'url(#arrowInSourceDeleted)'
+                                    : null,
+        pathMarkerEndDeleted    = d => 
+                                    d.location == d.source.key
+                                    ? null 
+                                    : 'url(#arrowInSinkDeleted)',
+                    //  Possible performance optimisation here.
+                    //  Store markers in __data__ instead of
+                    //  checking every time. FIXME
+
+        svg_defs
+        = body_svg
+            .append ('defs')
+                // lifted from 
+                // https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker
+            .html(  
+                `<marker    id="arrowInSink"    viewBox="0 0 10 10"
+                            refX="23"           refY="5"
+                            markerWidth="4"     markerHeight="4"
+                            fill="#f00"         stroke-width="3" 
+                            orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+                <marker     id="arrowInSource"  viewBox="0 0 10 10"
+                            refX="-15"          refY="5"
+                            markerWidth="4"     markerHeight="4"
+                            fill="black"        stroke-width="3" 
+                            orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+                <marker     id="arrowInSinkDeleted"    
+                            viewBox="0 0 10 10"
+                            refX="23"           refY="5"
+                            markerWidth="1"     markerHeight="1"
+                            fill="#f00"         stroke-width="3" 
+                            orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+                <marker     id="arrowInSourceDeleted"  
+                            viewBox="0 0 10 10"
+                            refX="-15"          refY="5"
+                            markerWidth="1"     markerHeight="1"
+                            fill="black"        stroke-width="3" 
+                            orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+
+                `
+            )
+/////////////////////////////////////////////////////////////////////////////////8888888888
 
         // Ensure that (element ontology) has a 1-1 mapping to (NODE Ontology)
 
@@ -516,33 +546,24 @@ function chart ( graphServer ) {
                     // group,manyNodesG[graph-viewer-role=node-groups], which
                     // isn't already mapped to a oneLinkGs element.
 
+                        // Programmer does not understand what is going on here.
+                        // FIXME
                     let oneLinkGs
                     = __manyLinksG_oneLinkGs 
                         .append ( 'g' )
-                        // Programmer does not understand what is going on here.
-                        // FIXME
                             .attr ( 'stroke', pathStrokeDefault ) 
-                            .attr ( 'stroke-opacity', '0.05' )
-                                // Child settings default to these parent
-                                // settings.
+                            .attr ( 'stroke-opacity', pathStrokeOpacityDefault )
+                                //  Descendant settings default to these 
+                                //  ancestor settings.
  
                     let path 
                     = oneLinkGs 
                         .append ( 'path' )
-
-                            .attr ( 'marker-start', d => 
-                                    d.location == d.source.key
-                                    ? 'url(#arrowInSource)'
-                                    : null 
-                                  )
-                            .attr ( 'marker-end', d => 
-                                    d.location == d.source.key
-                                    ? null 
-                                    : 'url(#arrowInSink)'
-                                  )
-                            .attr ( 'location', d => d.location )
-                            .attr ( 'source', d => d.source.key )
-                            .attr ( 'target', d => d.target.key )
+                            .attr ( 'marker-start', pathMarkerStartDefault )
+                            .attr ( 'marker-end', pathMarkerEndDefault )
+                            //.attr ( 'location', d => d.location )
+                            //.attr ( 'source', d => d.source.key )
+                            //.attr ( 'target', d => d.target.key )
 
                     return oneLinkGs 
                         // Programmer does not understand what is going on here.
@@ -577,6 +598,7 @@ function chart ( graphServer ) {
                         .selectAll ( 'path' )
 
                     // FIXME Replace this with Array.prototype.reduce for neatness:
+                    let traversedDOMPaths = [] 
                     let unSoftDeletedDOMPaths = []
                     let softDeletedPaths
                     =   paths.filter ( function( datum, index, elements ) 
@@ -599,6 +621,25 @@ function chart ( graphServer ) {
                                 }
                             }
                             else 
+                            if (    (   ( datum.location == datum.target.key ) 
+                                        && datum.target.lambda 
+                                        && datum.target.miss
+                                    )       //  N is a Script, pointer is in 
+                                            //  and points to N, and N had a 
+                                            //  cache-miss. 
+                                    || 
+                                    (   ( datum.location == datum.source.key )
+                                        && datum.source.lambda
+                                        && ( datum.source.hit || datum.source.miss )
+                                    )       //  N is a Script, pointer is in 
+                                            //  and points from N, and N had 
+                                            //  a cache-miss or cache-hit. 
+                               )
+                            {
+                                traversedDOMPaths.push ( this )
+                                return false 
+                            }
+                            else 
                             if (    elements[index]
                                     .parentNode
                                     .attributes
@@ -614,39 +655,61 @@ function chart ( graphServer ) {
                         } )
                     
                     softDeletedPaths
+                        .interrupt()
                         .attr ( 'stroke', pathStrokeDeleted )
-                        .attr ( 'stroke-width', 12 )
+                        .attr ( 'stroke-width', pathStrokeWidthDeleted )
                             // these now override parent settings
 
-                        .attr ( 'marker-start', d => 
-                                d.location == d.source.key
-                                ? 'url(#arrowInSourceDeleted)'
-                                : null 
-                              )
-                        .attr ( 'marker-end', d => 
-                                d.location == d.source.key
-                                ? null 
-                                : 'url(#arrowInSinkDeleted)'
-                              )
+                        .attr ( 'marker-start', pathMarkerStartDeleted )
+                        .attr ( 'marker-end', pathMarkerEndDeleted )
+                                //  Possible performance optimisation here.
+                                //  Store markers in __data__ instead of
+                                //  checking every time. FIXME
 
                     let unSoftDeletedPaths 
                     = d3.selectAll ( unSoftDeletedDOMPaths )
 
                     unSoftDeletedPaths
+                        .interrupt()
                         .attr ( 'stroke', null )
                         .attr ( 'stroke-width', null )
-                            // these will now default to parent's settings
+                            // these will now default to ancestor's settings
 
-                        .attr ( 'marker-start', d => 
-                                d.location == d.source.key
-                                ? 'url(#arrowInSource)'
-                                : null 
-                              )
-                        .attr ( 'marker-end', d => 
-                                d.location == d.source.key
-                                ? null 
-                                : 'url(#arrowInSink)'
-                              )
+                        .attr ( 'marker-start', pathMarkerStartDefault )
+                        .attr ( 'marker-end', pathMarkerEndDefault )
+                                //  Possible performance optimisation here.
+                                //  Store markers in __data__ instead of
+                                //  checking every time. FIXME
+
+                    let traversedPaths 
+                    = d3.selectAll ( traversedDOMPaths )
+
+                    traversedPaths
+                        .interrupt()
+                        .transition(0)
+                            .attr ( 'stroke', pathStrokeTraversed )
+                            .attr ( 'stroke-opacity', pathStrokeOpacityTraversed )
+                                // these now override parent settings
+
+                            .attr ( 'marker-start', null ) 
+                            .attr ( 'marker-end', null ) 
+
+                        .transition(0)
+                            .attr ( 'stroke', null )
+                            .attr ( 'stroke-opacity', null )
+                                // these will now default to ancestor's settings
+
+                            .attr ( 'marker-start', d => 
+                                d.deleted
+                                ?   pathMarkerStartDeleted ( d ) 
+                                :   pathMarkerStartDefault ( d ) )
+                            .attr ( 'marker-end', d =>
+                                d.deleted
+                                ? pathMarkerEndDeleted ( d ) 
+                                : pathMarkerEndDefault ( d ) )
+                                    //  Possible performance optimisation here.
+                                    //  Store markers in __data__ instead of
+                                    //  checking every time. FIXME
 
                     return __oneLinkGs
                         // Programmer does not understand what is going on here.
@@ -732,7 +795,7 @@ function chart ( graphServer ) {
             let pushLink = 
                 ( __sourceKey, __sinkKey, __locationKey, __locationIndex ) => {
                     __linkData.push ( {
-                        debug   : performance.now(),
+                        //debug   : performance.now(),
                         source  : __sourceKey, 
                         target  : __sinkKey,
                         type    : 'causal',

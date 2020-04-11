@@ -701,17 +701,17 @@ stale flag?`,
     CornerView.chart ( S ) 
 
     S.abacus = 1 
-      S.donkey = 2
-  S.blanket = new Script ( q => { 
-        q.abacus
-          q.donkey
-        q.changeAVeryLongKeyName = Math.random()
-          q.zack = Math.random()
+    S.donkey = 2
+    S.blanket = new Script ( q => { 
+    q.abacus
+    q.donkey
+    q.changeAVeryLongKeyName = Math.random()
+    q.zack = Math.random()
     return true 
   } )  
 
   setTimeout ( () => {
-      S.abacus
+       S.abacus
         S.abacus = 3.142 
         S.blanket
         delete S.changeAVeryLongKeyName
@@ -722,18 +722,23 @@ stale flag?`,
         S.e = null
         S.abacus
         S.donkey = 2
-      S.blanket
+        S.blanket
   }, 4000 )
   setTimeout ( () => {
         S.abacus = 3            
-      S.blanket
+        S.blanket
         delete S.donkey
         S.f = 1
         //console.log ( VERTICES.abacus('datum').value )
   }, 6000 )
+  setTimeout ( () => {
+        //delete S.donkey
+  }, 8000 )
 
     },
     want : 'legible'
+},
+{   warning : `Chart: transition()s are not yet interruptable.`
 },
 {   warning : `Corner: Scripts KeySniffers may not handle Sink and Source keys which are deep.`
 },
