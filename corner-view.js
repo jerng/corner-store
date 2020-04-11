@@ -432,6 +432,7 @@ function chart ( graphServer ) {
                         let hitCircles 
                         = hitNodeGs 
                             .select ( 'circle' )
+                            .interrupt()
                             .transition()
                             .duration ( 300 ) 
                                 .attr ( 'fill',  nodeHit )
@@ -444,6 +445,7 @@ function chart ( graphServer ) {
                         let missedCircles 
                         = missedNodeGs 
                             .select ( 'circle' )
+                            .interrupt()
                             .transition()
                             .duration ( 300 ) 
                                 .attr ( 'fill',  nodeMiss )
@@ -458,16 +460,15 @@ function chart ( graphServer ) {
                     let softDeletedCircles
                     =   softDeletedNodeGs
                         .select ( 'circle' )
+                        .interrupt()
                         .transition ()
-                        .ease ( d3.easeCubicOut )
-                            .attr ( 'fill', nodeDeleted )
-                            .attr ('r', nodeRDeleted )
-                    
-                        softDeletedCircles
-                        .transition()
-                        .duration ( 3000 ) 
                             .ease ( d3.easeCubicOut )
-                            .attr ( 'fill', '#f8f8f8' )
+                                .attr ( 'fill', nodeDeleted )
+                                .attr ('r', nodeRDeleted )
+                        .transition()
+                            .duration ( 3000 ) 
+                                .ease ( d3.easeCubicOut )
+                                .attr ( 'fill', '#f8f8f8' )
 
                     let unSoftDeletedNodeGs 
                     = d3.selectAll ( unSoftDeletedDOMNodes )
@@ -480,6 +481,7 @@ function chart ( graphServer ) {
                         let unSoftDeletedCircles
                         = unSoftDeletedNodeGs
                             .select ( 'circle' )
+                            .interrupt()
                             .transition()
                             .duration ( 300 ) 
                                 .attr ( 'fill', d => 
@@ -691,25 +693,10 @@ function chart ( graphServer ) {
                             .attr ( 'stroke-opacity', pathStrokeOpacityTraversed )
                                 // these now override parent settings
 
-                            .attr ( 'marker-start', null ) 
-                            .attr ( 'marker-end', null ) 
-
                         .transition(0)
                             .attr ( 'stroke', null )
                             .attr ( 'stroke-opacity', null )
                                 // these will now default to ancestor's settings
-
-                            .attr ( 'marker-start', d => 
-                                d.deleted
-                                ?   pathMarkerStartDeleted ( d ) 
-                                :   pathMarkerStartDefault ( d ) )
-                            .attr ( 'marker-end', d =>
-                                d.deleted
-                                ? pathMarkerEndDeleted ( d ) 
-                                : pathMarkerEndDefault ( d ) )
-                                    //  Possible performance optimisation here.
-                                    //  Store markers in __data__ instead of
-                                    //  checking every time. FIXME
 
                     return __oneLinkGs
                         // Programmer does not understand what is going on here.
