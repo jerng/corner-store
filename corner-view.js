@@ -306,7 +306,7 @@ function chart ( graphServer ) {
                                     
                                     // Reheats simulation during drag.
 
-                                    simulation.alpha(0.1)
+                                    simulation.alpha(0.2)
                                 } )
                         ) 
                             // console.log ( Object.is(d, d3.event.subject),  d, d3.event ) 
@@ -402,7 +402,7 @@ function chart ( graphServer ) {
                                     // need to add styling. Address. 
                             }
                             else 
-                            if ( datum.miss ) {
+                            if ( datum.missed ) {
                                 missedDOMNodes.push ( this ) 
                                 return false
                                     // Currently not in a deleted state;
@@ -625,14 +625,14 @@ function chart ( graphServer ) {
                             else 
                             if (    (   ( datum.location == datum.target.key ) 
                                         && datum.target.lambda 
-                                        && datum.target.miss
+                                        && datum.target.missed
                                     )       //  N is a Script, pointer is in 
                                             //  and points to N, and N had a 
                                             //  cache-miss. 
                                     || 
                                     (   ( datum.location == datum.source.key )
                                         && datum.source.lambda
-                                        && ( datum.source.hit || datum.source.miss )
+                                        && ( datum.source.hit || datum.source.missed )
                                     )       //  N is a Script, pointer is in 
                                             //  and points from N, and N had 
                                             //  a cache-miss or cache-hit. 
@@ -736,7 +736,7 @@ function chart ( graphServer ) {
             // remove ephemeral signals.
             __nodeData.forEach( e => { 
                 delete e.hit
-                delete e.miss
+                delete e.missed
                 delete e.updated
             } )
 
@@ -873,7 +873,7 @@ function chart ( graphServer ) {
                     }
                     break
 
-                case 'get_vertex_hit_runScriptAndLog' :
+                case 'get_vertex_hit_scriptRunAndSetValue' :
                     verbosity && console.warn ( `GET, HIT, SCRIPT` )
                     if ( ~index ) { // Found an index; report.
                         __nodeData[ index ].hit = true
@@ -885,15 +885,15 @@ function chart ( graphServer ) {
                     }
                     break
 
-                case 'get_vertex_miss_runScriptAndLog' :
-                    verbosity && console.warn ( `GET, MISS, Script` )
+                case 'get_vertex_miss_scriptRunAndSetValue' :
+                    verbosity && console.warn ( `GET, MISS, SET, HIT, Script` )
                     if ( ~index ) { // Found an index; report.
-                        __nodeData[ index ].miss = true
+                        __nodeData[ index ].missed = true
                         __nodeData[ index ].stale = boxedValue.datum.stale
                         __nodeData[ index ].value = boxedValue.datum.value
                     }
                     else {          // Found no index; complain.
-                        R (`d3 visualiser (get_vertex_miss_runScriptAndLog) :
+                        R (`d3 visualiser (get_vertex_miss_scriptRunAndSetValue) :
                             __nodeData has no node with the key : 
                             ${ boxedValue.datum.key }; perhaps a major problem.` )
                     }

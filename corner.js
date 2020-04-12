@@ -96,8 +96,8 @@ class AsyncDispatcher extends EventLog {
             Object.values ( this.tasks ) .map ( t => t( boxedValue ) )
         )
         this.actuallyNote ( {
-            time        : EventLog.time(),
-            resolution  : resolvedPromises
+            time                : EventLog.time(),
+            task_resolution     : resolvedPromises
         } ) 
             // logs own events to self!
     } 
@@ -430,6 +430,10 @@ class Script extends Datum {
 //          value : new AsyncDispatcher
 //      }
 
+        // configuration (initalised by parent)
+        this.log.gets.misses = new AsyncDispatcher
+        this.log.sets        = new EventLog
+
         switch ( args.length ) {
             case 0:
                 throw Error (`Fun.constructor/0 : we require more arguments`) 
@@ -610,7 +614,7 @@ class Graph extends Datum {
                 }
     }
 
-    runScriptAndLog ( datum ) {
+    scriptRunAndSetValue ( datum ) {
                 //console.log (`graph.vertexGetTyped/1 will now return datum.stale : `,
                 //datum.stale, 'datum.value', datum.value, 'datum.key', datum.key )
           
@@ -636,11 +640,11 @@ class Graph extends Datum {
 
             datum.stale = false
 
-            // LOGGING - CACHE MISS 
+            // LOGGING - CACHE MISS(-THEN-SET-AND-THEN-HIT)
             let timeStampBoxedValue = EventLog.timeStampBox ( result )
             datum.log.gets.misses.note ( timeStampBoxedValue )
             this.log.canon.note ( this.logFormat (
-                'get_vertex_miss_runScriptAndLog',
+                'get_vertex_miss_scriptRunAndSetValue',
                 datum,
                 timeStampBoxedValue.time
             ) )
@@ -659,7 +663,7 @@ class Graph extends Datum {
             let timeStampBoxedValue = EventLog.timeStampBox ( result )
             datum.log.gets.hits.note ( timeStampBoxedValue )
             this.log.canon.note ( this.logFormat (
-                'get_vertex_hit_runScriptAndLog',
+                'get_vertex_hit_scriptRunAndSetValue',
                 datum,
                 timeStampBoxedValue.time
             ) )
@@ -727,7 +731,7 @@ class Graph extends Datum {
         let result 
 
         if ( datum instanceof Script && datum.traits.getHandler ) { 
-            return this.runScriptAndLog ( datum ) 
+            return this.scriptRunAndSetValue ( datum ) 
         }
 
         else
@@ -845,7 +849,10 @@ class Graph extends Datum {
 
             //console.log(`graph.vertexSet/[n>1] datumToSet has been defined.`)
 
-// datumToSet MUST BE DEFINED BY THIS POINT...
+
+////////////////////////////////////////////////////////////////////////////////
+//  datumToSet MUST BE DEFINED BY THIS POINT...
+////////////////////////////////////////////////////////////////////////////////
 
         if ( datumToSet.value instanceof Script )
         {
@@ -887,8 +894,8 @@ class Graph extends Datum {
                 // LOGGING - 1 scenario (1 of 2 in vertexSet/n)
                 let timeStampBoxedValue =  EventLog.timeStampBox ( { 
                     'Script instance'  :   scriptToSet ,
-                    'FIXME'         :   `Placeholder log format for Fun, because
-                                         Fun.toString/n doesn't handle circular
+                    'FIXME'         :   `FIXME Placeholder log format for Script, because
+                                         Script.toString/n doesn't handle circular
                                          objects yet.`                
                 } ) 
                 datumToSet.log.sets.note ( timeStampBoxedValue )
@@ -1251,20 +1258,45 @@ class Graph extends Datum {
                         fulfill( cachedDependentHandlerKey )
                     } )
             }
+///////////////////////////////////////////////////////////////////////////////
             if ( scriptToSet.traits.reactive ) {
                 
                 let reactiveDependentHandlerKey 
                     = 'reactiveDependentHandler:' + scriptToSet.key
 
-                dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
+
+                //  Dependent Datum : 'Set' event
+                //
+                //  - not a Script  : happens when the Datum.value is updated
+                //                    AND when the Datum is fundamentaly re/created
+                //                      at Graph.setVertex/n
+                //
+                //  - a Script      : happens when the Script is fundamentally
+                //                    re/created at Graph.vertexSet/n
+                //                      NOT when the Script.value is updated
+                //                      during a
+                //                      'Get-miss-and-then-set-and-then-hit' event
+                //                      at Graph.scriptRunAndSetValue/n
+                //
+                // THIS IS A LITTLE ASYMMETRICAL and will BENEFIT FROM
+                // REFACTORING IN THE FUTURE. FIXME TODO WARNING CODE SMELL
+                //
+                //  DOCUMENT VERY CAREFULLY
+console.error(dependencyDatum)
+                let dispatcherTasks =   dependencyDatum instanceof Script
+                                        ?   dependencyDatum.log.gets.misses.tasks 
+                                        :   dependencyDatum.log.sets.tasks 
+                                    
+                dispatcherTasks[ reactiveDependentHandlerKey ]
                 =   args => new Promise ( ( fulfill, reject ) => {
                         
-                        console.log( reactiveDependentHandlerKey )
+                        console.error( reactiveDependentHandlerKey )
                         
-                        this.runScriptAndLog ( scriptToSet )
+                        this.scriptRunAndSetValue ( scriptToSet )
                         fulfill( reactiveDependentHandlerKey )
                     } )
             }
+///////////////////////////////////////////////////////////////////////////////
         },
         
         // vertexSet is using a keysniffer to get the keys of functions called in

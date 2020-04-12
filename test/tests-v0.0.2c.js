@@ -701,6 +701,7 @@ stale flag?`,
     },
     //want : 'legible'
 },
+/*
 {   test : `D3 graph visualiser`,
     code : function () {
 
@@ -833,41 +834,54 @@ not sure if it is feasible.`
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 //*/
+{   test : `temp: Chart + Reactivity`,
+    code : function () {
+
+        let s = new Graph( 'store' )
+        CornerView.chart ( s )
+
+        s.e = 1
+        s.f = 2
+        s.s = new Script ( e => e.e + e.f )
+
+        s.h = {}
+        s.h.i = 4
+        s.h.j = 6
+        s.h.k = new Script ( e => e.h.i + e.h.j )
+        s.n = new Script ( s => s.s + s.h.k)
+
+
+        s.r = new Script ( s => { 
+                return s.dependent = s.n 
+            }, 
+            {   reactive    : true,
+                getHandler  : false
+            } 
+        ) 
+
+        s.n
+        setTimeout ( ()=>s.n, 1000 )
+
+        console.warn ( 
+            `r`,                        s('vertices').r('datum'), s.r, "\n",
+            `n('datum').log.sets.book`, s('vertices').n('datum').log.sets 
+        )
+
+    },
+    want : ''
+},
+//*/
 
 
 
 
 /* Testing conveniences for the browser:
 
-s = new Graph( 'store' )
-CornerView.chart ( s )
+//  Multiple bugs here (s.n)
+//  :   getHandler-false is not working
+//  :   calling Script doesn't always update SINK
+//  :   reactivity is not working!    
 
-s.e = 1
-s.f = 2
-s.s = new Script ( e => e.e + e.f )
-
-s.h = {}
-s.h.i = 4
-s.h.j = 5
-s.h.k = new Script ( e => e.h.i + e.h.j )
-s.n = new Script ( s => s.s + s.h.k)
-
-
-s.r = new Script ( s => { 
-        return s.dependent = s.n 
-    }, 
-    {   reactive    : true,
-        getHandler  : false
-    } 
-) 
-
-s.n
-
-
-console.warn ( `n('datum').logs.sets.book`, s('vertices').n('datum').logs.sets.book )
-
-
-s( 'vertices' )
 
 
 */
