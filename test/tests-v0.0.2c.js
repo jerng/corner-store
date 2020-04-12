@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -234,7 +234,39 @@ new Exam.Exam ( {
                                     "n":2}}}}
     ] )
 },
-//*/
+{   test : `2020-04-12.`,
+    code : function () {
+        let STORE = new Graph ( 'store' )
+        STORE.source1 = 'theFIRSTpart;' 
+        STORE.source2 = 'theSECONDpart;' 
+
+        //console.log (`Before setting STORE.computed2a`)
+if ( ! ( 'temp' in window ) ) {
+    window.temp = []    
+}
+        STORE.computed2a       = new Script ( s => { 
+                                        s.source1 
+                                        s.source2
+                                        console.warn ( s.source1, s.source2)
+                                        window.temp.push ({
+                                            time : performance.now(),
+                                            source1 : s.source1,
+                                            source2 : s.source2
+                                        }) 
+                                 } ) 
+        
+        //console.log (`After setting STORE.computed2a`)
+
+        //console.log (STORE.computed2a)
+
+        return JSON.stringify ( {
+            computedValue   :   STORE.computed2a,
+        } )
+    },
+    want : JSON.stringify ( {
+        computedValue   :   'theFIRSTpart;theSECONDpart;'
+    } )
+},
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -257,7 +289,6 @@ new Exam.Exam ( {
         computedValue   :   'theFIRSTpart;theSECONDpart;'
     } )
 },
-/*
 {   test : `Computed properties; dependency getter / puller - also check pointers on dependents and dependencies.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -347,6 +378,7 @@ new Exam.Exam ( {
         sink4After          : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`,
     } )
 },
+//*/
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Script is run; 
 - the Script is run when the Fun's Datum is read (gotten/get); 
@@ -370,10 +402,14 @@ new Exam.Exam ( {
 
             return computed
         } ) 
-        
-        //console.log( STORE( 'vertices' ).sink4( 'unproxy' ).pointers.in )
-        //console.log( STORE( 'graph').log.canon.book )
-        //console.log( JSON.stringify ( STORE( 'graph').log.canon.book, null, 4 ) )
+
+
+
+STORE.computed3        
+console.log ( STORE ( 'vertices' ).sink4('datum').pointers.in )
+
+
+
 
         return JSON.stringify ( {
             sink4Before     : STORE.sink4,
@@ -392,7 +428,7 @@ new Exam.Exam ( {
                                     .pointers.out.causal[0].okey,
             sink4Pointer      :   STORE( 'vertices' )
                                     .sink4( 'datum' )
-                                    .pointers.in.causal[0].ikey
+                                    .pointers.in.causal[0].ikey 
         } )
     },
     want : JSON.stringify ( {
@@ -406,6 +442,7 @@ new Exam.Exam ( {
 
     } )
 },
+/*/
 {   test : `graph() and datum() should eject the same thing`,
     code : function () {
 
@@ -774,6 +811,9 @@ stale flag?`,
 
     },
     //want : 'legible'
+},
+{   warning : `Corner: Scripts KeySniffers may save multiple mentions of a
+source/sink as multiple pointers. Is this good or bad?.`
 },
 {   warning : `Corner: Scripts KeySniffers may not handle Sink and Source keys which are deep.`
 },

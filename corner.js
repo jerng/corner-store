@@ -902,14 +902,18 @@ class Graph extends Datum {
 
 ////////////////////////////////////////////////////////////////////////////////
             // Detect sinks and sources, and plant pointers.
+            //
+            // WARNING: filtered for uniqueness.
+            //          https://stackoverflow.com/a/14438954/1378390
             
-            let sourceKeys  =   scriptToSet.traits.hasSources
+            let sourceKeys = (  scriptToSet.traits.hasSources
                                 ? this.handlers.sniffSourceKeys ( scriptToSet.lambda )
-                                : []
-            let sinkKeys    =   scriptToSet.traits.hasSinks
+                                : []    ).filter((v, i, a) => a.indexOf(v) === i)
+                                    
+            let sinkKeys   = ( scriptToSet.traits.hasSinks
                                 ? this.handlers.sniffSinkKeys   ( scriptToSet.lambda )
-                                : []
-                                
+                                : []    ).filter((v, i, a) => a.indexOf(v) === i)
+
             sourceKeys.forEach ( key => {
                 this.handlers.setSourcePointer ( scriptToSet, key )
             } )
@@ -1334,32 +1338,57 @@ class Graph extends Datum {
             
             let __keys = []
 
+            // WARNING FIXME TO : 
+            //
+            // Symbol(Symbol.toPrimitive) is still popping up in error messages,
+            // so we are not yet out of the woods on this.
+            //
             let __sourceNthKeySniffer = new Proxy ( {}, {
                 get : ( __targ, __prop, __rcvr ) => {
-console.error(`wip`)
-//                  // Step 2, Branch A
-//                  // (We found a depth>1 key, but we do not know if its
-//                  // subkeys will be read, or not.)
 
-//                  __keys[ __keys.length - 1 ].push ( __prop )
+                    //console.log(`step2A`, __prop)                    
+                    
+                    //  Here: we need to deal with the
+                    //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
+
+                    if ( __prop == Symbol.toPrimitive ) {
+                        return ()=> true 
+                    }   // WARNING: kludge
+
+                    // Step 2, Branch A
+                    // (We found a depth>1 key, but we do not know if its
+                    // subkeys will be read, or not.)
+
+                    __keys[ __keys.length - 1 ].push ( __prop )
                     return __sourceNthKeySniffer
                 
                     // Repeat Step 2. until there are no more keys.
                 },
                 set : ( __targ, __prop, __val, __rcvr ) => {
 
-//                  // Step 2, Branch B
-//                  // We found a sink, so the entire key-chain does not
-//                  // terminate in a Datum which is a source. Discard it.
+                    //console.log(`step2B`, __prop)                    
+                    
+                    // Step 2, Branch B
+                    // We found a sink, so the entire key-chain does not
+                    // terminate in a Datum which is a source. Discard it.
 
-//                  __keys.pop()
+                    __keys.pop()
                     return true 
                 }
             } )
 
             let __sourceFirstKeySniffer = new Proxy ( {}, {
                 get : ( __targ, __prop, __rcvr ) => {
+
+                    //console.log(`step1A`, __prop)                    
                     
+                    //  Here: we need to deal with the
+                    //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
+
+                    if ( __prop == Symbol.toPrimitive ) {
+                        return ()=> true 
+                    }   // WARNING: kludge
+
                     //  Step 1, Branch A
                     //  (We found a depth=1 key, but we do not know if its
                     //  subkeys will be read, or not.)
@@ -1372,6 +1401,8 @@ console.error(`wip`)
                 },
                 set : ( __targ, __prop, __val, __rcvr ) => {
 
+                    //console.log(`step1B`, __prop)                    
+                    
                     //  Step 1, Branch B
                     //  (We don't care about sinks.)
 
@@ -1390,7 +1421,6 @@ console.error(`wip`)
         sniffSinkKeys :  __lambda => 
         {
             
-//*/
             let __temp = []
             let __keys = []
 
@@ -1418,7 +1448,6 @@ console.error(`wip`)
                 }
             } )
 
-//*/
             let __sinkFirstKeySniffer = new Proxy ( {}, {
                 get : ( __targ, __prop, __rcvr ) => {
 
