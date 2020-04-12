@@ -771,6 +771,17 @@ stale flag?`,
     },
     //want : 'legible'
 },
+{   warning : `Corner:.`
+},
+{   warning : `Corner: currently working on Reactivity concerns.`
+},
+{   warning : `Corner: (set_vertex) events may refer to insertion/replacement of
+Datum/Script objects, or they may refer to insertion/replacement of their .value
+property. Make this more coherent.`
+},
+{   warning : `Corner: Scripts replaced by Datums, and Datums replaced by
+Scripts on (set) events. Make this coherent.`
+},
 {   warning : `Corner: Scripts KeySniffers may save multiple mentions of a
 source/sink as multiple pointers. Is this good or bad?.`
 },
@@ -786,14 +797,14 @@ source/sink as multiple pointers. Is this good or bad?.`
 
     }
 },
-{   warning : `Make datum+pointer writes TRANSACTIONAL.`
+{   warning : `Corner: Make datum+pointer writes TRANSACTIONAL.`
 },
-{   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
+{   warning : `Corner: On creation of a Fun.traits.hasSinks, sink's cache needs to be
 invalidated, unless Script runs immediately.`
 },
-{   warning : `Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
+{   warning : `Corner: Pointer/vertice creation/deletion generally doesn't check for old pointers.`,
 },
-{   warning : `When a Datum is replaced by an Fun, what happens to pointers
+{   warning : `Corner: When a Datum is replaced by an Fun, what happens to pointers
 initially known to the Datum?.`,
 },
 {   warning : `Review Graph() and Datum() application API`
