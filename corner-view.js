@@ -109,7 +109,7 @@ function chart ( graphServer ) {
     forceLink 
     = d3.forceLink ( linkData )
         .id ( d => d.key )
-        .distance ( 200 ) ,
+        .distance ( 10 ) ,
 
     // The Force Simulation IS STARTED Here:
 
@@ -915,25 +915,25 @@ function chart ( graphServer ) {
                     pushNodeButPreferAssign ( index, nodeDatum)
                     break
 
-                case 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerGet' :
+                case 'set_pointer_in_CAUSAL_setSourcePointers' :
                    
                     verbosity && console.warn ( `SCRIPT hasSources: own PointerIn` )
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
-                case 'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerGet' :
+                case 'set_pointer_out_CAUSAL_setSourcePointers' :
                     
                     verbosity && console.warn ( `SCRIPT hasSources: SOURCE's PointerOut` )
                     pushLastLinkOut ( locatedInSink = false )
                     break
   
-                case 'set_pointer_in_CAUSAL_scopedScriptKeySnifferHandlerSet' :
+                case 'set_pointer_in_CAUSAL_setSinkPointers' :
                     
                     verbosity && console.warn ( `SCRIPT hasSinks: set SINK's PointerIn` )
                     pushLastLinkIn ( locatedInSink = true )
                     break
 
-                case 'set_pointer_out_CAUSAL_scopedScriptKeySnifferHandlerSet' :
+                case 'set_pointer_out_CAUSAL_setSinkPointers' :
                                                    
                     verbosity && console.warn ( `SCRIPT hasSinks: set own PointerOut` )
                     pushLastLinkOut ( locatedInSink = false )

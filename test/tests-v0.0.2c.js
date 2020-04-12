@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -234,39 +234,6 @@ new Exam.Exam ( {
                                     "n":2}}}}
     ] )
 },
-{   test : `2020-04-12.`,
-    code : function () {
-        let STORE = new Graph ( 'store' )
-        STORE.source1 = 'theFIRSTpart;' 
-        STORE.source2 = 'theSECONDpart;' 
-
-        //console.log (`Before setting STORE.computed2a`)
-if ( ! ( 'temp' in window ) ) {
-    window.temp = []    
-}
-        STORE.computed2a       = new Script ( s => { 
-                                        s.source1 
-                                        s.source2
-                                        console.warn ( s.source1, s.source2)
-                                        window.temp.push ({
-                                            time : performance.now(),
-                                            source1 : s.source1,
-                                            source2 : s.source2
-                                        }) 
-                                 } ) 
-        
-        //console.log (`After setting STORE.computed2a`)
-
-        //console.log (STORE.computed2a)
-
-        return JSON.stringify ( {
-            computedValue   :   STORE.computed2a,
-        } )
-    },
-    want : JSON.stringify ( {
-        computedValue   :   'theFIRSTpart;theSECONDpart;'
-    } )
-},
 {   test : `Computed properties; dependency getter / puller.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -378,7 +345,6 @@ if ( ! ( 'temp' in window ) ) {
         sink4After          : `Yo mama, I got two parts : theFIRSTpart;theSECONDpart;`,
     } )
 },
-//*/
 {   test : `Computed properties; dependent setter / pusher : 
 - pushed computation should not be written until the the Script is run; 
 - the Script is run when the Fun's Datum is read (gotten/get); 
@@ -402,14 +368,6 @@ if ( ! ( 'temp' in window ) ) {
 
             return computed
         } ) 
-
-
-
-STORE.computed3        
-console.log ( STORE ( 'vertices' ).sink4('datum').pointers.in )
-
-
-
 
         return JSON.stringify ( {
             sink4Before     : STORE.sink4,
@@ -442,7 +400,6 @@ console.log ( STORE ( 'vertices' ).sink4('datum').pointers.in )
 
     } )
 },
-/*/
 {   test : `graph() and datum() should eject the same thing`,
     code : function () {
 
@@ -658,7 +615,10 @@ stale flag?`,
 
         STORE.a = 1
         STORE.b = new Script ( 
-            s => sideEffected = s.a + 2, 
+            s => { 
+                //console.warn ( `lambda`, sideEffected, s.a )
+                return sideEffected = s.a + 2
+            }, 
             {   reactive    : true,
                 getHandler  : false
             } 
@@ -677,11 +637,9 @@ stale flag?`,
             STORE.a = 2, sideEffected,
         ] )
     },
-    want : JSON.stringify ( [ null, 1, 3, 2, 4  ] )
+    want : JSON.stringify ( [ 'sinkNthKeySniffer_kludge2', 1, 3, 2, 4  ] )
 },
-//*/
-/*
-{   test : `Graph Logger (canon) ( works, but test has yet to be written completely)`,
+{   warning : `(works, but test unwritten - maybe move to own repository) Graph Logger (canon)`,
     code : function () {
         let S  = new Graph ( 'store' )
         let GRAPH   = S ( 'graph' )
@@ -719,7 +677,7 @@ stale flag?`,
     },
     want : ''
 },
-{   test : `Deep keys in Sinks and Sources`,
+{   warning: `(works, but test unwritten) Deep keys in Sinks and Sources`,
     code : function () {
 
     let S       = new Graph ( 'store' )
@@ -780,7 +738,7 @@ stale flag?`,
 
     } )  
 
-    console.log ( S.blanket ) 
+    //console.log ( S.blanket ) 
 
   setTimeout ( () => {
 //     S.abacus
@@ -827,9 +785,7 @@ source/sink as multiple pointers. Is this good or bad?.`
 
     }
 },
-{   warning : `Increase transactionality of datum+pointer writes.`
-},
-{   warning : `Why are Datums reading on update?`
+{   warning : `Make datum+pointer writes TRANSACTIONAL.`
 },
 {   warning : `On creation of a Fun.traits.hasSinks, sink's cache needs to be
 invalidated, unless Script runs immediately.`
@@ -894,9 +850,26 @@ s.h = {}
 s.h.i = 4
 s.h.j = 5
 s.h.k = new Script ( e => e.h.i + e.h.j )
+s.n = new Script ( s => s.s + s.h.k)
+
+
+s.r = new Script ( s => { 
+        return s.dependent = s.n 
+    }, 
+    {   reactive    : true,
+        getHandler  : false
+    } 
+) 
+
+s.n
+
+
+console.warn ( `n('datum').logs.sets.book`, s('vertices').n('datum').logs.sets.book )
+
 
 s( 'vertices' )
-s('vertices').x('unproxy').datum.lambda
+
+
 */
 
 

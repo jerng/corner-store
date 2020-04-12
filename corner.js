@@ -847,10 +847,9 @@ class Graph extends Datum {
 
 // datumToSet MUST BE DEFINED BY THIS POINT...
 
-        // If datumToSet.value IS a Script, call it on a keySniffer to plant pointers.
         if ( datumToSet.value instanceof Script )
         {
-                //console.log (`graph.vertexSet/[n>1] : value instanceof Script `)
+            //console.warn (`graph.vertexSet/[n>1] : value instanceof Script `)
 
             // Assign all old Datum's own properties except (those listed below) to Fun.
             delete datumToSet.lambda
@@ -910,9 +909,13 @@ class Graph extends Datum {
                                 ? this.handlers.sniffSourceKeys ( scriptToSet.lambda )
                                 : []    ).filter((v, i, a) => a.indexOf(v) === i)
                                     
-            let sinkKeys   = ( scriptToSet.traits.hasSinks
+            //console.warn ( `hasSinks`, scriptToSet.traits.hasSinks )
+
+            let sinkKeys   = (  scriptToSet.traits.hasSinks
                                 ? this.handlers.sniffSinkKeys   ( scriptToSet.lambda )
                                 : []    ).filter((v, i, a) => a.indexOf(v) === i)
+
+            //console.warn ( `sinkKeys`, sinkKeys )
 
             sourceKeys.forEach ( key => {
                 this.handlers.setSourcePointer ( scriptToSet, key )
@@ -922,10 +925,6 @@ class Graph extends Datum {
             } )
 
 ////////////////////////////////////////////////////////////////////////////////
-
-            //  console.log (`graph.vertexSet/>1 : Script : AFTER
-            //      value.lambda(keySniffer)`, scriptToSet.traits )
-            //  console.log ( scriptToSet.toString() )
 
             return result
         } 
@@ -1260,7 +1259,7 @@ class Graph extends Datum {
                 dependencyDatum.log.sets.tasks [ reactiveDependentHandlerKey ]
                 =   args => new Promise ( ( fulfill, reject ) => {
                         
-                        //console.log( `scopedFunKeySnifferHandlerGet` )
+                        console.log( reactiveDependentHandlerKey )
                         
                         this.runScriptAndLog ( scriptToSet )
                         fulfill( reactiveDependentHandlerKey )
@@ -1343,7 +1342,7 @@ class Graph extends Datum {
             // Symbol(Symbol.toPrimitive) is still popping up in error messages,
             // so we are not yet out of the woods on this.
             //
-            let __sourceNthKeySniffer = new Proxy ( {}, {
+            let __sourceNthKeySniffer = new Proxy ( { in: 'sourceNthKeySniffer' }, {
                 get : ( __targ, __prop, __rcvr ) => {
 
                     //console.log(`step2A`, __prop)                    
@@ -1352,8 +1351,8 @@ class Graph extends Datum {
                     //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
 
                     if ( __prop == Symbol.toPrimitive ) {
-                        return ()=> true 
-                    }   // WARNING: kludge
+                        return ()=> 'sourceNthKeySniffer_kludge' 
+                    }   
 
                     // Step 2, Branch A
                     // (We found a depth>1 key, but we do not know if its
@@ -1377,7 +1376,7 @@ class Graph extends Datum {
                 }
             } )
 
-            let __sourceFirstKeySniffer = new Proxy ( {}, {
+            let __sourceFirstKeySniffer = new Proxy ( { in: 'sourceFirstKeySniffer' }, {
                 get : ( __targ, __prop, __rcvr ) => {
 
                     //console.log(`step1A`, __prop)                    
@@ -1386,8 +1385,8 @@ class Graph extends Datum {
                     //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
 
                     if ( __prop == Symbol.toPrimitive ) {
-                        return ()=> true 
-                    }   // WARNING: kludge
+                        return ()=> 'sourceFirstKeySniffer_kludge' 
+                    }   
 
                     //  Step 1, Branch A
                     //  (We found a depth=1 key, but we do not know if its
@@ -1420,12 +1419,24 @@ class Graph extends Datum {
 
         sniffSinkKeys :  __lambda => 
         {
-            
+
+            //console.warn(`sniffSinkKeys`)
+
             let __temp = []
             let __keys = []
 
-            let __sinkNthKeySniffer = new Proxy ( {}, {
+            let __sinkNthKeySniffer = new Proxy ( { in: 'sinkNthKeySniffer' }, {
                 get : ( __targ, __prop, __rcvr ) => {
+
+                    //console.log ( `step2A`, __prop )
+                    
+                    //  Here: we need to deal with the
+                    //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
+
+                    if ( __prop == Symbol.toPrimitive ) {
+                        return ()=> 'sinkNthKeySniffer_kludge' 
+                    }
+
 
                     //  Step 2, Branch A
                     //  (We found a depth>1 key, but we do not know if its
@@ -1435,6 +1446,8 @@ class Graph extends Datum {
                     return __sinkNthKeySniffer
                 },
                 set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    //console.log ( `step2B`, __prop )
 
                     // Step 2, Branch B
                     // We found a sink, terminating the entire key-chain.
@@ -1448,8 +1461,18 @@ class Graph extends Datum {
                 }
             } )
 
-            let __sinkFirstKeySniffer = new Proxy ( {}, {
+            let __sinkFirstKeySniffer = new Proxy ( { in: 'sinkFirstKeySniffer' }, {
                 get : ( __targ, __prop, __rcvr ) => {
+
+                    //console.log ( `step1A`, __prop )
+                    
+                    //  Here: we need to deal with the
+                    //  interpreter's calls to __rcvr[Symbol.toPrimitive(hint)]
+
+                    if ( __prop == Symbol.toPrimitive ) {
+                        return ()=> 'sinkFirstKeySniffer_kludge' 
+                    }
+
 
                     //  Step 1, Branch A
                     //  Any previous source deep-keys which did not
@@ -1464,6 +1487,8 @@ class Graph extends Datum {
                     return __sinkNthKeySniffer
                 },
                 set : ( __targ, __prop, __val, __rcvr ) => {
+
+                    //console.log ( `step1B`, __prop )
 
                     //  Step 1, Branch B, task 1
                     //  Any previous source deep-keys which did not
@@ -1481,7 +1506,7 @@ class Graph extends Datum {
             } )
 
             // Step 0. Initiate algorithm.
-//            __lambda ( __sinkFirstKeySniffer )
+            __lambda ( __sinkFirstKeySniffer )
 
             // Step 3. Reduce key chains to deep keeps
             let     __deepKeys = __keys.map ( group => group.join ( '.' ) )
