@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-//*
+/*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -639,6 +639,7 @@ stale flag?`,
     },
     want : JSON.stringify ( [ 'sinkNthKeySniffer_kludge2', 1, 3, 2, 4  ] )
 },
+/*
 {   warning : `(works, but test unwritten - maybe move to own repository) Graph Logger (canon)`,
     code : function () {
         let S  = new Graph ( 'store' )
@@ -701,7 +702,7 @@ stale flag?`,
     },
     //want : 'legible'
 },
-/*
+
 {   test : `D3 graph visualiser`,
     code : function () {
 
@@ -781,11 +782,6 @@ property. Make this more coherent.`
 },
 {   warning : `Corner: Scripts replaced by Datums, and Datums replaced by
 Scripts on (set) events. Make this coherent.`
-},
-{   warning : `Corner: Scripts KeySniffers may save multiple mentions of a
-source/sink as multiple pointers. Is this good or bad?.`
-},
-{   warning : `Corner: Scripts KeySniffers may not handle Sink and Source keys which are deep.`
 },
 {   warning : ` viewer has no mechanised tests :(.`
 },
@@ -870,8 +866,9 @@ not sure if it is feasible.`
             } 
         ) 
 
-        s.n
-        setTimeout ( ()=>s.n, 1000 )
+        setTimeout ( ()=>s.s, 1000 )
+        setTimeout ( ()=>s.h.k, 2000 )
+        setTimeout ( ()=>s.n, 3000 )
 
         console.warn ( 
             `r`,                        s('vertices').r('datum'), s.r, "\n",

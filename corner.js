@@ -196,22 +196,17 @@ class Datum {
                 value       : {         
                     gets    : {
                         hits    : new EventLog,   
-                        misses  : new EventLog    
+                        misses  : new AsyncDispatcher    
                     },   
                     sets    : new AsyncDispatcher, 
-
-                  //deletes : []        // [ microtime, value ]
-                    // This doesn't quite work that way for now. When we delete
-                    // a Datum, we really expunge it from the Graph.
-                    // Maybe this can change in the future. TODO
-
-                  // Should we log cache invalidations?
 
                     setsPointerIn   : new EventLog,
                     setsPointerOut  : new EventLog,
 
                     getsPointerIn   : new EventLog,
                     getsPointerOut  : new EventLog,
+
+                    // Should we log cache invalidations?
 
                 },                                              
                 writable    : true
@@ -422,17 +417,6 @@ class Script extends Datum {
     constructor ( ... args ) {
         
         super()
-
-//      // Configuration (initialised by super())
-//      // OVERRIDES Datum.log.sets
-//      this.log.sets = {
-//          pointers : new EventLog,
-//          value : new AsyncDispatcher
-//      }
-
-        // configuration (initalised by parent)
-        this.log.gets.misses = new AsyncDispatcher
-        this.log.sets        = new EventLog
 
         switch ( args.length ) {
             case 0:
@@ -1267,22 +1251,29 @@ class Graph extends Datum {
 
                 //  Dependent Datum : 'Set' event
                 //
-                //  - not a Script  : happens when the Datum.value is updated
-                //                    AND when the Datum is fundamentaly re/created
-                //                      at Graph.setVertex/n
+                //  - not a Script  :   Happens when the Datum.value is updated.
+                // 
+                //                      (   It just so happens that when the above
+                //                      happens, whilst no underlying Datum
+                //                      exists at that vertex, then the Datum 
+                //                      is fundamentaly re/created
+                //                      at Graph.setVertex/n.   )
                 //
-                //  - a Script      : happens when the Script is fundamentally
-                //                    re/created at Graph.vertexSet/n
-                //                      NOT when the Script.value is updated
-                //                      during a
-                //                      'Get-miss-and-then-set-and-then-hit' event
-                //                      at Graph.scriptRunAndSetValue/n
+                //  - a Script      :   Happens when the Script is fundamentally
+                //                      re/created at Graph.vertexSet/n
                 //
-                // THIS IS A LITTLE ASYMMETRICAL and will BENEFIT FROM
-                // REFACTORING IN THE FUTURE. FIXME TODO WARNING CODE SMELL
+                //                      ( NOT when the Script.value is updated
+                //                      during a 'Get/Set-miss-recache-hit' 
+                //                      event at Graph.scriptRunAndSetValue/n. )
                 //
-                //  DOCUMENT VERY CAREFULLY
-console.error(dependencyDatum)
+                //  - This should be considered intentional, and well-formed. 
+                //
+                //      Yet, DOCUMENT it VERY CAREFULLY. 2020-04-13
+
+                //  Therefore reactivity (traits.reactive) does not depend
+                //  solely on 'set' or 'get/set-miss-recache-hit' events.
+                //  Rather, it depends on the class context...
+
                 let dispatcherTasks =   dependencyDatum instanceof Script
                                         ?   dependencyDatum.log.gets.misses.tasks 
                                         :   dependencyDatum.log.sets.tasks 

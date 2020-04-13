@@ -109,14 +109,15 @@ function chart ( graphServer ) {
     forceLink 
     = d3.forceLink ( linkData )
         .id ( d => d.key )
-        .distance ( 10 ) ,
+        //.distance ( 200 ) 
+        ,
 
     // The Force Simulation IS STARTED Here:
 
     simulation 
     = d3.forceSimulation ( nodeData )
         .force ( '?x',          d3.forceX (   ) )
-        .force ( '?y',          d3.forceY (   ).strength(0.5) )
+        .force ( '?y',          d3.forceY (   ) )
         .force ( '?collision',  d3.forceCollide (70) )
         .force ( '?links',      forceLink )
         .velocityDecay  ( .5 )
