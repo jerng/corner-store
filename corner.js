@@ -1281,7 +1281,7 @@ class Graph extends Datum {
                 dispatcherTasks[ reactiveDependentHandlerKey ]
                 =   args => new Promise ( ( fulfill, reject ) => {
                         
-                        console.error( reactiveDependentHandlerKey )
+                        //console.error( reactiveDependentHandlerKey )
                         
                         this.scriptRunAndSetValue ( scriptToSet )
                         fulfill( reactiveDependentHandlerKey )

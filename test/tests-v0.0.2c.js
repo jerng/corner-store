@@ -24,7 +24,7 @@ new Exam.Exam ( {
         }
     },
     concerns : [ 
-/*
+//*
 {   test : `Graph class constructor can return a graph store.`,
     code : function () {
         let STORE = new Graph ( 'store' )
@@ -639,7 +639,7 @@ stale flag?`,
     },
     want : JSON.stringify ( [ 'sinkNthKeySniffer_kludge2', 1, 3, 2, 4  ] )
 },
-/*
+//*
 {   warning : `(works, but test unwritten - maybe move to own repository) Graph Logger (canon)`,
     code : function () {
         let S  = new Graph ( 'store' )
@@ -702,8 +702,44 @@ stale flag?`,
     },
     //want : 'legible'
 },
+{   test : `(works, but test unwritten) Chart + Reactivity`,
+    code : function () {
 
-{   test : `D3 graph visualiser`,
+        let s = new Graph( 'store' )
+        CornerView.chart ( s )
+
+        s.e = 1
+        s.f = 2
+        s.s = new Script ( e => e.e + e.f )
+
+        s.h = {}
+        s.h.i = 4
+        s.h.j = 6
+        s.h.k = new Script ( e => e.h.i + e.h.j )
+        s.n = new Script ( s => s.s + s.h.k)
+
+
+        s.r = new Script ( s => { 
+                return s.dependent = s.n 
+            }, 
+            {   reactive    : true,
+                getHandler  : false
+            } 
+        ) 
+
+        setTimeout ( ()=>s.s, 1000 )
+        setTimeout ( ()=>s.h.k, 2000 )
+        setTimeout ( ()=>s.n, 3000 )
+
+      //console.warn ( 
+      //    `r`,                        s('vertices').r('datum'), s.r, "\n",
+      //    `n('datum').log.sets.book`, s('vertices').n('datum').log.sets 
+      //)
+
+    },
+    want : 'legible'
+},
+{   warning : `(works, but test unwritten) D3 graph visualiser`,
     code : function () {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -772,20 +808,12 @@ stale flag?`,
     },
     //want : 'legible'
 },
-{   warning : `Corner:.`
-},
-{   warning : `Corner: currently working on Reactivity concerns.`
-},
-{   warning : `Corner: (set_vertex) events may refer to insertion/replacement of
-Datum/Script objects, or they may refer to insertion/replacement of their .value
-property. Make this more coherent.`
-},
 {   warning : `Corner: Scripts replaced by Datums, and Datums replaced by
 Scripts on (set) events. Make this coherent.`
 },
 {   warning : ` viewer has no mechanised tests :(.`
 },
-{   test : 'Pointer logging.',
+{   warning : 'Corner: Pointer logging.',
     code : function () {
     
         let S  = new Graph ( 'store' )
@@ -841,43 +869,6 @@ not sure if it is feasible.`
 {   warning: `Eruda web console doesn't show inenumerable props. Fork and fix Eruda.`
 },
 //*/
-{   test : `temp: Chart + Reactivity`,
-    code : function () {
-
-        let s = new Graph( 'store' )
-        CornerView.chart ( s )
-
-        s.e = 1
-        s.f = 2
-        s.s = new Script ( e => e.e + e.f )
-
-        s.h = {}
-        s.h.i = 4
-        s.h.j = 6
-        s.h.k = new Script ( e => e.h.i + e.h.j )
-        s.n = new Script ( s => s.s + s.h.k)
-
-
-        s.r = new Script ( s => { 
-                return s.dependent = s.n 
-            }, 
-            {   reactive    : true,
-                getHandler  : false
-            } 
-        ) 
-
-        setTimeout ( ()=>s.s, 1000 )
-        setTimeout ( ()=>s.h.k, 2000 )
-        setTimeout ( ()=>s.n, 3000 )
-
-      //console.warn ( 
-      //    `r`,                        s('vertices').r('datum'), s.r, "\n",
-      //    `n('datum').log.sets.book`, s('vertices').n('datum').log.sets 
-      //)
-
-    },
-    want : ''
-},
 //*/
 
 
