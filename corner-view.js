@@ -172,21 +172,24 @@ function chart ( graphServer ) {
                                           : nodeScriptFresh ) ),
                                           
         labelBGDefaultCode  = 'rgba(255,255,255,0.3)',
+        labelBGReactiveCode  = 'rgba(255,255,0,0.5)',
 
         labelBGOpaque = function() {  
             d3.select(this)
                 .select('div')
-                .transition()
-                .duration( 0 )
                 .style('background-color','#fff')
         },
 
-        labelBGReset = function() {  
+        labelBGReset = function( d ) {  
             d3.select(this)
                 .select('div')
                 .transition()
                 .duration( 500 )
-                .style('background-color',labelBGDefaultCode)
+                .style( 'background-color', 
+                        d.reactive
+                        ? labelBGReactiveCode 
+                        : labelBGDefaultCode
+                )
         },
 
         labelHtml = d => d.key 
@@ -335,13 +338,15 @@ function chart ( graphServer ) {
                     let div
                     = foreignObject
                         .append( 'xhtml:div' )
-                            .attr( 'style',    
+                            .attr( 'style', d =>
                                    `padding: 5px;
                                     overflow-wrap: break-word; 
                                     border: 1px solid rgba(00,00,00,0.1);
                                     border-radius: 5px;
-                                    background-color: ${labelBGDefaultCode};
-                                    ` 
+                                    background-color: ${ d.reactive
+                                                         ? labelBGReactiveCode
+                                                         : labelBGDefaultCode
+                                    };` 
                             )
                             .html ( labelHtml )
 
@@ -751,7 +756,9 @@ function chart ( graphServer ) {
                 lambda  : boxedValue.datum.lambda ,
                     // This should destructively update the .lambda
                     // field if .lambda no longer exists here.
-                stale   : boxedValue.datum.stale
+                stale   : boxedValue.datum.stale,
+                
+                ... boxedValue.datum.traits
             }
 
             let pushNodeButPreferAssign = ( __index, __nodeDatum) => {

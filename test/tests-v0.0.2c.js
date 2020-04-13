@@ -870,10 +870,10 @@ not sure if it is feasible.`
         setTimeout ( ()=>s.h.k, 2000 )
         setTimeout ( ()=>s.n, 3000 )
 
-        console.warn ( 
-            `r`,                        s('vertices').r('datum'), s.r, "\n",
-            `n('datum').log.sets.book`, s('vertices').n('datum').log.sets 
-        )
+      //console.warn ( 
+      //    `r`,                        s('vertices').r('datum'), s.r, "\n",
+      //    `n('datum').log.sets.book`, s('vertices').n('datum').log.sets 
+      //)
 
     },
     want : ''
