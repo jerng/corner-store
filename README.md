@@ -62,7 +62,7 @@ design decisions to-date.
 
 3.  ### Automatic Reduction and Reactivity [[6](#6)]
 
-    ###### Implementation
+    ###### Implementation Details
 
     This is achieved by implementing `traits` in our Script instance vertices.
     Traits denote the *rules* which govern the operation of each Script instance
