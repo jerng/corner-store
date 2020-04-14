@@ -1,9 +1,48 @@
-#  WARNING 
+##### Alpha: current software release stage 
 
-Latest commit has the class `Algo` renamed to `Code`. Documentation has not
-otherwise been updated.
+-   **User advice :** APIs and variables names are not guaranteed to be stable.
+-   **Developer advice :** Documentation has barely begun, but tests exist.
 
-#  corner(store).js
+README.md should tell you how to use this software, if you would like to try it
+out. *Furtheronto* that, a little will be be written about the motivations for
+the production of this software, and how those motivations have influenced
+design decisions to-date.
+
+# Modules
+
+#### `corner.js`
+#### `corner-view.js`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#  Previous Documentation Below
 
 An introduction via pretty slides is found
 [here](https://docs.google.com/presentation/d/1esYQhtpjGjE9KsLmrdkGLD642FO-jTEeEuHlg4h6MWk/edit#slide=id.p).

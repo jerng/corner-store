@@ -1,8 +1,8 @@
-/** @module j 
+/** 
  *
  *
  */
-
+//      @module
 // *  @summary 
 // *  @description 
 // *  @todo 
@@ -112,20 +112,20 @@ class AsyncDispatcher extends EventLog {
 
 }
 
-/**
- *  Arities:
- *
- *  1   :   Argument is typechecked.
- *      
- *      String ?    datum.key <= argument,
- *
- *      Object ?    datum.key   <= object's first key,
- *                  datum.value <= object's first value,
- *      
- *                  ... to be implement: object's other key/values as inputs... 
- *      
- *      Array ?     ... to be implemented as lists of the above...       
- */
+//
+//  Arities:
+//
+//  1   :   Argument is typechecked.
+//      
+//      String ?    datum.key <= argument,
+//
+//      Object ?    datum.key   <= object's first key,
+//                  datum.value <= object's first value,
+//      
+//                  ... to be implement: object's other key/values as inputs... 
+//      
+//      Array ?     ... to be implemented as lists of the above...       
+///
 
 class Datum {
 
