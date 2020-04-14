@@ -6,8 +6,7 @@
 // *  @summary 
 // *  @description 
 // *  @todo 
-export { Datum, Graph, Script }
-import * as d3 from 'https://d3js.org/d3.v5.js'
+export { Graph, Script, Datum }
 
 // data type for use in Datum
 class PointerOut {

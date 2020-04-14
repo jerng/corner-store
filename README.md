@@ -1,7 +1,7 @@
-###### Alpha: current software release stage 
+###### **Alpha** : current software release stage 
 
 -   **User advice :** APIs and variables names are not guaranteed to be stable.
--   **Developer advice :** Documentation has barely begun, but tests exist.
+-   **Developer advice :** Tests exist; documentation has barely begun.
 
 README.md should tell you how to use this software, if you would like to try it
 out. *Furtheronto* that, a little will be be written about the motivations for
@@ -12,7 +12,7 @@ design decisions to-date.
 
 #### `corner.js`
 
-
+   Simply include this file, for example, as a `<script/>`. 
 
 #### `corner-view.js`
 

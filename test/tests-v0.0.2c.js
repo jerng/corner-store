@@ -1,4 +1,7 @@
-import * as Corner from '../corner.js'
+import {    Graph as Graph, 
+            Script as Script,
+            Datum as TestOnlyDatum,
+       } from '../corner.js'
 import * as CornerView from '../corner-view.js'
 import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
@@ -7,10 +10,6 @@ import * as Exam from '../lib/submodules/exam.js/exam.js'
 window.CornerView = CornerView
 
 let p = thing => JSON.stringify ( thing, null, 4 )
-
-globalThis.Script   = Corner.Script
-globalThis.Datum    = Corner.Datum
-globalThis.Graph    = Corner.Graph 
 
 new Exam.Exam ( { 
     config : {
@@ -159,7 +158,7 @@ new Exam.Exam ( {
                 }
 
         return JSON.stringify ( { 
-            aDatum  : STORE.tree( 'datum' ) instanceof Datum,
+            aDatum  : STORE.tree( 'datum' ) instanceof TestOnlyDatum,
             aPOJO   : STORE.tree() 
         }, null, 2 )
     },

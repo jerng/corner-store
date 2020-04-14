@@ -1,4 +1,7 @@
 export { chart }
+import './lib/third-party/d3.v5.js'
+
+//console.log ( d3.zoom ) 
 
 let p = thing => JSON.stringify ( thing, null, 4 )
 
