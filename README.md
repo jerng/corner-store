@@ -1,10 +1,11 @@
 ###### **Alpha** : current software release stage 
 
--   **User advice :** APIs and variables names are not guaranteed to be stable.
--   **Developer advice :** Tests exist; documentation has barely begun.
+-   **User Advice :** APIs and variables names are not guaranteed to be stable.
+-   **Developer Advice :** Tests exist; documentation has barely begun.
 
 README.md should tell you how to use this software, if you would like to try it
-out. *Furtheronto* that, a little will be be written about the motivations for
+out. Beyond that, [a little will be be
+written](#motivation-design-production-decisions) about the motivations for
 the production of this software, and how those motivations have influenced
 design decisions to-date.
 
@@ -93,21 +94,7 @@ design decisions to-date.
     To take it to one extreme, consider the [physics project at
     Wolfram-Alpha](https://writings.stephenwolfram.com/2020/04/finally-we-may-have-a-path-to-the-fundamental-theory-of-physics-and-its-beautiful/).
 
-    ###### Implementation
-
-    -   A key paradigm introduced, is the decoupling of namespaces from
-        data structures. In our graph store, all objects are namespaced *as if*
-        they are descendents of a single Javascript object. However, that object
-        operates under-the-hood as a helper of almost server-like complexity,
-        allowing for the creation of *labeled pointers* [[4](#4)] between any
-        two vertices [[3](#3)] in the graph.
-
-        Therefore from a framework user's point of view, namespaces for objects
-        in the store are merely an indicial convenience, taking the form of a
-        [tree](https://en.wikipedia.org/wiki/Tree_(graph_theory)). What we are
-        really talking and thinking about with our store, is a [disconnected
-        graph which may or may not contain
-        cycles](https://www.quora.com/Can-a-disconnected-graph-contain-cycles).
+    ###### Implementation Details
 
     -   Vertices in the graph represent data points. Each vertice is mechanised
         as a `Datum` - this class is not yet provided to the framework user. It
@@ -223,7 +210,22 @@ nature of the thing-in-itself ... here of course, we are applying these
 questions to Javascript as a language and runtime.  *Abstraction ===
 Convenience*.
 
+###### [7]
 
+A key paradigm introduced, is the decoupling of namespaces from data structures.
+In our graph store, all objects are namespaced *as if* they are descendents of a
+single Javascript object. However, that object operates under-the-hood as a
+helper of almost server-like complexity, allowing for the creation of *labeled
+pointers* [[4](#4)] between any two *vertices* [[3](#3)] in the graph.
+
+Therefore from a framework user's point of view, namespaces for objects in the
+store are merely an indicical convenience, taking the form of a
+[tree](https://en.wikipedia.org/wiki/Tree_(graph_theory)). 
+
+What we are really talking and thinking about with our store, is modelling each
+data point in our application as a vertex, in a [disconnected graph which may or
+may not contain
+cycles](https://www.quora.com/Can-a-disconnected-graph-contain-cycles). 
 
 
 
