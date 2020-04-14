@@ -1,4 +1,4 @@
-##### Alpha: current software release stage 
+###### Alpha: current software release stage 
 
 -   **User advice :** APIs and variables names are not guaranteed to be stable.
 -   **Developer advice :** Documentation has barely begun, but tests exist.
@@ -11,6 +11,9 @@ design decisions to-date.
 # Modules
 
 #### `corner.js`
+
+
+
 #### `corner-view.js`
 
 
