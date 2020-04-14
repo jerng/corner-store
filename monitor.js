@@ -1,12 +1,10 @@
-export { chart }
+export { monitor }
 import './lib/third-party/d3.v5.js'
-
-//console.log ( d3.zoom ) 
 
 let p = thing => JSON.stringify ( thing, null, 4 )
 
 // D3 visualisation experiment:
-function chart ( graphServer ) {
+function monitor ( graphServer ) {
 
     const 
 

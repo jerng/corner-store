@@ -1,13 +1,11 @@
 import {    Graph as Graph, 
             Script as Script,
             Datum as TestOnlyDatum,
-       } from '../corner.js'
-import * as CornerView from '../corner-view.js'
+       } from '../corner-store.js'
+import * as Monitor from '../monitor.js'
 import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'
 //import * as SSON from   '../lib/sson/sson.js'
-
-window.CornerView = CornerView
 
 let p = thing => JSON.stringify ( thing, null, 4 )
 
@@ -705,7 +703,7 @@ stale flag?`,
     code : function () {
 
         let s = new Graph( 'store' )
-        CornerView.chart ( s )
+        Monitor.monitor ( s )
 
         s.e = 1
         s.f = 2
@@ -755,7 +753,7 @@ stale flag?`,
     let GRAPH       = S ( 'graph' )
     let VERTICES    = S ( 'vertices' )
   
-//    CornerView.chart ( S ) 
+//    Corner. ( S ) 
 
     S.abacus = { pieces: 'several', beads: { red: 1 } }
     S.donkey = { parts: 'many' }

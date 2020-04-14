@@ -10,14 +10,38 @@ design decisions to-date.
 
 # Modules
 
-#### `corner.js`
+#### `corner-store.js`
 
-   Simply include this file, for example, as a `<script/>`. 
+-   Simply include this file, for example, as a `<script/>`. 
+-   This file exports two classes, `Graph` and `Script`.
+-   A new graph *store* may be obtained with the expression `S = new Graph (
+    'store' )`.
 
-#### `corner-view.js`
+#### `monitor.js`
 
+-   Simply include this file, for example, as a `<script/>`. 
+    -   This file has `corner-store.js` as a dependency, you may want to put
+        them in the same directory.
+    -   This file also has the [`D3: Data-Driven
+        Documents`](https://github.com/d3/d3) library as a dependency.  You may
+        want to put it in `./lib/third-party/d3.v5.js` where this file is in
+        `.`. [^1]
+-   This file exports one method, `monitor`.
+-   A new graph *monitor* may be rendered to an HTML document, with the
+    expression `monitor ( S )`, where S is a graph *store*.
 
+# Application Programming Interface
 
+# Motivations
+
+# Design & Production Decisions
+
+[^1]    
+    -   Mr. Bostock has put a remarkable amount of work into creating and
+        maintaining D3.
+    -   Personally, I found the documentation hard to ingest, and have joked
+        as a friend suggested that it may be useful in the future to write a
+        wrapper called D4: D3 for Dummies. 
 
 
 
