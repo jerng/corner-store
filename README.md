@@ -165,7 +165,7 @@ At the point in 2019 at which I sought to start building internal websites and
 apps, I did a quick review of the Javascript ecosystem which I hadn't touched
 since ... 2015 ... and concluded that it was in a bit of a Cambrian explosion.
 While browser compatibility has stablised remarkably since 2010, language
-features have creeped wholesale into the spec, and a massive Framework War of
+features had creeped wholesale into the spec, and a massive Framework War of
 sorts was ongoing.
 
 Given our extremely limited corporate resources, I decided to sidestep as many
