@@ -36,8 +36,7 @@ design decisions to-date.
 
 # Design & Production Decisions
 
-[^1]    
-    -   Mr. Bostock has put a remarkable amount of work into creating and
+[^1]: Mr. Bostock has put a remarkable amount of work into creating and
         maintaining D3.
     -   Personally, I found the documentation hard to ingest, and have joked
         as a friend suggested that it may be useful in the future to write a
