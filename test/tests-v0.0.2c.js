@@ -16,10 +16,10 @@ new Exam.Exam ( {
     config : {
         expand : {
           initialContext : true,
-          //tests : {
-          //    legible : true,
+            tests : {
+              legible : true,
           //    verifiable : true
-          //},
+            },
           //unexpectedScript : false
         }
     },
@@ -710,26 +710,26 @@ stale flag?`,
 
         s.e = 1
         s.f = 2
-        s.s = new Script ( e => e.e + e.f )
+        s.iComputeDataFromSources = new Script ( e => e.e + e.f )
 
         s.h = {}
         s.h.i = 4
         s.h.j = 6
-        s.h.k = new Script ( e => e.h.i + e.h.j )
-        s.n = new Script ( s => s.s + s.h.k)
+        s.h.iComputeDataFromSources = new Script ( e => e.h.i + e.h.j )
+        s.iComputeDataFromGrandSourcesViaSources = new Script ( s => s.iComputeDataFromSources + s.h.iComputeDataFromSources)
 
 
-        s.r = new Script ( s => { 
-                return s.dependent = s.n 
+        s.reactive = new Script ( s => { 
+                return s.dependent = s.iComputeDataFromGrandSourcesViaSources 
             }, 
             {   reactive    : true,
                 getHandler  : false
             } 
         ) 
 
-        setTimeout ( ()=>s.s, 1000 )
-        setTimeout ( ()=>s.h.k, 2000 )
-        setTimeout ( ()=>s.n, 3000 )
+        setTimeout ( ()=>s.iComputeDataFromSources, 1000 )
+        setTimeout ( ()=>s.h.iComputeDataFromSources, 2000 )
+        setTimeout ( ()=>s.iComputeDataFromGrandSourcesViaSources, 3000 )
 
       //console.warn ( 
       //    `r`,                        s('vertices').r('datum'), s.r, "\n",
