@@ -25,7 +25,7 @@ design decisions to-date.
     -   This file also has the [`D3: Data-Driven
         Documents`](https://github.com/d3/d3) library as a dependency.  You may
         want to put it in `./lib/third-party/d3.v5.js` where this file is in
-        `.`. [^1]
+        `.`. [[1](#1)]
 -   This file exports one method, `monitor`.
 -   A new graph *monitor* may be rendered to an HTML document, with the
     expression `monitor ( S )`, where S is a graph *store*.
@@ -36,11 +36,15 @@ design decisions to-date.
 
 # Design & Production Decisions
 
-[^1]: Mr. Bostock has put a remarkable amount of work into creating and
-        maintaining D3.
-    -   Personally, I found the documentation hard to ingest, and have joked
-        as a friend suggested that it may be useful in the future to write a
-        wrapper called D4: D3 for Dummies. 
+---
+
+###### [1]
+Mr. Bostock has put a remarkable amount of work into creating and maintaining D3.
+
+-   Personally, I found the documentation hard to ingest, and the proliferation
+    of versions and examples across this ecosystem is quite expansive. A friend
+    suggested that it may be useful in the future to write a wrapper called D4:
+    D3 for Dummies. 
 
 
 
