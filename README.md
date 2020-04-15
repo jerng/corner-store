@@ -142,7 +142,7 @@ Please walk along with `demo.html`.
 6.  ## Creating a Monitor 
 
     ```javascript
-    Monitor.Monitor ( CS )
+    Monitor.monitor ( CS )
     ```
 
     ![Creating a Monitor](https://jerng.github.io/corner-store/images/demo-slide-06\(2020-04-15\).jpg)
@@ -153,7 +153,7 @@ Please walk along with `demo.html`.
 
     ```javascript
     CS = new Graph ( 'store' )
-    Monitor.Monitor ( CS )
+    Monitor.monitor ( CS )
     CS.a = 1
     CS.b = 2
     CS.c = new Script ( g => g.a + g.b )
