@@ -1,7 +1,7 @@
 import {    Graph as Graph, 
             Script as Script,
             Datum as TestOnlyDatum,
-       } from '../corner-store.js'
+       } from '../store.js'
 import * as Monitor from '../monitor.js'
 import * as Exam from '../lib/submodules/exam.js/exam.js'
 //import * as Serl from   '../lib/serl.js'

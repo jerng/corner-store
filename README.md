@@ -4,20 +4,17 @@
 
 ###### Current Release Stage : **`ALPHA`**
 
--   **User Advice :**       APIs and variables names are not guaranteed to be
-                            stable. But the API surface is very small, so feel
-                            free to just play with it, like a toy. Maybe you
-                            will find something useful. Maybe not.
+-   **User Advice :** APIs and variables names are not guaranteed to be stable.
+    But the API surface is very small, so feel free to just play with it, like a
+    toy. Maybe you will find something useful. Maybe not.
 
 -   **Developer Advice :**  Tests exist; documentation has barely begun. If you
-                            feel inclined to get involved, feel free to do so
-                            with or without asking me questions or sending me
-                            comments. Use Github for public comms whenever
-                            possible, that will reduce repetition. I should be
-                            able to update docs for urgent sections within a
-                            day, whenever needed.
+    feel inclined to get involved, feel free to do so with or without asking me
+    questions or sending me comments. Use Github for public comms whenever
+    possible, that will reduce repetition. I should be able to update docs for
+    urgent sections within a day, whenever needed.
 
-README.md should tell you how to use this software, if you would like to try it
+`README.md` should tell you how to use this software, if you would like to try it
 out. Beyond that, [a little will be be
 written](#motivation-design-production-decisions) about the motivations for the
 production of this software, and how those motivations have influenced design
@@ -25,7 +22,7 @@ decisions to-date.
 
 # Modules
 
-#### `corner-store.js`
+#### `store.js`
 
 -   This file exports two classes, `Graph` and `Script`.
 -   A new graph *store* may be obtained with the expression `S = new Graph (
@@ -38,7 +35,7 @@ decisions to-date.
 -   A new graph *monitor* may be rendered to an HTML document, with the
     expression `monitor ( S )`, where S is a graph *store*.
 -   Simply `include` this file, or use it as a `<script/>`. 
-    -   This file has `corner-store.js` as a dependency, you may want to put
+    -   This file has `store.js` as a dependency, you may want to put
         them in the same directory.
     -   This file also has the [`D3: Data-Driven
         Documents`](https://github.com/d3/d3) library as a dependency.  You may
@@ -47,7 +44,11 @@ decisions to-date.
 
 # Application Programming Interface
 
+1.  ### Creating a Store
 
+    ![CS = new Graph ('store')](https://jerng.github.io/corner-store/images/new-graph-store-2020-04-15.png)
+
+2.  ###
 
 # Motivation, Design, Production Decisions
 
@@ -55,7 +56,7 @@ decisions to-date.
 
 1.  ### Metaprogramming via `Proxy`
 
-    By the heuristic of [minimalism in tooling](#minimalism-in-tooling), the
+    By the heuristic of [minimalism](#minimalism-in-tooling), the
     entrypoint for the framework API is a single proxied object, which we can refer
     to generically as a *store*, hence the project's choice of name. [[5](#5)]
 
@@ -67,14 +68,14 @@ decisions to-date.
     the 'normal' path to acquiring a mastery of software craftsmanship *should*
     begin *in the web browser*.[[2](#2)]
 
-    -   Pure Javascript - no special syntax, sigils, brackets, or
-        pre-compilation needed.
+    -   Vanilla [Javascript](https://tc39.es/ecma262/) - no special syntax,
+        sigils, brackets, templates, or pre-compilation needed.
     -   It can be compiled, built, performance enhanced, what-have-you, later.
         Simply write Scripts into your Graph, which perform the necessary
         adjustments to other Scripts, or to blocks of text. If you want
         non-specification syntax, or features, you are encouraged to *learn how
-        to parse it by yourself*. The store is a helper for the organisation of
-        your mind.
+        to parse it by yourself*. The store is a [helper for the organisation of
+        your mind](#purpose-of-this-software).
     -   For now, pop the module into a browser, run code without a buildstep. 
 
 3.  ### Automatic Reduction and Reactivity [[6](#6)]
