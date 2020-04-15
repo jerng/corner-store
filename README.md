@@ -2,6 +2,7 @@
 |:---|:---
 |[Quick Start](#quick-start)
 |   |[Purpose of this Software](#purpose-of-this-software)
+|   |[A Demo](#a-demo)
 |   |[Current Release Stage](#current-release-stage-alpha)
 |   |[Modules](#modules)
 |[Application Programming Interface](#application-programming-interface)
@@ -26,6 +27,10 @@
 ### Purpose of this Software
 
 *The __store__ organises human memory during Javascript application development.*
+
+###### A Demo 
+
+[`demo.html`](https://jerng.github.io/corner-store/demo.html).
 
 ###### Current Release Stage : **`ALPHA`**
 
