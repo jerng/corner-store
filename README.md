@@ -199,6 +199,9 @@ Please walk along with `demo.html`.
     ![Visualising Reactive Data Structures (i)](https://jerng.github.io/corner-store/images/demo-slide-09\(2020-04-15\).jpg)
 
     ---
+    ```javascript
+    CS.a = 99
+    ```
 
     ![Visualising Reactive Data Structures (ii](https://jerng.github.io/corner-store/images/demo-slide-10\(2020-04-15\).jpg)
     
