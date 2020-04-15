@@ -74,7 +74,7 @@ Please walk along with `demo.html`.
 
 1.  ## Creating a Store
     
-    ```
+    ```javascript
     CS = new Graph ( 'store' )
     ```
 
@@ -84,7 +84,7 @@ Please walk along with `demo.html`.
 
 2.  ## Setting Datum and Script Values 
 
-    ```
+    ```javascript
     CS.a = 1
     CS.b = 2
     CS.c = new Script ( g => g.a + g.b )
@@ -97,7 +97,7 @@ Please walk along with `demo.html`.
 
 3.  ## Getting Trees Out
 
-    ```
+    ```javascript
     CS.d = { m:1, n:2, o:3 }
     CS.d.n = [ 77, 88, 99 ]
     CS.d
@@ -110,7 +110,7 @@ Please walk along with `demo.html`.
 
 4.  ## TMI: Internal Representation of Data
 
-    ```
+    ```javascript
     CS ()
     CS ('graph')
     ```
@@ -121,7 +121,7 @@ Please walk along with `demo.html`.
 
 5.  ## Recap 
 
-    ```
+    ```javascript
     CS = new Graph ( 'store' )
     CS.a = 1
     CS.b = 2
@@ -141,7 +141,7 @@ Please walk along with `demo.html`.
 
 6.  ## Creating a Monitor 
 
-    ```
+    ```javascript
     Monitor.Monitor ( CS )
     ```
 
@@ -151,7 +151,7 @@ Please walk along with `demo.html`.
 
 7.  ## Visual Recap 
 
-    ```
+    ```javascript
     CS = new Graph ( 'store' )
     Monitor.Monitor ( CS )
     CS.a = 1
@@ -172,7 +172,7 @@ Please walk along with `demo.html`.
 
 8.  ## Visualising the Cache State 
 
-    ```
+    ```javascript
     CS.iHaveSources = new Script ( s => s.a * 2 )
     CS.iHaveSources
     ```
@@ -183,7 +183,7 @@ Please walk along with `demo.html`.
 
 9.  ## Visualising Reactive Data Structures (i) 
 
-    ```
+    ```javascript
     CS.sideEffectedVertex = undefined
     CS.reactiveVertex = new Script (
 
