@@ -44,101 +44,415 @@
 
 
     <section>
-        <article><h6><strong>Alpha</strong> : current software release stage</h6>
+        <article><table>
+<thead>
+<tr>
+<th style="text-align:left">Contents</th>
+<th style="text-align:left">Sub-section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a href="#quick-start">Quick Start</a></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#purpose-of-this-software">Purpose of this Software</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#current-release-stage-alpha">Current Release Stage</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#modules">Modules</a></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="#application-programming-interface">Application Programming Interface</a></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#creating-a-store">Creating a Store</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#setting-datum-and-script-values">Setting <em>Datum</em> and <em>Script</em> Values</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#getting-trees-out">Getting Trees Out</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#tmi-internal-representation-of-data">TMI: Internal Representation of Data</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#recap">Recap</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#creating-a-monitor">Creating a Monitor</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#visual-recap">Visual Recap</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#visualising-the-cache-state">Visualising the Cache State</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#visualising-reactive-data-structures-i">Visualising Reactive Data Structures</a></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="#motivation-design-production-decisions">Motivation, Design, Production Decisions</a></td>
+<td style="text-align:left"></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#metaprogramming-via-proxy">Metaprogramming via Proxy</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#minimalism-in-tooling">Minimalism in Tooling</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#user-content-automatic-reduction-and-reactivity-6">Automatic Reduction and Reactivity</a></td>
+</tr>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"><a href="#supporting-emergent-data-structures">Supporting Emergent Data Structures</a></td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="#footnotes">Footnotes</a></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table>
+<h1>Quick Start</h1>
+<h3>Purpose of this Software</h3>
+<p><em>The <strong>store</strong> organises human memory during Javascript application development.</em></p>
+<h6>Current Release Stage : <strong><code>ALPHA</code></strong></h6>
 <ul>
-<li><strong>User advice :</strong> APIs and variables names are not guaranteed to be stable.</li>
-<li><strong>Developer advice :</strong> Tests exist; documentation has barely begun.</li>
+<li>
+<p><strong>User Advice :</strong> APIs and variables names are not guaranteed to be stable.
+But the API surface is very small, so feel free to just play with it, like a
+toy. Maybe you will find something useful. Maybe not.</p>
+</li>
+<li>
+<p><strong>Developer Advice :</strong>  Tests exist; documentation has barely begun. If you
+feel inclined to get involved, feel free to do so with or without asking me
+questions or sending me comments. Use Github for public comms whenever
+possible, that will reduce repetition. I should be able to update docs for
+urgent sections within a day, whenever needed.</p>
+</li>
 </ul>
-<p>README.md should tell you how to use this software, if you would like to try it
-out. <em>Furtheronto</em> that, a little will be be written about the motivations for
-the production of this software, and how those motivations have influenced
-design decisions to-date.</p>
-<h1>Modules</h1>
-<h4><code>corner.js</code></h4>
-<p>Simply include this file, for example, as a <code>&lt;script/&gt;</code>.</p>
-<h4><code>corner-view.js</code></h4>
-<h1>Previous Documentation Below</h1>
-<p>An introduction via pretty slides is found
-<a href="https://docs.google.com/presentation/d/1esYQhtpjGjE9KsLmrdkGLD642FO-jTEeEuHlg4h6MWk/edit#slide=id.p">here</a>.</p>
-<p>This is a datastore frontend which I’ve developed for personal use.</p>
-<h1>Design Goals</h1>
+<p><code>README.md</code> should tell you how to use this software, if you would like to try it
+out. Beyond that, <a href="#motivation-design-production-decisions">a little will be be
+written</a> about the motivations for the
+production of this software, and how those motivations have influenced design
+decisions to-date. A very limited amount of expertise has gone into development
+so far, so please bear with the infancy of the project.</p>
+<h2>Modules</h2>
+<h4><code>store.js</code></h4>
 <ul>
-<li>Reactive</li>
-<li>Keystroke-minimal</li>
-<li>Easy to Run
+<li>This file exports two classes, <code>Graph</code> and <code>Script</code>.</li>
+<li>A new graph <em>store</em> may be obtained with the expression <code>S = new Graph ( 'store' )</code>.</li>
+<li>Simply <code>include</code> this file, or use it as a <code>&lt;script/&gt;</code>.</li>
+</ul>
+<h4><code>monitor.js</code></h4>
 <ul>
-<li>Pure Javascript - no illegal syntax, sigils, brackets, or pre-compilation needed.</li>
-<li>Pop the module into a browser, run code without a buildstep.</li>
-<li>It can be compiled, built, performance enhanced, what-have-you, later.</li>
+<li>This file exports one method, <code>monitor</code>.</li>
+<li>A new graph <em>monitor</em> may be rendered to an HTML document, with the
+expression <code>monitor ( S )</code>, where S is a graph <em>store</em>.</li>
+<li>Simply <code>include</code> this file, or use it as a <code>&lt;script/&gt;</code>.
+<ul>
+<li>This file has <code>store.js</code> as a dependency, you may want to put
+them in the same directory.</li>
+<li>This file also has the <a href="https://github.com/d3/d3"><code>D3: Data-Driven Documents</code></a> library as a dependency.  You may
+want to put it in <code>./lib/third-party/d3.v5.js</code> where this file is in
+<code>.</code>. [<a href="#1">1</a>]</li>
 </ul>
 </li>
 </ul>
-<h1>Minified... just run it now!</h1>
-<h2>Here is the code.</h2>
-<p>You can paste it into your console and follow along the next slides.</p>
-<pre class="prettyprint source lang-javascript"><code>class ArrowOut{constructor(a){return this.okey=a,this.reads=[],this.updates=[],this.deletes=[],this}}class ArrowIn{constructor(a){return this.ikey=a,this.reads=[],this.updates=[],this.deletes=[],this}}class Algo{constructor(...a){if(1!==a.length)throw Error(`Algo.constructor : expected one and only one argument, received (${a.length}) arguments`);if(&quot;function&quot;!=typeof a[0])throw Error(`Algo.constructor : typeof (argument provided) was not 'function'`);this.lambda=a[0];return this}}class Datum extends Function{toString(){return[&quot;Datum.toString/0 returned:&quot;,[&quot;a shallow copy of enumerable properties, { ... this }&quot;,{...this}],[&quot;Object.getOwnPropertyDescriptors ( this )&quot;,Object.getOwnPropertyDescriptors(this)]]}constructor(...a){switch(super(),this.key,this.value,this.arrows={in:{},out:{}},this.log={reads:[],updates:[],deletes:[]},this.cache={stale:!1,hits:[],misses:[]},a.length){case 0:return;case 1:switch(typeof a[0]){case&quot;string&quot;:return this.key=a[0],this;case&quot;object&quot;:return this.key=Object.keys(a[0])[0],this.value=a[0][this.key],this;default:throw Error(`Datum::constructor/1 called on n, where (typeof n) is not 'string' or 'object';  branch undefined`);}default:throw Error(`datum.constructor/n called, branch for this arity is undefined.`);}}}class Graph extends Datum{toString(){return[&quot;Graph.toString/0 returned:&quot;,super.toString()]}constructor(...a){switch(super(),this.key=&quot;&quot;,this.value={},this.handlers=this.handlers(),this.datumHandler={apply:this.handlers.datumHandlerApply,deleteProperty:this.handlers.datumHandlerDeleteProperty,get:this.handlers.datumHandlerGet,set:this.handlers.datumHandlerSet},this.graphHandler={...this.datumHandler,apply:this.handlers.graphHandlerApply},this.proxy=new Proxy(this,this.graphHandler),a.length){case 0:return{graph:this,server:this.proxy};case 1:switch(a[0]){case&quot;server&quot;:return this.proxy;case&quot;graph&quot;:return this;default:throw Error(`Graph.constructor/1 called, the argument was not understood.`);}break;default:throw Error(`Graph.constructor/n called, where no branch was defined for arity-n.`);}}deleteVertex(a){if(!(a in this.value))return!0;if(&quot;object&quot;==typeof this.value[a](&quot;datum&quot;).value)for(const b in this.value)if(b.startsWith(a+&quot;.&quot;)&&!this.deleteVertex(b))return!1;return delete this.value[a],!(a in this.value)}getVertex(a){if(a in this.value){let b=this.value[a]();return b instanceof Algo?b.lambda(this.proxy):&quot;object&quot;==typeof b?this.value[a]:b}}setVertex(...a){let b;switch(a.length){case 0:throw Error(`graph.setVertex/0 called; unsupported arity.`);case 1:console.warn(`graph.setVertex/1 : rewrite & test for this branch`);let c=a[0];b=new Datum(c),this.value[b.key]=new Proxy(b,this.datumHandler);}let c=a[0],d=a[1];if(!this.deleteVertex(c))return!1;if(b=new Datum({[c]:d}),&quot;object&quot;==typeof d)for(const a in d){if(!this.setVertex(c+&quot;.&quot;+a,d[a]))return!1}if(d instanceof Algo){let a=new Proxy({},{get:(a,d)=>{&quot;causal&quot;in b.arrows.in||(b.arrows.in.causal=[]),b.arrows.in.causal.push(new ArrowIn(d));let e=this.value[d](&quot;datum&quot;);&quot;causal&quot;in e.arrows.out||(e.arrows.out.causal=[]),e.arrows.out.causal.push(new ArrowOut(c))},set:(a,d)=>{&quot;causal&quot;in b.arrows.out||(b.arrows.out.causal=[]),b.arrows.out.causal.push(new ArrowOut(d)),d in this.value||this.setVertex(d,void 0);let e=this.value[d](&quot;datum&quot;);&quot;causal&quot;in e.arrows.in||(dependencyDatum.arrows.in.causal=[]),e.arrows.in.causal.push(new ArrowIn(c))}});d.lambda(a)}return this.value[b.key]=new Proxy(b,this.datumHandler),this.value[b.key]()==a[1]}handlers(){return{datumHandlerDeleteProperty:(a,b)=>this.deleteVertex(b),datumHandlerGet:(a,b)=>{let c=(a.key?a.key+&quot;.&quot;:&quot;&quot;)+b;return this.getVertex(c)},datumHandlerSet:(a,b,c)=>{let d=(a.key?a.key+&quot;.&quot;:&quot;&quot;)+b;return this.setVertex(d,c)},datumHandlerApply:(a,b,c)=>{switch(c.length){case 0:let b=a;return&quot;object&quot;==typeof b.value?this.recoverEnumerableProperties(b):b.value;case 1:switch(c[0]){case&quot;unproxy&quot;:return a;case&quot;gopds&quot;:return Object.getOwnPropertyDescriptors(this);case&quot;datum&quot;:return a;default:throw Error(`graph.datumHandleApply/1 : the argument was not understood`);}default:throw Error(`graph.datumHandlerApply/n, where arity-n has no defined branch`);}},graphHandlerApply:(a,b,c)=>{switch(c.length){case 0:let b=a;return&quot;object&quot;==typeof b.value?this.recoverEnumerableProperties(b):b.value;case 1:switch(c[0]){case&quot;unproxy&quot;:return a;case&quot;gopds&quot;:return Object.getOwnPropertyDescriptors(this);case&quot;graph&quot;:return a;case&quot;server&quot;:return this.proxy;default:throw Error(`graph.graphHandlerApply/1 called; the argument was not understood`);}default:throw Error(`graph.graphHandlerApply/n called, where no branch is defined for arity-n`);}}}}recoverEnumerableProperties(a){if(a instanceof Datum){for(const b in this.value)if(b.startsWith(a.key+&quot;.&quot;)){let c=b.slice(a.key.length+1);c.includes(&quot;.&quot;)||(a.value[c]=this.value[b]())}return a.value}for(const b in this.value)b.includes(&quot;.&quot;)||(a[b]=this.value[b]());return a}}globalThis.Algo=Algo,globalThis.Datum=Datum,globalThis.Graph=Graph;
-</code></pre>
-<h1>Transcript from Demo Slides</h1>
-<h2>slide</h2>
-<p>Here's all the demo code so far.</p>
-<pre class="prettyprint source lang-javascript"><code>new Graph
-G = new Graph('server')
-G.a = 1
-G.b = 2
-G.c = new Algo ( g => g.a + g.b )
-G.c
-G.d = { m:1, n:2, o:3 }
-G.d.n = [ 77, 88, 99 ]
-G.d
-G.d()
-G()
-G(‘graph’)
-</code></pre>
-<h2>slide</h2>
-<p>A central concept to this tool is graphs. Graphs data structures have become
-very popular, with the rise of social networking and recommendation engines.</p>
-<p>But application data is often not structured as graphs because the languages
-developers use do not come with built-in graph data structures.</p>
-<p>For example, JavaScript has Arrays, and Objects, and Weak Maps, and Sets, but
-all of these are simply nested trees of data. This is un-brainlike, and
-generally it feels restrictive.</p>
-<h4>The <em>Graph.constructor/0</em> will return a bunch of useful things, but we don’t need all of them for the demo.</h4>
-<h2>slide</h2>
-<h4><em>Graph.constructor/1</em> can give you a simple server, to get started.</h4>
-<p>The real graph data is a few layers beneath, but what you get here is a proxy,
-which intercepts your calls to the graph data.</p>
-<p>From the developer’s point of view, the graph server is a simple user-interface
-to a datastore.</p>
-<p>The developer doesn’t need to know how the datastore works.</p>
-<p>Underneath, it’s just JavaScript.</p>
-<h2>slide</h2>
-<h4>For this demo, the variable <em>G</em> refers to our graph server.</h4>
-<p>G is very easy to use.</p>
-<h4>Here we <em>set</em> two literal values in G.</h4>
-<h4>Then we <em>set</em> a computed value.</h4>
-<p>The Algo class is not complex. It simply functions as a type marker which tells
-the proxy how to handle getters and setters.</p>
-<h4>Voila, if we <em>get</em> the computed value, it just works.</h4>
-<p>ECMAScript has always been a shameful mess, and as it grows older and uglier, I
-spend too much time wondering why global standards must be so hard to use.</p>
-<p>For what it’s worth, jQuery has been a gold standard in minimalist ease of
-access. Follow jQuery.</p>
-<h2>slide</h2>
-<p>We can put anything into our graph via the server. The server behaves just like
-a POJO, most of the time. But you’re about to see when it doesn’t.</p>
-<p>In order for the server to track every single item under its namespace, it
-proxies every single subobject.</p>
-<p>But our applications don’t care about these proxies, we just want our data.</p>
-<h4>Use <em>a function call (arity 0)</em> to extract a tree of data from any non-leaf node in the graph.</h4>
-<h2>slide</h2>
-<h4>We can <em>call the server with arity 0</em> to extract the total tree.</h4>
-<p>Time for a peek under the hood.</p>
-<p>We can <em>call the server with arity 1</em> to access the un-proxied target Graph
-instance. But most developers would probably not bother, most of the time.</p>
-<p>But if you take an interest in how this is working, you will note that the
-server deconstructs every single POJO tree when it is inserted to the graph.</p>
-<h4>The graph data is actually stored in a flat index of compound keys.</h4>
-<h2>end of slides</h2></article>
+<h1>Application Programming Interface</h1>
+<p>Please walk along with <code>demo.html</code>.</p>
+<ol>
+<li>
+<h2>Creating a Store</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-01(2020-04-15).jpg" alt="Creating a Store"></h2>
+</li>
+<li>
+<h2>Setting Datum and Script Values</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-02(2020-04-15).jpg" alt="Setting Datum and Script Values"></h2>
+</li>
+<li>
+<h2>Getting Trees Out</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-03(2020-04-15).jpg" alt="Getting Trees Out"></h2>
+</li>
+<li>
+<h2>TMI: Internal Representation of Data</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-04(2020-04-15).jpg" alt="TMI: Internal Representation of Data"></h2>
+</li>
+<li>
+<h2>Recap</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-05(2020-04-15).jpg" alt="Recap"></h2>
+</li>
+<li>
+<h2>Creating a Monitor</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-06(2020-04-15).jpg" alt="Creating a Monitor"></h2>
+</li>
+<li>
+<h2>Visual Recap</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-07(2020-04-15).jpg" alt="Visual Recap"></h2>
+</li>
+<li>
+<h2>Visualising the Cache State</h2>
+<h2><img src="https://jerng.github.io/corner-store/images/demo-slide-08(2020-04-15).jpg" alt="Visualising the Cache State"></h2>
+</li>
+<li>
+<h2>Visualising Reactive Data Structures (i)</h2>
+<p><img src="https://jerng.github.io/corner-store/images/demo-slide-09(2020-04-15).jpg" alt="Visualising Reactive Data Structures (i)"></p>
+<hr>
+<p><img src="https://jerng.github.io/corner-store/images/demo-slide-10(2020-04-15).jpg" alt="Visualising Reactive Data Structures (ii"></p>
+</li>
+</ol>
+<hr>
+<h1>Motivation, Design, Production Decisions</h1>
+<p>... and some discoveries along the ways of implemention.</p>
+<ol>
+<li>
+<h3>Metaprogramming via <code>Proxy</code></h3>
+<p>By the heuristic of <a href="#minimalism-in-tooling">minimalism</a>, the
+entrypoint for the framework API is a single proxied object, which we can refer
+to generically as a <em>store</em>, hence the project's choice of name. [<a href="#5">5</a>]</p>
+</li>
+<li>
+<h3>Minimalism in Tooling</h3>
+<p>A key goal of this project is to minimise the number of tools involved in
+taking the development of a Javascript software application, from design
+draught, to webscale robustness. Everyone owns a web browser (or three). So
+the 'normal' path to acquiring a mastery of software craftsmanship <em>should</em>
+begin <em>in the web browser</em>.[<a href="#2">2</a>]</p>
+<ul>
+<li>Vanilla <a href="https://tc39.es/ecma262/">Javascript</a> - no special syntax,
+sigils, brackets, templates, or pre-compilation needed.</li>
+<li>It can be compiled, built, performance enhanced, what-have-you, later.
+Simply write Scripts into your Graph, which perform the necessary
+adjustments to other Scripts, or to blocks of text. If you want
+non-specification syntax, or features, you are encouraged to <em>learn how
+to parse it by yourself</em>. The store is a <a href="#purpose-of-this-software">helper for the organisation of
+your mind</a>.</li>
+<li>For now, pop the module into a browser, run code without a buildstep.</li>
+</ul>
+</li>
+<li>
+<h3>Automatic Reduction and Reactivity [<a href="#6">6</a>]</h3>
+<h6>Implementation Details</h6>
+<p>This is achieved by implementing <code>traits</code> in our Script instance vertices.
+Traits denote the <em>rules</em> which govern the operation of each Script instance
+vertice. Some key traits have been implemented, while others remain on the
+whiteboard.</p>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Done?</th>
+<th>Intended Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hasSources</td>
+<td>YES</td>
+<td>can read from graph</td>
+</tr>
+<tr>
+<td>hasSinks</td>
+<td>YES</td>
+<td>can write to graph</td>
+</tr>
+<tr>
+<td>cached</td>
+<td>YES</td>
+<td>lazy updates</td>
+</tr>
+<tr>
+<td>reactive</td>
+<td>YES</td>
+<td>active updates, on source changes</td>
+</tr>
+<tr>
+<td>setHandler</td>
+<td>YES</td>
+<td>code triggered by proxyHandler.set</td>
+</tr>
+<tr>
+<td>getHandler</td>
+<td>YES</td>
+<td>code triggered by proxyHandler.get</td>
+</tr>
+<tr>
+<td>-------------</td>
+<td>------</td>
+<td>-------------------</td>
+</tr>
+<tr>
+<td>firmSources</td>
+<td>NO</td>
+<td>blocks source deletion</td>
+</tr>
+<tr>
+<td>firmSinks</td>
+<td>NO</td>
+<td>blocks sink deletion</td>
+</tr>
+<tr>
+<td>exclusiveGets</td>
+<td>NO</td>
+<td>monopolises source reads</td>
+</tr>
+<tr>
+<td>exclusiveSets</td>
+<td>NO</td>
+<td>monopolises sink writes</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<h3>Supporting Emergent Data Structures</h3>
+<p>Javascript didn't make room for directed graphs to be first-class citizens.
+To be fair, very few languages do. (And to be honest, I'm not quite sure what
+this would mean.) But directed graphs do need to be front and centre in our
+thought processes as programmers, because the world we are programming about
+in inherently full of these data structures.</p>
+<p>To take it to one extreme, consider the <a href="https://writings.stephenwolfram.com/2020/04/finally-we-may-have-a-path-to-the-fundamental-theory-of-physics-and-its-beautiful/">physics project at
+Wolfram-Alpha</a>.</p>
+<h6>Implementation Details</h6>
+<ul>
+<li>
+<p>Vertices in the graph represent data points. Each vertice is mechanised
+as a <code>Datum</code> - this class is not yet provided to the framework user. It
+has two child classes which are, however, provided as part of the
+framework's API.</p>
+<ol>
+<li>
+<p><code>Graph</code> is an extension of <code>Datum</code>, and this special class of datum
+is the underlying class which coordinates <strong>all vertices</strong> (data
+points) in our graphs. The graph 'store' object is a <em>proxied</em>
+instance of the Graph class.</p>
+</li>
+<li>
+<p><code>Script</code> is an extension of <code>Datum</code>, and this special class of datum
+is the underlying class which represents <strong>those vertices</strong> (data
+points) in our graphs whch are of a <strong>dimensionality greater than
+1</strong> in the sense that each such datum potentially represents yet
+another graph (which may be contained within our initial graph, or
+simply not documented at all).</p>
+</li>
+</ol>
+<p>It is possible to create multiple Graph instances per realm. And it is
+possible to refer to subsets of a Graph instance's via variable names.</p>
+<p>Putting Graph instances into Graph instances is an intriguing
+opportunity which has not yet been studied closely. Please try it and
+complain about the consequences.</p>
+<p>Please also try zany things like programming mini neural networks into
+the store just to see how bad the performance is. At least they might be
+fun to watch in the monitoring tool.</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h5>Footnotes</h5>
+<h6>[1]</h6>
+<p>Mr. Bostock has put a remarkable amount of work into creating and maintaining
+D3. This should be duly applauded.</p>
+<ul>
+<li>Personally, I found the documentation hard to ingest, and that the
+proliferation of versions and examples across this ecosystem was somewhat
+confusing. A friend suggested that it may be useful in the future to write a
+wrapper called D4: D3 for Dummies... I may have to take that seriously if I
+acquire some affluence to pursue this.</li>
+</ul>
+<h6>[2]</h6>
+<p>For all its manifest progress, computing remains somewhat divisive, between what
+is easy to learn, and what is powerful to deploy. Fortunately, many divides
+can be easily bridged with just a little middleware. This piece of software aims
+to do just that.</p>
+<p>The 'industry standard' for using ECMAScript in 2020 incorporates toolchains and
+buildsteps and arbitrary syntaxes deemed superior by various parties, then
+compiled to standard Javascript runtimes. But the runtime itself is often
+sidelined - instead of figuring out how to work within its limitations, the
+ecosystem glorifies working around them.</p>
+<p>If you feel similarly dank about tooling proliferation, but still require a
+semblance of professional allure, consider this Facebook-owned project to
+produce a unified toolchain, led by the <a href="https://twitter.com/sebmck">creator of
+Babel</a>:
+<a href="https://romejs.dev/">Rome</a>.</p>
+<p>On a more selfish level, I currently do not work in professional software.
+Instead I find myself piloting a rather traditional sort of business - a cafe!
+However, we do want to be a modern corporation, and to be minimally competant in
+our delivery of basic software, and hardware, as befits the times. So how should
+a tiny organisation like ours approach such endeavours?</p>
+<p>At the point in 2019 at which I sought to start building internal websites and
+apps, I did a quick review of the Javascript ecosystem which I hadn't touched
+since ... 2015 ... and concluded that it was in a bit of a Cambrian explosion.
+While browser compatibility has stablised remarkably since 2010, language
+features had creeped wholesale into the spec, and a massive Framework War of
+sorts was ongoing.</p>
+<p>Given our extremely limited corporate resources, I decided to sidestep as many
+external dependencies as possible, and to focus on curating our own long-term
+stack from scratch. This served both as an exercise is understanding the state
+of Javascript (which I had never mastered) and in turn this delivers some
+necessary foundations for my company's work.</p>
+<h6>[3]</h6>
+<p>Due to an abundance of things in the Javascript universe which bear the name
+'node', from HTML DOM entities to serverside frameworks, this specific term is
+eschewed here, in favour of the term 'vertex' whenever we refer to vertices in
+our graph store.</p>
+<h6>[4]</h6>
+<p>Due to the naming of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow function
+expressions</a>,
+we eschew the term 'arrow' in favour of 'pointer' whenever referring to directed
+edges in our graph.</p>
+<h6>[5]</h6>
+<p>The introduction of
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy">Proxy</a>
+allows Javascript developers to intercept certain operations on certain objects.
+Its limitation is that it cannot intercept most <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD
+operations</a> upon
+just any object, instead it can only intercept CRUD operations upon the <em>keyed
+properties</em> of objects. This fundamentally limits the ways in which we can
+augment the ergonomics of using proxies. If we want to use Proxy, then our
+(programming) user-interface designs <strong><strong>must</strong></strong> revolve around proxied
+objects.</p>
+<h6>[6]</h6>
+<p>One of the defining factors of any mature system is its ability to multiply
+force. The consumer's term for this is, 'it just works', and the question then
+is one of how much magic is too much? At some point, hidden layers obscure the
+nature of the thing-in-itself ... here of course, we are applying these
+questions to Javascript as a language and runtime.  <em>Abstraction ===
+Convenience</em>.</p>
+<h6>[7]</h6>
+<p>A key paradigm introduced, is the decoupling of namespaces from data structures.
+In our graph store, all objects are namespaced <em>as if</em> they are descendents of a
+single Javascript object. However, that object operates under-the-hood as a
+helper of almost server-like complexity, allowing for the creation of <em>labeled
+pointers</em> [<a href="#4">4</a>] between any two <em>vertices</em> [<a href="#3">3</a>] in the graph.</p>
+<p>Therefore from a framework user's point of view, namespaces for objects in the
+store are merely an indicical convenience, taking the form of a
+<a href="https://en.wikipedia.org/wiki/Tree_(graph_theory)">tree</a>.</p>
+<p>What we are really talking and thinking about with our store, is modelling each
+data point in our application as a vertex, in a <a href="https://www.quora.com/Can-a-disconnected-graph-contain-cycles">disconnected graph which may or
+may not contain
+cycles</a>.</p></article>
     </section>
 
 
@@ -155,7 +469,7 @@ server deconstructs every single POJO tree when it is inserted to the graph.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Apr 15 2020 00:16:28 GMT+0800 (Malaysia Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Wed Apr 15 2020 22:48:34 GMT+0800 (Malaysia Time)
 </footer>
 
 <script> prettyPrint(); </script>

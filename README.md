@@ -1,4 +1,4 @@
-|Contents|(section)
+|Contents|Sub-section
 |:---|:---
 |[Quick Start](#quick-start)
 |   |[Purpose of this Software](#purpose-of-this-software)
@@ -43,6 +43,7 @@
 out. Beyond that, [a little will be be
 written](#motivation-design-production-decisions) about the motivations for the
 production of this software, and how those motivations have influenced design
+://camo.githubusercontent.com/bc744237e802fc27d6d878c099aab1077099826a/68747470733a2f2f6a65726e672e6769746875622e696f2f636f726e65722d73746f72652f696d616765732f64656d6f2d736c6964652d303828323032302d30342d3135292e6a7067 0. ## Visualising Reactive Data Structures (ii)
 decisions to-date. A very limited amount of expertise has gone into development
 so far, so please bear with the infancy of the project.
 
@@ -73,46 +74,128 @@ so far, so please bear with the infancy of the project.
 Please walk along with `demo.html`.
 
 1.  ## Creating a Store
+    
+    ```
+    CS = new Graph ( 'store' )
+    ```
 
     ![Creating a Store](https://jerng.github.io/corner-store/images/demo-slide-01\(2020-04-15\).jpg)
+
     ---
 
 2.  ## Setting Datum and Script Values 
 
+    ```
+    CS.a = 1
+    CS.b = 2
+    CS.c = new Script ( g => g.a + g.b )
+    CS.c
+    ```
+
     ![Setting Datum and Script Values](https://jerng.github.io/corner-store/images/demo-slide-02\(2020-04-15\).jpg)
+
     ---
 
 3.  ## Getting Trees Out
 
+    ```
+    CS.d = { m:1, n:2, o:3 }
+    CS.d.n = [ 77, 88, 99 ]
+    CS.d
+    CS.d ()
+    ```
+
     ![Getting Trees Out](https://jerng.github.io/corner-store/images/demo-slide-03\(2020-04-15\).jpg)
+
     ---
 
 4.  ## TMI: Internal Representation of Data
 
+    ```
+    CS ()
+    CS ('graph')
+    ```
+
     ![TMI: Internal Representation of Data](https://jerng.github.io/corner-store/images/demo-slide-04\(2020-04-15\).jpg)
+
     ---
 
 5.  ## Recap 
 
+    ```
+    CS = new Graph ( 'store' )
+    CS.a = 1
+    CS.b = 2
+    CS.c = new Script ( g => g.a + g.b )
+    CS.c
+    CS.d = { m:1, n:2, o:3 }
+    CS.d.n = [ 77, 88, 99 ]
+    CS.d
+    CS.d ()
+    CS ()
+    CS ( 'graph' )
+    ```
+
     ![Recap](https://jerng.github.io/corner-store/images/demo-slide-05\(2020-04-15\).jpg)
+
     ---
 
 6.  ## Creating a Monitor 
 
+    ```
+    Monitor.Monitor ( CS )
+    ```
+
     ![Creating a Monitor](https://jerng.github.io/corner-store/images/demo-slide-06\(2020-04-15\).jpg)
+
     ---
 
 7.  ## Visual Recap 
 
+    ```
+    CS = new Graph ( 'store' )
+    Monitor.Monitor ( CS )
+    CS.a = 1
+    CS.b = 2
+    CS.c = new Script ( g => g.a + g.b )
+    CS.c
+    CS.d = { m:1, n:2, o:3 }
+    CS.d.n = [ 77, 88, 99 ]
+    CS.d
+    CS.d ()
+    CS ()
+    CS ( 'graph' )
+    ```
+
     ![Visual Recap](https://jerng.github.io/corner-store/images/demo-slide-07\(2020-04-15\).jpg)
+
     ---
 
 8.  ## Visualising the Cache State 
 
+    ```
+    CS.iHaveSources = new Script ( s => s.a * 2 )
+    CS.iHaveSources
+    ```
+
     ![Visualising the Cache State](https://jerng.github.io/corner-store/images/demo-slide-08\(2020-04-15\).jpg)
+
     ---
 
 9.  ## Visualising Reactive Data Structures (i) 
+
+    ```
+    CS.sideEffectedVertex = undefined
+    CS.reactiveVertex = new Script (
+
+        s => { s.sideEffectedVertex = s.a + 2 },
+
+        {   reactive    : true,
+            getHandler  : false
+        } 
+    )
+
+    ```
 
     ![Visualising Reactive Data Structures (i)](https://jerng.github.io/corner-store/images/demo-slide-09\(2020-04-15\).jpg)
 
