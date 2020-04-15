@@ -1,6 +1,6 @@
-##### Purpose of this Software
+### Purpose of this Software
 
-**The _store_ is a helper for the organisation of your mind.**
+**The _store_ organises human memory during Javascript application development.**
 
 ###### Current Release Stage : **`ALPHA`**
 
