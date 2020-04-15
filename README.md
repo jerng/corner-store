@@ -70,7 +70,8 @@ so far, so please bear with the infancy of the project.
 
 # Application Programming Interface
 
-Please walk along with `demo.html`.
+Please walk along with
+[`demo.html`](https://jerng.github.io/corner-store/demo.html).
 
 1.  ## Creating a Store
     
