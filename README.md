@@ -30,7 +30,7 @@
 
 ###### A Demo 
 
-[`demo.html`](https://jerng.github.io/corner-store/demo.html).
+[`demo.html`](https://jerng.github.io/corner-store/demo.html)
 
 ###### Current Release Stage : **`ALPHA`**
 
