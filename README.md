@@ -78,7 +78,7 @@ Please walk along with `demo.html`.
     CS = new Graph ( 'store' )
     ```
 
-    ![Creating a Store](https://jerng.github.io/corner-store/images/demo-slide-01\(2020-04-15\).jpg)
+    ![Creating a Store](https://jerng.github.io/corner-store/docs/images/demo-slide-01\(2020-04-15\).jpg)
 
     ---
 
@@ -91,7 +91,7 @@ Please walk along with `demo.html`.
     CS.c
     ```
 
-    ![Setting Datum and Script Values](https://jerng.github.io/corner-store/images/demo-slide-02\(2020-04-15\).jpg)
+    ![Setting Datum and Script Values](https://jerng.github.io/corner-store/docs/images/demo-slide-02\(2020-04-15\).jpg)
 
     ---
 
@@ -104,7 +104,7 @@ Please walk along with `demo.html`.
     CS.d ()
     ```
 
-    ![Getting Trees Out](https://jerng.github.io/corner-store/images/demo-slide-03\(2020-04-15\).jpg)
+    ![Getting Trees Out](https://jerng.github.io/corner-store/docs/images/demo-slide-03\(2020-04-15\).jpg)
 
     ---
 
@@ -115,7 +115,7 @@ Please walk along with `demo.html`.
     CS ('graph')
     ```
 
-    ![TMI: Internal Representation of Data](https://jerng.github.io/corner-store/images/demo-slide-04\(2020-04-15\).jpg)
+    ![TMI: Internal Representation of Data](https://jerng.github.io/corner-store/docs/images/demo-slide-04\(2020-04-15\).jpg)
 
     ---
 
@@ -135,7 +135,7 @@ Please walk along with `demo.html`.
     CS ( 'graph' )
     ```
 
-    ![Recap](https://jerng.github.io/corner-store/images/demo-slide-05\(2020-04-15\).jpg)
+    ![Recap](https://jerng.github.io/corner-store/docs/images/demo-slide-05\(2020-04-15\).jpg)
 
     ---
 
@@ -145,7 +145,7 @@ Please walk along with `demo.html`.
     Monitor.monitor ( CS )
     ```
 
-    ![Creating a Monitor](https://jerng.github.io/corner-store/images/demo-slide-06\(2020-04-15\).jpg)
+    ![Creating a Monitor](https://jerng.github.io/corner-store/docs/images/demo-slide-06\(2020-04-15\).jpg)
 
     ---
 
@@ -166,7 +166,7 @@ Please walk along with `demo.html`.
     CS ( 'graph' )
     ```
 
-    ![Visual Recap](https://jerng.github.io/corner-store/images/demo-slide-07\(2020-04-15\).jpg)
+    ![Visual Recap](https://jerng.github.io/corner-store/docs/images/demo-slide-07\(2020-04-15\).jpg)
 
     ---
 
@@ -177,7 +177,7 @@ Please walk along with `demo.html`.
     CS.iHaveSources
     ```
 
-    ![Visualising the Cache State](https://jerng.github.io/corner-store/images/demo-slide-08\(2020-04-15\).jpg)
+    ![Visualising the Cache State](https://jerng.github.io/corner-store/docs/images/demo-slide-08\(2020-04-15\).jpg)
 
     ---
 
@@ -196,14 +196,14 @@ Please walk along with `demo.html`.
 
     ```
 
-    ![Visualising Reactive Data Structures (i)](https://jerng.github.io/corner-store/images/demo-slide-09\(2020-04-15\).jpg)
+    ![Visualising Reactive Data Structures (i)](https://jerng.github.io/corner-store/docs/images/demo-slide-09\(2020-04-15\).jpg)
 
     ---
     ```javascript
     CS.a = 99
     ```
 
-    ![Visualising Reactive Data Structures (ii](https://jerng.github.io/corner-store/images/demo-slide-10\(2020-04-15\).jpg)
+    ![Visualising Reactive Data Structures (ii](https://jerng.github.io/corner-store/docs/images/demo-slide-10\(2020-04-15\).jpg)
     
 ---
 
