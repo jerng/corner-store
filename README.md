@@ -18,7 +18,8 @@
 out. Beyond that, [a little will be be
 written](#motivation-design-production-decisions) about the motivations for the
 production of this software, and how those motivations have influenced design
-decisions to-date.
+decisions to-date. A very limited amount of expertise has gone into development
+so far, so please bear with the infancy of the project.
 
 # Modules
 
@@ -46,7 +47,15 @@ decisions to-date.
 
 1.  ### Creating a Store
 
-    ![CS = new Graph ('store')](https://jerng.github.io/corner-store/images/new-graph-store-2020-04-15.png)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-01\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-02\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-03\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-04\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-05\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-06\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-07\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-08\(2020-04-15\).jpg)
+    ![](https://jerng.github.io/corner-store/images/demo-slide-09\(2020-04-15\).jpg)
 
 2.  ###
 
@@ -103,7 +112,7 @@ decisions to-date.
 
 4.  ### Supporting Emergent Data Structures
 
-    Javascript did't make room for directed graphs to be first-class citizens.
+    Javascript didn't make room for directed graphs to be first-class citizens.
     To be fair, very few languages do. (And to be honest, I'm not quite sure what
     this would mean.) But directed graphs do need to be front and centre in our
     thought processes as programmers, because the world we are programming about
