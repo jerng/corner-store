@@ -1,12 +1,23 @@
 |Contents|(section)
-|---|---
-|[Quick Start](#quick-start)|[Purpose of this Software](#purpose-of-this-software)
-|   |[Current Release Stage](#current-release-stage)
+|:---|:---
+|[Quick Start](#quick-start)
+|   |[Purpose of this Software](#purpose-of-this-software)
+|   |[Current Release Stage](#current-release-stage-alpha)
 |   |[Modules](#modules)
 |[Application Programming Interface](#application-programming-interface)
-|[Motivation, Design, Production Decisions](#motivation-design-production-decisions)|[Metaprogramming via Proxy](#metaprogramming-via-proxy)
+|   |[Creating a Store](#creating-a-store)
+|   |[Setting *Datum* and *Script* Values](#setting-datum-and-script-values)
+|   |[Getting Trees Out](#getting-trees-out)
+|   |[TMI: Internal Representation of Data](#tmi-internal-representation-of-data)
+|   |[Recap](#recap)
+|   |[Creating a Monitor](#creating-a-monitor)
+|   |[Visual Recap](#visual-recap)
+|   |[Visualising the Cache State](#visualising-the-cache-state)
+|   |[Visualising Reactive Data Structures](#visualising-reactive-data-structures-i)
+|[Motivation, Design, Production Decisions](#motivation-design-production-decisions)
+|   |[Metaprogramming via Proxy](#metaprogramming-via-proxy)
 |   |[Minimalism in Tooling](#minimalism-in-tooling)
-|   |[Automatic Reduction and Reactivity](#automatic-reduction-and-reactivity)
+|   |[Automatic Reduction and Reactivity](#user-content-automatic-reduction-and-reactivity-6)
 |   |[Supporting Emergent Data Structures](#supporting-emergent-data-structures)
 |[Footnotes](#footnotes)
 
@@ -14,7 +25,7 @@
 
 ### Purpose of this Software
 
-**The _store_ organises human memory during Javascript application development.**
+*The __store__ organises human memory during Javascript application development.*
 
 ###### Current Release Stage : **`ALPHA`**
 
@@ -64,42 +75,52 @@ Please walk along with `demo.html`.
 1.  ## Creating a Store
 
     ![Creating a Store](https://jerng.github.io/corner-store/images/demo-slide-01\(2020-04-15\).jpg)
+    ---
 
 2.  ## Setting Datum and Script Values 
 
     ![Setting Datum and Script Values](https://jerng.github.io/corner-store/images/demo-slide-02\(2020-04-15\).jpg)
+    ---
 
 3.  ## Getting Trees Out
 
     ![Getting Trees Out](https://jerng.github.io/corner-store/images/demo-slide-03\(2020-04-15\).jpg)
+    ---
 
 4.  ## TMI: Internal Representation of Data
 
     ![TMI: Internal Representation of Data](https://jerng.github.io/corner-store/images/demo-slide-04\(2020-04-15\).jpg)
+    ---
 
 5.  ## Recap 
 
     ![Recap](https://jerng.github.io/corner-store/images/demo-slide-05\(2020-04-15\).jpg)
+    ---
 
 6.  ## Creating a Monitor 
 
     ![Creating a Monitor](https://jerng.github.io/corner-store/images/demo-slide-06\(2020-04-15\).jpg)
+    ---
 
 7.  ## Visual Recap 
 
     ![Visual Recap](https://jerng.github.io/corner-store/images/demo-slide-07\(2020-04-15\).jpg)
+    ---
 
 8.  ## Visualising the Cache State 
 
     ![Visualising the Cache State](https://jerng.github.io/corner-store/images/demo-slide-08\(2020-04-15\).jpg)
+    ---
 
 9.  ## Visualising Reactive Data Structures (i) 
 
     ![Visualising Reactive Data Structures (i)](https://jerng.github.io/corner-store/images/demo-slide-09\(2020-04-15\).jpg)
 
-10. ## Visualising Reactive Data Structures (ii)
+    ---
 
     ![Visualising Reactive Data Structures (ii](https://jerng.github.io/corner-store/images/demo-slide-10\(2020-04-15\).jpg)
+    
+---
 
 # Motivation, Design, Production Decisions
 
