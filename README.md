@@ -43,7 +43,6 @@
 out. Beyond that, [a little will be be
 written](#motivation-design-production-decisions) about the motivations for the
 production of this software, and how those motivations have influenced design
-://camo.githubusercontent.com/bc744237e802fc27d6d878c099aab1077099826a/68747470733a2f2f6a65726e672e6769746875622e696f2f636f726e65722d73746f72652f696d616765732f64656d6f2d736c6964652d303828323032302d30342d3135292e6a7067 0. ## Visualising Reactive Data Structures (ii)
 decisions to-date. A very limited amount of expertise has gone into development
 so far, so please bear with the infancy of the project.
 
