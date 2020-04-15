@@ -36,6 +36,22 @@
         <code>
             CS.a = 99
         </code>
+        Then this.
+        <code>
+            CS.sideEffectedVertex = undefined
+            CS.reactiveVertex = new Script (
+
+                s => { s.sideEffectedVertex = s.a + 2 },
+
+                {   reactive    : true,
+                    getHandler  : false
+                } 
+            ) 
+        </code>
+        Then this.
+        <code>
+            CS.a = 99
+        </code>
     </pre>
     <hr/>
     Not sure what just happened? If answer is yes, please r.t.f.m. Thank you.

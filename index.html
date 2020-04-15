@@ -1,0 +1,61 @@
+<html>
+
+<head>
+    <script type="module" src="demo.js"> </script>
+    <link rel="stylesheet" type="text/css" href="docs/styles/jsdoc-default.css">
+
+</head>
+
+<body>
+    <h1>This is the flashy demo.</h1>
+    The interactive demo for technical users of the framework, is <a href="./demo.html">over here</a>.
+    <script>
+
+        window.addEventListener('load', function () {
+
+            CS = new Graph ( 'store' )
+            Monitor.monitor ( CS )
+            CS.a = 1
+            CS.b = 2
+            CS.c = new Script ( g => g.a + g.b )
+            CS.c
+            CS.d = { m:1, n:2, o:3 }
+            CS.d.n = [ 77, 88, 99 ]
+            CS.d
+            CS.d ()
+            CS ()
+            CS ( 'graph' )
+
+            setTimeout( ()=> {
+                CS.iHaveSources = new Script ( s => s.a * 2 )
+                CS.iHaveSources
+            }, 1000 )
+
+            setTimeout( ()=> {
+                CS.a = 99
+            }, 2000 )
+
+            setTimeout( ()=> {
+                CS.sideEffectedVertex = undefined
+                CS.reactiveVertex = new Script (
+
+                    s => { s.sideEffectedVertex = s.a + 2 },
+
+                    {   reactive    : true,
+                        getHandler  : false
+                    } 
+                ) 
+            }, 3000 )
+
+            setTimeout( ()=> {
+                CS.a = 99
+            }, 4000 )
+
+        })
+
+    </script>
+</body>
+
+
+</html>
+
