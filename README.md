@@ -28,6 +28,9 @@
 
 *The __store__ organises human memory during Javascript application development.*
 
+Example of an in-production app which has some feature overlap: [AWS Step
+Functions](https://aws.amazon.com/step-functions/features/)
+
 ###### A Demo 
 
 [`demo.html`](https://jerng.github.io/corner-store/demo.html)
