@@ -1,6 +1,6 @@
 # RESULT
 
-Minimum resource configuration :
+Minimum resource configuration, 128MB implies 1/14 of a vCPU-"thread" :
 
 ## Our Test
 ```
